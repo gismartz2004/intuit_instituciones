@@ -1,9 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Upload, Video, FileText, BarChart as BarChartIcon, Users, Settings } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Upload, Video, FileText, BarChart as BarChartIcon, Users, Settings, BookOpen, UserPlus, Trash2 } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { toast } from "@/hooks/use-toast";
 
 const RADAR_DATA = [
   { subject: 'Lógica', A: 120, fullMark: 150 },
@@ -15,94 +20,154 @@ const RADAR_DATA = [
 ];
 
 export default function ProfessorDashboard() {
+  const [modules, setModules] = useState([
+    { id: 1, title: "Fundamentos de Python", items: [{ type: 'video', name: 'Intro.mp4' }] },
+    { id: 2, title: "Lógica de Programación", items: [{ type: 'pdf', name: 'Estructuras.pdf' }] }
+  ]);
+  const [students, setStudents] = useState([
+    { id: 1, name: "Ana García", email: "ana@example.com" },
+    { id: 2, name: "Carlos López", email: "carlos@example.com" }
+  ]);
+
+  const addModule = () => {
+    const newModule = { id: Date.now(), title: "Nuevo Módulo", items: [] };
+    setModules([...modules, newModule]);
+    toast({ title: "Módulo creado", description: "Se ha añadido un nuevo módulo de enseñanza." });
+  };
+
+  const addStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const newStudent = {
+      id: Date.now(),
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+    };
+    setStudents([...students, newStudent]);
+    toast({ title: "Estudiante creado", description: `${newStudent.name} ha sido añadido.` });
+  };
+
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8 pb-24">
+    <div className="p-8 max-w-6xl mx-auto space-y-8 pb-24">
       <div className="flex justify-between items-center">
         <div>
            <h1 className="text-3xl font-extrabold text-[#0047AB]">Panel Docente</h1>
-           <p className="text-slate-500">Gestiona tus clases y recursos educativos.</p>
+           <p className="text-slate-500">Gestiona tus módulos, contenido y alumnos.</p>
         </div>
-        <Button className="bg-[#0047AB] gap-2">
-          <Plus className="w-4 h-4" /> Nuevo Recurso
-        </Button>
+        <div className="flex gap-3">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <UserPlus className="w-4 h-4" /> Crear Estudiante
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <form onSubmit={addStudent}>
+                <DialogHeader>
+                  <DialogTitle>Nuevo Estudiante</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nombre Completo</Label>
+                    <Input id="name" name="name" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" required />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit">Guardar Estudiante</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={addModule} className="bg-[#0047AB] gap-2">
+            <Plus className="w-4 h-4" /> Nuevo Módulo
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-700 text-white border-none shadow-lg">
-          <CardContent className="pt-6">
-            <div className="text-3xl font-extrabold mb-1">24</div>
-            <div className="text-sm font-medium opacity-80">Alumnos Activos</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-extrabold mb-1 text-slate-800">12</div>
-            <div className="text-sm font-medium text-slate-500">Cursos Publicados</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-extrabold mb-1 text-yellow-500">4.8</div>
-            <div className="text-sm font-medium text-slate-500">Calificación Promedio</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-extrabold mb-1 text-green-500">92%</div>
-            <div className="text-sm font-medium text-slate-500">Tasa de Aprobación</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="content" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-          <TabsTrigger value="content">Contenido</TabsTrigger>
-          <TabsTrigger value="radar">Radar de Aptitudes</TabsTrigger>
-          <TabsTrigger value="methodology">Metodología</TabsTrigger>
+      <Tabs defaultValue="modules" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+          <TabsTrigger value="modules">Módulos</TabsTrigger>
+          <TabsTrigger value="students">Mis Alumnos</TabsTrigger>
+          <TabsTrigger value="radar">Radar</TabsTrigger>
+          <TabsTrigger value="methodology">IA Insights</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="content" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Biblioteca de Recursos</CardTitle>
-              <CardDescription>Sube PDFs, vídeos y enlaces para tus alumnos.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer">
-                <div className="bg-blue-100 p-4 rounded-full">
-                  <Upload className="w-8 h-8 text-[#0047AB]" />
-                </div>
-                <div className="text-center">
-                  <p className="font-bold text-slate-700">Arrastra archivos aquí o haz clic para subir</p>
-                  <p className="text-sm text-slate-400">Soporta PDF, MP4, PPTX</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <Badge variant="secondary" className="mb-2">Python Básico</Badge>
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Settings className="w-4 h-4" /></Button>
+        <TabsContent value="modules" className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {modules.map((mod) => (
+              <Card key={mod.id} className="border-2 border-slate-100 hover:border-blue-100 transition-all">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <BookOpen className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <CardTitle className="text-lg">{mod.title}</CardTitle>
                   </div>
-                  <CardTitle className="text-lg">Introducción a Variables</CardTitle>
+                  <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-                    <Video className="w-4 h-4" />
-                    <span>Video • 12 min</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm font-medium text-slate-500 mb-2">
+                      <span>Contenido ({mod.items.length})</span>
+                    </div>
+                    {mod.items.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg text-sm">
+                        <div className="flex items-center gap-2">
+                          {item.type === 'video' ? <Video className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                          {item.name}
+                        </div>
+                        <Badge variant="outline" className="text-[10px] uppercase">{item.type}</Badge>
+                      </div>
+                    ))}
+                    <div className="pt-4 flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 gap-1">
+                        <Upload className="w-3 h-3" /> PDF/Word
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 gap-1">
+                        <Video className="w-3 h-3" /> Vídeo
+                      </Button>
+                    </div>
                   </div>
-                  <Button variant="outline" className="w-full">Editar</Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="radar">
+        <TabsContent value="students" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Listado de Estudiantes</CardTitle>
+              <CardDescription>Alumnos registrados en tus módulos.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {students.map((student) => (
+                  <div key={student.id} className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-[#0047AB] text-white rounded-full flex items-center justify-center font-bold">
+                        {student.name[0]}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-700">{student.name}</p>
+                        <p className="text-sm text-slate-500">{student.email}</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm">Ver Perfil</Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="radar" className="mt-6">
           <Card>
              <CardHeader>
                <CardTitle>Radar de Aptitudes</CardTitle>
@@ -127,11 +192,11 @@ export default function ProfessorDashboard() {
           </Card>
         </TabsContent>
         
-        <TabsContent value="methodology">
+        <TabsContent value="methodology" className="mt-6">
            <Card>
              <CardHeader>
-               <CardTitle>Análisis Metodológico</CardTitle>
-               <CardDescription>Insights basados en IA sobre el rendimiento de las clases.</CardDescription>
+               <CardTitle>Análisis Metodológico (IA)</CardTitle>
+               <CardDescription>Insights sobre el rendimiento de tus clases.</CardDescription>
              </CardHeader>
              <CardContent>
                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-800">
