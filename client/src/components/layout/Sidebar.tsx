@@ -28,20 +28,19 @@ export function Sidebar({ currentRole, onRoleChange }: SidebarProps) {
     { href: "/dashboard", icon: Book, label: "Aprender" },
     { href: "/leaderboard", icon: Trophy, label: "Clasificación" },
     { href: "/quests", icon: Target, label: "Misiones" },
-    { href: "/shop", icon: Store, label: "Tienda" },
     { href: "/profile", icon: User, label: "Perfil" },
   ];
 
   const adminLinks = [
     { href: "/admin", icon: Shield, label: "Panel Admin" },
     { href: "/admin/users", icon: User, label: "Usuarios" },
-    { href: "/admin/analytics", icon: Target, label: "Analíticas" },
+    { href: "/profile", icon: Settings, label: "Configuración" },
   ];
 
   const professorLinks = [
     { href: "/teach", icon: GraduationCap, label: "Mis Clases" },
     { href: "/teach/create", icon: Code, label: "Crear Contenido" },
-    { href: "/teach/analytics", icon: Target, label: "Radar" },
+    { href: "/profile", icon: Settings, label: "Configuración" },
   ];
 
   const links = currentRole === "admin" ? adminLinks : 

@@ -149,9 +149,9 @@ export default function AdminDashboard() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Digital">Digital</SelectItem>
-                            <SelectItem value="Plata">Plata</SelectItem>
-                            <SelectItem value="Pro">Pro</SelectItem>
+                            <SelectItem value="Digital">Básico (Digital)</SelectItem>
+                            <SelectItem value="Plata">Medio (Plata)</SelectItem>
+                            <SelectItem value="Pro">Avanzado (Pro)</SelectItem>
                             <SelectItem value="N/A">N/A</SelectItem>
                           </SelectContent>
                         </Select>
