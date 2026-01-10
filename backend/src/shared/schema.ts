@@ -1,55 +1,176 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, integer, boolean, timestamp, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role").notNull().default("student"), // 'admin' | 'professor' | 'student'
+// 1. Tabla de Roles
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  nombreRol: varchar("nombre_rol", { length: 50 }).notNull(),
 });
 
-export const modules = pgTable("modules", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  description: text("description"),
-  professorId: varchar("professor_id").notNull(), // Assuming simple link to users.id
+// 2. Tabla de Planes
+export const planes = pgTable("planes", {
+  id: serial("id").primaryKey(),
+  nombrePlan: varchar("nombre_plan", { length: 50 }).notNull(),
+  precio: decimal("precio", { precision: 10, scale: 2 }),
 });
 
-export const levels = pgTable("levels", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  order: integer("order").notNull().default(0),
-  moduleId: varchar("module_id").notNull().references(() => modules.id),
+// 3. Tabla de Usuarios
+export const usuarios = pgTable("usuarios", {
+  id: serial("id").primaryKey(),
+  roleId: integer("role_id").references(() => roles.id),
+  planId: integer("plan_id").references(() => planes.id),
+  nombre: varchar("nombre", { length: 100 }),
+  email: varchar("email", { length: 100 }).unique(),
+  password: varchar("password", { length: 255 }),
+  activo: boolean("activo").default(true),
 });
 
-export const contents = pgTable("contents", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  type: text("type").notNull(), // 'video', 'pdf', 'link', 'text'
-  data: text("data").notNull(), // URL or text content
-  levelId: varchar("level_id").notNull().references(() => levels.id),
+// 4. Tabla de Módulos
+export const modulos = pgTable("modulos", {
+  id: serial("id").primaryKey(),
+  nombreModulo: varchar("nombre_modulo", { length: 100 }),
+  duracionDias: integer("duracion_dias"),
+  fechaCreacion: timestamp("fecha_creacion").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  role: true,
+// 5. Tabla de Asignaciones
+export const asignaciones = pgTable("asignaciones", {
+  id: serial("id").primaryKey(),
+  estudianteId: integer("estudiante_id").references(() => usuarios.id),
+  profesorId: integer("profesor_id").references(() => usuarios.id),
+  moduloId: integer("modulo_id").references(() => modulos.id),
 });
 
-export const insertModuleSchema = createInsertSchema(modules);
-export const insertLevelSchema = createInsertSchema(levels);
-export const insertContentSchema = createInsertSchema(contents);
+// 6. Tabla de Niveles
+export const niveles = pgTable("niveles", {
+  id: serial("id").primaryKey(),
+  moduloId: integer("modulo_id").references(() => modulos.id),
+  tituloNivel: varchar("titulo_nivel", { length: 100 }),
+  orden: integer("orden"),
+});
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// 7. Contenidos
+export const contenidos = pgTable("contenidos", {
+  id: serial("id").primaryKey(),
+  nivelId: integer("nivel_id").references(() => niveles.id),
+  tipo: varchar("tipo", { length: 20 }), // video, pdf, link, word, slides, entregable, codigo_lab
+  urlRecurso: text("url_recurso"),
+  // Campos para ejercicios de código
+  tituloEjercicio: varchar("titulo_ejercicio", { length: 255 }),
+  descripcionEjercicio: text("descripcion_ejercicio"),
+  codigoInicial: text("codigo_inicial"),
+  codigoEsperado: text("codigo_esperado"),
+  lenguaje: varchar("lenguaje", { length: 50 }), // javascript, python, etc.
+});
 
-export type InsertModule = z.infer<typeof insertModuleSchema>;
-export type Module = typeof modules.$inferSelect;
+// 8. Tabla Maestra de Puntos
+export const puntosLog = pgTable("puntos_log", {
+  id: serial("id").primaryKey(),
+  estudianteId: integer("estudiante_id").references(() => usuarios.id),
+  cantidad: integer("cantidad"),
+  motivo: varchar("motivo", { length: 255 }),
+  fechaObtencion: timestamp("fecha_obtencion").defaultNow(),
+});
 
-export type InsertLevel = z.infer<typeof insertLevelSchema>;
-export type Level = typeof levels.$inferSelect;
+// 9. Actividades
+export const actividades = pgTable("actividades", {
+  id: serial("id").primaryKey(),
+  nivelId: integer("nivel_id").references(() => niveles.id),
+  tipo: varchar("tipo", { length: 20 }), // entregable, quiz, codigo, simulador
+  titulo: varchar("titulo", { length: 100 }),
+  puntosMaximos: integer("puntos_maximos"),
+  fechaPlazo: timestamp("fecha_plazo"),
+});
 
-export type InsertContent = z.infer<typeof insertContentSchema>;
-export type Content = typeof contents.$inferSelect;
+// 10. Entregas
+export const entregas = pgTable("entregas", {
+  id: serial("id").primaryKey(),
+  actividadId: integer("actividad_id").references(() => actividades.id),
+  estudianteId: integer("estudiante_id").references(() => usuarios.id),
+  puntosLogId: integer("puntos_log_id").references(() => puntosLog.id),
+  archivoUrl: text("archivo_url"),
+  calificacionNumerica: integer("calificacion_numerica"),
+  feedbackProfe: text("feedback_profe"),
+});
+
+// 11. Ranking Genios Awards
+export const rankingAwards = pgTable("ranking_awards", {
+  id: serial("id").primaryKey(),
+  estudianteId: integer("estudiante_id").references(() => usuarios.id),
+  puntosTotalesId: integer("puntos_totales_id").references(() => puntosLog.id),
+  posicionActual: integer("posicion_actual"),
+  ultimoRewindUrl: text("ultimo_rewind_url"),
+});
+
+// 12. Certificados
+export const certificados = pgTable("certificados", {
+  id: serial("id").primaryKey(),
+  estudianteId: integer("estudiante_id").references(() => usuarios.id),
+  moduloId: integer("modulo_id").references(() => modulos.id),
+  codigoVerificacion: varchar("codigo_verificacion", { length: 100 }),
+  urlPdf: text("url_pdf"),
+  fechaEmision: date("fecha_emision").defaultNow(),
+});
+
+// 13. Recursos (Sistema de Archivos)
+export const recursos = pgTable("recursos", {
+  id: serial("id").primaryKey(),
+  profesorId: integer("profesor_id").references(() => usuarios.id),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  tipo: varchar("tipo", { length: 50 }), // mime type
+  url: text("url").notNull(),
+  peso: integer("peso"),
+  fechaSubida: timestamp("fecha_subida").defaultNow(),
+});
+
+// Schemas for insertions
+export const insertRoleSchema = createInsertSchema(roles);
+export const insertPlanSchema = createInsertSchema(planes);
+export const insertUsuarioSchema = createInsertSchema(usuarios);
+export const insertModuloSchema = createInsertSchema(modulos);
+export const insertAsignacionSchema = createInsertSchema(asignaciones);
+export const insertNivelSchema = createInsertSchema(niveles);
+export const insertContenidoSchema = createInsertSchema(contenidos);
+export const insertPuntoLogSchema = createInsertSchema(puntosLog);
+export const insertActividadSchema = createInsertSchema(actividades);
+export const insertEntregaSchema = createInsertSchema(entregas);
+export const insertRankingAwardSchema = createInsertSchema(rankingAwards);
+export const insertCertificadoSchema = createInsertSchema(certificados);
+
+// Types
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+
+export type Plan = typeof planes.$inferSelect;
+export type InsertPlan = z.infer<typeof insertPlanSchema>;
+
+export type Usuario = typeof usuarios.$inferSelect;
+export type InsertUsuario = z.infer<typeof insertUsuarioSchema>;
+
+export type Modulo = typeof modulos.$inferSelect;
+export type InsertModulo = z.infer<typeof insertModuloSchema>;
+
+export type Asignacion = typeof asignaciones.$inferSelect;
+export type InsertAsignacion = z.infer<typeof insertAsignacionSchema>;
+
+export type Nivel = typeof niveles.$inferSelect;
+export type InsertNivel = z.infer<typeof insertNivelSchema>;
+
+export type Contenido = typeof contenidos.$inferSelect;
+export type InsertContenido = z.infer<typeof insertContenidoSchema>;
+
+export type PuntoLog = typeof puntosLog.$inferSelect;
+export type InsertPuntoLog = z.infer<typeof insertPuntoLogSchema>;
+
+export type Actividad = typeof actividades.$inferSelect;
+export type InsertActividad = z.infer<typeof insertActividadSchema>;
+
+export type Entrega = typeof entregas.$inferSelect;
+export type InsertEntrega = z.infer<typeof insertEntregaSchema>;
+
+export type RankingAward = typeof rankingAwards.$inferSelect;
+export type InsertRankingAward = z.infer<typeof insertRankingAwardSchema>;
+
+export type Certificado = typeof certificados.$inferSelect;
+export type InsertCertificado = z.infer<typeof insertCertificadoSchema>;

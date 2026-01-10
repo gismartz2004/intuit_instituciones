@@ -10,18 +10,30 @@ import Login from "@/pages/Login";
 import Leaderboard from "@/pages/Leaderboard";
 import CourseEditor from "@/pages/CourseEditor";
 import Profile from "@/pages/Profile";
+import AITutor from "@/pages/AITutor";
+import ProCourses from "@/pages/ProCourses";
+import GamerRaffle from "@/pages/GamerRaffle";
+import LevelViewer from "@/pages/LevelViewer";
+import FileSystem from "@/pages/FileSystem";
 import { Toaster } from "@/components/ui/toaster";
 
 function App() {
-  const [user, setUser] = useState<{ role: "student" | "admin" | "professor"; name: string; id: string; plan?: string } | null>(null);
+  const [user, setUser] = useState<{ role: "student" | "admin" | "professor"; name: string; id: string; plan?: string } | null>(() => {
+    // Initialize state from local storage
+    const savedUser = localStorage.getItem("edu_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [location, setLocation] = useLocation();
 
-  const handleLogin = (role: "student" | "admin" | "professor", name: string, id: string) => {
-    setUser({ role, name, id, plan: role === "student" ? "Digital" : undefined });
+  const handleLogin = (role: "student" | "admin" | "professor", name: string, id: string, planId?: number) => {
+    const userData = { role, name, id, plan: planId ? planId.toString() : undefined };
+    setUser(userData);
+    localStorage.setItem("edu_user", JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem("edu_user");
     setLocation("/login");
   };
 
@@ -34,7 +46,12 @@ function App() {
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
       {user && location !== "/login" && location !== "/lab" && (
         <>
-          <Sidebar currentRole={user.role} onRoleChange={(r) => setUser({ ...user, role: r })} />
+          <Sidebar
+            currentRole={user.role}
+            onRoleChange={(r) => setUser({ ...user, role: r })}
+            onLogout={handleLogout}
+            userPlanId={user.plan ? parseInt(user.plan) : 1}
+          />
           <MobileNav currentRole={user.role} />
         </>
       )}
@@ -52,14 +69,22 @@ function App() {
                   <Redirect to="/dashboard" />}
           </Route>
 
-          <Route path="/dashboard" component={StudentDashboard} />
+          <Route path="/dashboard">
+            <StudentDashboard user={user!} />
+          </Route>
           <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/users" component={AdminDashboard} />
           <Route path="/teach">
             <ProfessorDashboard user={user!} />
           </Route>
           <Route path="/teach/module/:id" component={CourseEditor} />
           <Route path="/lab" component={CodingLab} />
           <Route path="/leaderboard" component={Leaderboard} />
+          <Route path="/ai-tutor" component={AITutor} />
+          <Route path="/pro-courses" component={ProCourses} />
+          <Route path="/gamer-raffle" component={GamerRaffle} />
+          <Route path="/level/:levelId" component={LevelViewer} />
+          <Route path="/files" component={FileSystem} />
           <Route path="/profile">
             {user ? <Profile user={user} /> : <Redirect to="/login" />}
           </Route>

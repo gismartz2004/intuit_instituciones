@@ -31,10 +31,7 @@ interface ProfessorDashboardProps {
 export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
   const [, setLocation] = useLocation();
   const [modules, setModules] = useState<any[]>([]);
-  const [students, setStudents] = useState([
-    { id: 1, name: "Ana García", email: "ana@example.com" },
-    { id: 2, name: "Carlos López", email: "carlos@example.com" }
-  ]);
+  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,10 +40,15 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
 
   const fetchModules = async () => {
     try {
-      const res = await fetch(`/api/modules/professor/${user.id}`);
+      const res = await fetch(`http://localhost:3000/api/professor/${user.id}/modules`);
       if (res.ok) {
         const data = await res.json();
         setModules(data);
+        // Aggregate all unique students from all modules
+        const allStudents = data.flatMap((m: any) => m.students || []);
+        // Remove duplicates by ID
+        const uniqueStudents = Array.from(new Map(allStudents.map((s: any) => [s.id, s])).values());
+        setStudents(uniqueStudents as any[]);
       }
     } catch (error) {
       console.error("Error fetching modules:", error);
@@ -78,16 +80,46 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
     }
   };
 
-  const addStudent = (e: React.FormEvent) => {
+  const [selectedModuleId, setSelectedModuleId] = useState<string>("");
+
+  const addStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const newStudent = {
-      id: Date.now(),
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-    };
-    setStudents([...students, newStudent]);
-    toast({ title: "Estudiante creado", description: `${newStudent.name} ha sido añadido.` });
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const moduleId = formData.get("moduleId") as string;
+
+    if (!moduleId) {
+      toast({ title: "Error", description: "Debes seleccionar un módulo.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      // 1. Create User and Assign (Unified Endpoint)
+      const res = await fetch('http://localhost:3000/api/professor/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          moduleId: parseInt(moduleId)
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Error creating student");
+      }
+
+      toast({ title: "Éxito", description: "Estudiante creado y asignado." });
+      fetchModules(); // Refresh data
+      // Close dialog or reset form? (Optional but good UX)
+      // reset form manually or reload page
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo realizar la operación.", variant: "destructive" });
+    }
   };
 
   return (
@@ -111,12 +143,25 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
+                    <Label htmlFor="moduleId">Asignar al Módulo</Label>
+                    <select name="moduleId" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" required>
+                      <option value="">Selecciona un módulo...</option>
+                      {modules.map(m => (
+                        <option key={m.id} value={m.id}>{m.nombreModulo}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="name">Nombre Completo</Label>
-                    <Input id="name" name="name" required />
+                    <Input id="name" name="name" required placeholder="Ej. Pedro Picapiedra" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" type="email" required />
+                    <Input id="email" name="email" type="email" required placeholder="correo@ejemplo.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Contraseña Temporal</Label>
+                    <Input id="password" name="password" type="password" required defaultValue="123456" />
                   </div>
                 </div>
                 <DialogFooter>
@@ -148,15 +193,15 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
                     <div className="bg-blue-100 p-2 rounded-lg">
                       <BookOpen className="w-5 h-5 text-blue-600" />
                     </div>
-                    <CardTitle className="text-lg">{mod.title}</CardTitle>
+                    <CardTitle className="text-lg">{mod.nombreModulo}</CardTitle>
                   </div>
                   <Button variant="ghost" size="icon" className="text-slate-400 hover:text-blue-600">
                     <Settings className="w-4 h-4" />
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-500 mb-4">{mod.description || "Sin descripción"}</p>
-                  <Button className="w-full text-xs" variant="secondary">Gestinar Contenido</Button>
+                  <p className="text-sm text-slate-500 mb-4">{mod.duracionDias ? `${mod.duracionDias} días` : "Sin duración definida"}</p>
+                  <Button className="w-full text-xs" variant="secondary">Gestionar Contenido</Button>
                 </CardContent>
               </Card>
             ))}
@@ -175,10 +220,10 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
                   <div key={student.id} className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-[#0047AB] text-white rounded-full flex items-center justify-center font-bold">
-                        {student.name[0]}
+                        {(student.nombre || "?")[0]}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-700">{student.name}</p>
+                        <p className="font-bold text-slate-700">{student.nombre || "Sin Nombre"}</p>
                         <p className="text-sm text-slate-500">{student.email}</p>
                       </div>
                     </div>

@@ -1,56 +1,36 @@
-import { Controller, Get, Post, Body, Param, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, NotFoundException, ParseIntPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { InsertUser, insertUserSchema } from 'src/shared/schema';
+import { InsertUsuario, insertUsuarioSchema } from 'src/shared/schema';
 
-@Controller('users')
+@Controller('usuarios')
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
     @Get(':id')
-    async getUser(@Param('id') id: string) {
+    async getUser(@Param('id', ParseIntPipe) id: number) {
         const user = await this.usersService.getUser(id);
         if (!user) throw new NotFoundException('User not found');
         return user;
     }
 
-    @Post('login')
-    async login(@Body() body: any) {
-        console.log(`Login Attempt for user: ${body.username}`);
-        const user = await this.usersService.validateUser(body.username, body.password);
-        if (!user) {
-            console.log('Login failed: Invalid credentials or user not found');
-            throw new UnauthorizedException('Invalid credentials');
-        }
-        console.log(`Login successful: ${user.role}`);
-        return user;
+    @Get()
+    async getAllUsers() {
+        return this.usersService.getAllUsers();
     }
 
-    // @Post()
-    // async createUser(@Body() body: any) {
-    //     // Basic validation using Zod schema if not handled by a pipe
-    //     const result = insertUserSchema.safeParse(body);
-    //     // if (!result.success) {
-    //     //     throw new Error('Invalid data');
-    //     //     @Get('setup')
-    //     //     // async setup() {
-    //     //     //     const admin = await this.usersService.ensureAdminExists();
-    //     //     //     return { message: 'Admin user verified/created', user: admin };
-    //     //     // }
-    //     // }
-    //     return this.usersService.createUser(result.data);
-    // }
-    // @Post()
-    // async createUser(@Body() body: any) {
-    //     // Basic validation using Zod schema if not handled by a pipe
-    //     const result: InsertUser = insertUserSchema.safeParse(body);
-    //     // if (!result.success) {
-    //     //     throw new Error('Invalid data');
-    //     //     @Get('setup')
-    //     //     // async setup() {
-    //     //     //     const admin = await this.usersService.ensureAdminExists();
-    //     //     //     return { message: 'Admin user verified/created', user: admin };
-    //     //     // }
-    //     // }
-    //     return this.usersService.createUser(result as InsertUser);
-    // }
+    // Admin only creation endpoint
+    @Post()
+    async createUser(@Body() body: any) {
+        // Validation could go here or in a Pipe
+        const result = insertUsuarioSchema.safeParse(body);
+        if (!result.success) {
+            throw new Error('Invalid user data');
+        }
+        return this.usersService.createUser(result.data);
+    }
+
+    @Patch(':id')
+    async updateUser(@Param('id', ParseIntPipe) id: number, @Body() updates: any) {
+        return this.usersService.updateUser(id, updates);
+    }
 }

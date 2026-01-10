@@ -1,113 +1,226 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Star, Lock, Check, Zap, Play } from "lucide-react";
+import { Star, Lock, Check, Zap, Play, Trophy, Flame, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Mock Data for the Learning Path
-const UNITS = [
-  {
-    id: 1,
-    title: "Unidad 1: Fundamentos de IA",
-    description: "Aprende los conceptos básicos de la Inteligencia Artificial.",
-    color: "bg-[#58CC02]", // Green
-    lessons: [
-      { id: 1, type: "star", status: "completed", x: 0 },
-      { id: 2, type: "book", status: "completed", x: -40 },
-      { id: 3, type: "star", status: "active", x: 40 },
-      { id: 4, type: "trophy", status: "locked", x: 0 },
-    ],
-  },
-  {
-    id: 2,
-    title: "Unidad 2: Lógica de Programación",
-    description: "Domina las estructuras de control y variables.",
-    color: "bg-[#CE82FF]", // Purple
-    lessons: [
-      { id: 5, type: "star", status: "locked", x: 0 },
-      { id: 6, type: "book", status: "locked", x: -40 },
-      { id: 7, type: "star", status: "locked", x: 40 },
-      { id: 8, type: "trophy", status: "locked", x: 0 },
-    ],
-  },
-];
+interface StudentDashboardProps {
+  user: {
+    name: string;
+    id: string;
+    role: string;
+  };
+}
 
-export default function StudentDashboard() {
+export default function StudentDashboard({ user }: StudentDashboardProps) {
+  const [modules, setModules] = useState<any[]>([]);
+  const [progress, setProgress] = useState<any>(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchModules();
+      fetchProgress();
+    }
+  }, [user]);
+
+  const fetchModules = async () => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/student/${user.id}/modules`);
+      if (res.ok) {
+        const data = await res.json();
+        const mappedData = data.map((mod: any, idx: number) => ({
+          ...mod,
+          color: idx % 2 === 0 ? "from-emerald-400 to-green-500" : "from-purple-400 to-violet-500",
+          levels: mod.levels?.map((lvl: any, lIdx: number) => ({
+            ...lvl,
+            type: lIdx === 0 ? "star" : (lIdx === mod.levels.length - 1 ? "trophy" : "book"),
+            status: "active",
+            x: (lIdx % 2 === 0) ? 0 : (lIdx % 4 === 1 ? -40 : 40)
+          })) || []
+        }));
+        setModules(mappedData);
+      }
+    } catch (error) {
+      console.error("Error fetching student modules:", error);
+    }
+  };
+
+  const fetchProgress = async () => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/student/${user.id}/progress`);
+      if (res.ok) {
+        const data = await res.json();
+        setProgress(data);
+      }
+    } catch (error) {
+      console.error("Error fetching progress:", error);
+    }
+  };
+
   return (
-    <div className="flex justify-center pb-20 pt-8">
-      <div className="w-full max-w-[600px] px-4">
-        {UNITS.map((unit) => (
-          <div key={unit.id} className="mb-12">
-            {/* Unit Header */}
-            <div className={cn("rounded-2xl p-6 mb-8 text-white flex justify-between items-center shadow-lg", unit.color)}>
-              <div>
-                <h2 className="text-2xl font-extrabold">{unit.title}</h2>
-                <p className="opacity-90 font-medium">{unit.description}</p>
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      {/* Enhanced User Profile Header - Bottom Right */}
+      {progress && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="fixed bottom-4 right-4 z-50 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/50 p-3 w-[220px]"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            {/* Compact Avatar */}
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                {user.name[0].toUpperCase()}
               </div>
-              <Link href="/unit-details">
-                <button className="bg-black/20 hover:bg-black/30 text-white font-bold py-3 px-6 rounded-xl transition-all border-2 border-transparent">
-                  GUÍA
-                </button>
-              </Link>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
 
-            {/* Path */}
-            <div className="flex flex-col items-center gap-6 relative">
-              {unit.lessons.map((lesson, idx) => (
-                <LessonNode key={lesson.id} lesson={lesson} index={idx} />
-              ))}
+            {/* Compact Name */}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-800 text-sm truncate">{user.name}</p>
+              <p className="text-[10px] text-slate-500 font-medium">Estudiante</p>
             </div>
           </div>
-        ))}
-      </div>
-      
-      {/* Right Sidebar Stats (Desktop Only) */}
-      <div className="hidden xl:block w-[350px] pl-8 fixed right-0 top-0 pt-8 pr-8">
-        <div className="flex gap-4 mb-8">
-          <div className="flex items-center gap-2">
-            <img src="https://d35aaqx5ub95lt.cloudfront.net/images/icons/9044c53d5e2361d904f85e33d0615555.svg" className="w-8 h-8" />
-            <span className="font-bold text-[#FF9600]">2</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <img src="https://d35aaqx5ub95lt.cloudfront.net/images/icons/f2a361596e10787e9c5f4039803158c5.svg" className="w-8 h-8" />
-            <span className="font-bold text-[#1CB0F6]">450</span>
-          </div>
-          <div className="flex items-center gap-2">
-             <div className="bg-rose-500 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold">
-               <span className="text-xs">❤</span>
-             </div>
-            <span className="font-bold text-rose-500">5</span>
-          </div>
-        </div>
 
-        <div className="border-2 border-slate-200 rounded-2xl p-6 mb-6">
-          <h3 className="font-bold text-slate-700 text-lg mb-4">Ranking de Liga</h3>
-          <div className="flex items-center gap-4 mb-4">
-             <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-white">#1</div>
-             <div className="flex-1">
-               <p className="font-bold text-slate-700">Juan Pérez</p>
-               <p className="text-slate-400 text-sm">1200 XP</p>
-             </div>
-          </div>
-          <div className="w-full h-[1px] bg-slate-200 my-4"></div>
-          <Link href="/leaderboard" className="text-[#1CB0F6] font-bold uppercase tracking-wider text-sm hover:underline">
-            Ver Liga
-          </Link>
-        </div>
+          {/* Compact Stats Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Points Card */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl p-2 border border-orange-200/50"
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-[9px] font-bold text-orange-700 uppercase">Pts</span>
+              </div>
+              <p className="text-xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                {progress.totalPoints || 0}
+              </p>
+            </motion.div>
 
-        <div className="border-2 border-slate-200 rounded-2xl p-6">
-          <h3 className="font-bold text-slate-700 text-lg mb-4">Misiones Diarias</h3>
-          <div className="space-y-4">
-             <div className="flex items-center gap-4">
-               <Zap className="w-8 h-8 text-yellow-500 fill-current" />
-               <div className="flex-1">
-                 <p className="font-bold text-slate-700">Gana 50 XP</p>
-                 <div className="w-full h-3 bg-slate-200 rounded-full mt-2 overflow-hidden">
-                   <div className="h-full bg-yellow-500 w-[70%] rounded-full"></div>
-                 </div>
-               </div>
-             </div>
+            {/* Streak Card */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="bg-gradient-to-br from-red-50 to-pink-100 rounded-xl p-2 border border-red-200/50"
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-5 h-5 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <Flame className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-[9px] font-bold text-red-700 uppercase">Racha</span>
+              </div>
+              <p className="text-xl font-black bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                0
+              </p>
+            </motion.div>
           </div>
+        </motion.div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex justify-center pb-24 pt-12 px-4">
+        <div className="w-full max-w-[700px]">
+          {modules.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-slate-500 mt-20 bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-lg"
+            >
+              <Target className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+              <p className="text-lg font-semibold">No tienes módulos asignados aún</p>
+              <p className="text-sm text-slate-400 mt-2">Contacta a tu profesor para comenzar</p>
+            </motion.div>
+          ) : (
+            <AnimatePresence>
+              {modules.map((mod, modIdx) => {
+                const moduleProgress = progress?.moduleProgress?.find((p: any) => p.moduloId === mod.id);
+
+                return (
+                  <motion.div
+                    key={mod.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: modIdx * 0.1 }}
+                    className="mb-16"
+                  >
+                    {/* Enhanced Module Header */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className={cn(
+                        "rounded-3xl p-8 mb-6 text-white shadow-2xl relative overflow-hidden bg-gradient-to-br",
+                        mod.color
+                      )}
+                    >
+                      {/* Decorative Elements */}
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+                      <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl translate-y-24 -translate-x-24"></div>
+
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="flex-1">
+                            <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold mb-3">
+                              MÓDULO ACTIVO
+                            </div>
+                            <h2 className="text-3xl font-black mb-2">{mod.nombreModulo}</h2>
+                            <p className="opacity-90 font-medium text-sm">
+                              {mod.duracionDias ? `${mod.duracionDias} Días de duración` : "Módulo de aprendizaje"}
+                            </p>
+                          </div>
+                          <Link href={`/unit/${mod.id}`}>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-8 rounded-2xl transition-all border-2 border-white/30 shadow-lg"
+                            >
+                              EMPEZAR
+                            </motion.button>
+                          </Link>
+                        </div>
+
+                        {/* Enhanced Progress Bar */}
+                        {moduleProgress && (
+                          <div className="mt-6">
+                            <div className="flex justify-between text-sm mb-3 font-semibold">
+                              <span>Progreso: Día {moduleProgress.daysElapsed} de {moduleProgress.totalDays}</span>
+                              <span className="bg-white/20 px-3 py-1 rounded-full">{moduleProgress.progressPercentage}%</span>
+                            </div>
+                            <div className="w-full bg-black/20 backdrop-blur-sm rounded-full h-4 overflow-hidden shadow-inner">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${moduleProgress.progressPercentage}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="bg-white rounded-full h-4 shadow-lg relative"
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/40 to-white/0 animate-pulse"></div>
+                              </motion.div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+
+                    {/* Enhanced Lesson Path */}
+                    <div className="flex flex-col items-center gap-8 relative">
+                      {/* Connecting Line */}
+                      <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-200 via-slate-300 to-slate-200 -translate-x-1/2 -z-10"></div>
+
+                      {mod.levels && mod.levels.length > 0 ? (
+                        mod.levels.map((level: any, idx: number) => (
+                          <LessonNode key={level.id} lesson={level} index={idx} />
+                        ))
+                      ) : (
+                        <p className="text-slate-400 italic bg-white/80 px-6 py-4 rounded-2xl">
+                          No hay niveles disponibles
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
         </div>
       </div>
     </div>
@@ -117,46 +230,67 @@ export default function StudentDashboard() {
 function LessonNode({ lesson, index }: { lesson: any; index: number }) {
   const isLocked = lesson.status === "locked";
   const isActive = lesson.status === "active";
-  
+
   return (
-    <div 
+    <motion.div
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
       className="relative z-10"
       style={{ transform: `translateX(${lesson.x}px)` }}
     >
-      <Link href={isLocked ? "#" : "/lab"}>
-        <div className="group relative cursor-pointer">
+      <Link href={isLocked ? "#" : `/level/${lesson.id}`}>
+        <motion.div
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.95 }}
+          className="group relative cursor-pointer"
+        >
+          {/* Glow Effect */}
+          {isActive && (
+            <div className="absolute inset-0 bg-blue-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
+          )}
+
           {/* Shadow/Depth */}
-          <div 
+          <div
             className={cn(
-              "absolute top-2 left-0 w-full h-full rounded-full transition-all",
-              isLocked ? "bg-slate-300" : "bg-blue-700",
-              isActive && "animate-pulse"
-            )} 
+              "absolute top-3 left-0 w-full h-full rounded-2xl transition-all",
+              isLocked ? "bg-slate-300" : "bg-blue-800"
+            )}
           />
-          
+
           {/* Main Button */}
-          <div 
+          <div
             className={cn(
-              "w-20 h-20 rounded-full flex items-center justify-center relative transition-transform active:translate-y-2 border-4 z-10",
-              isLocked 
-                ? "bg-slate-200 border-slate-300 text-slate-400" 
-                : isActive 
-                  ? "bg-[#0047AB] border-blue-400 text-white shadow-[0_0_20px_rgba(0,71,171,0.6)]" 
-                  : "bg-blue-500 border-blue-600 text-white"
+              "w-24 h-24 rounded-2xl flex items-center justify-center relative transition-all border-4 z-10 shadow-xl",
+              isLocked
+                ? "bg-slate-200 border-slate-300 text-slate-400"
+                : isActive
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-300 text-white shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                  : "bg-gradient-to-br from-blue-400 to-blue-500 border-blue-400 text-white"
             )}
           >
-            {lesson.type === "star" && <Star className="w-8 h-8 fill-current" />}
-            {lesson.type === "book" && <Check className="w-8 h-8 stroke-[4]" />}
-            {lesson.type === "trophy" && <div className="text-2xl">🏆</div>}
-            
+            {lesson.type === "star" && <Star className="w-10 h-10 fill-current drop-shadow-lg" />}
+            {lesson.type === "book" && <Check className="w-10 h-10 stroke-[4] drop-shadow-lg" />}
+            {lesson.type === "trophy" && <Trophy className="w-10 h-10 fill-current drop-shadow-lg" />}
+
             {isActive && (
-              <div className="absolute -top-4 bg-white text-[#0047AB] px-3 py-1 rounded-lg font-bold text-xs uppercase animate-bounce border-2 border-slate-200 shadow-sm">
-                Empezar
-              </div>
+              <motion.div
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ repeat: Infinity, duration: 1, repeatType: "reverse" }}
+                className="absolute -top-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase shadow-lg border-2 border-white"
+              >
+                ¡Empezar!
+              </motion.div>
             )}
+
+            {/* Level Number Badge */}
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center font-black text-xs text-slate-700 shadow-lg border-2 border-slate-100">
+              {index + 1}
+            </div>
           </div>
-        </div>
+        </motion.div>
       </Link>
-    </div>
+    </motion.div>
   );
 }

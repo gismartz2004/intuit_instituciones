@@ -9,7 +9,7 @@ import { Rocket, Lock, AtSign, Eye, EyeOff } from "lucide-react";
 import generatedImage from '@assets/generated_images/arg_academy_logo.png';
 
 interface LoginProps {
-  onLogin: (role: "student" | "admin" | "professor", name: string, id: string) => void;
+  onLogin: (role: "student" | "admin" | "professor", name: string, id: string, planId?: number) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -28,20 +28,29 @@ export default function Login({ onLogin }: LoginProps) {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/api/users/login', {
+      // Assuming 'username' input field is actually for email in the new schema
+      // Or we can assume username = email for now, or update label to "Email"
+      const res = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email: username, password })
       });
 
       if (res.ok) {
-        const user = await res.json();
+        const data = await res.json();
+        const user = data.user;
+        const roleMap: Record<number, "admin" | "professor" | "student"> = {
+          1: "admin",
+          2: "professor",
+          3: "student"
+        };
+        // Using roleId from new schema to determine frontend string role
+        const role = roleMap[user.roleId] || "student";
 
-        // Auto-redirect logic based on backend role
-        onLogin(user.role, user.username, user.id);
-        const targetPath = user.role === "admin" ? "/admin" : user.role === "professor" ? "/teach" : "/dashboard";
+        onLogin(role, user.nombre, user.id.toString(), user.planId);
+        const targetPath = role === "admin" ? "/admin" : role === "professor" ? "/teach" : "/dashboard";
         setLocation(targetPath);
-        toast({ title: "¡Bienvenido!", description: `Iniciando sesión como ${user.role}...` });
+        toast({ title: "¡Bienvenido!", description: `Iniciando sesión como ${role}...` });
       } else {
         toast({ title: "Error de acceso", description: "Credenciales inválidas. Intenta nuevamente.", variant: "destructive" });
       }
@@ -63,7 +72,7 @@ export default function Login({ onLogin }: LoginProps) {
       <Card className="w-full max-w-md border-0 shadow-2xl z-10 bg-white/95 backdrop-blur-sm overflow-hidden">
         <div className="bg-gradient-to-r from-[#0047AB] to-[#0066CC] p-8 text-center text-white relative">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-          <img src={generatedImage} alt="Logo" className="w-20 h-20 mx-auto mb-4 invert drop-shadow-md transition-transform hover:scale-105 duration-300" />
+          {/* <img src={generatedImage} alt="Logo" className="w-20 h-20 mx-auto mb-4 invert drop-shadow-md transition-transform hover:scale-105 duration-300" /> */}
           <h1 className="text-3xl font-black tracking-tight mb-1">ARG ACADEMY</h1>
           <p className="text-blue-100 font-medium text-sm tracking-wide">Plataforma de Educación Inteligente</p>
         </div>
@@ -74,7 +83,7 @@ export default function Login({ onLogin }: LoginProps) {
             {/* Inputs */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-slate-600 font-semibold text-xs ml-1">Usuario</Label>
+                <Label className="text-slate-600 font-semibold text-xs ml-1">Email</Label>
                 <div className="relative group">
                   <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#0047AB] transition-colors" />
                   <Input
