@@ -265,7 +265,29 @@ export default function CourseEditor() {
                                         onClick={() => setSelectedLevel(level.id)}
                                     >
                                         <CardContent className="pt-4">
-                                            <h3 className="font-bold text-lg mb-2">{level.tituloNivel}</h3>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <h3 className="font-bold text-lg">{level.tituloNivel}</h3>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (confirm('¿Estás seguro de eliminar este nivel y todo su contenido?')) {
+                                                            // Call delete function (needs to be implemented in component body first, but for now assuming it exists or doing fetch directly)
+                                                            fetch(`http://localhost:3000/api/professor/levels/${level.id}`, { method: 'DELETE' })
+                                                                .then(res => {
+                                                                    if (res.ok) {
+                                                                        toast({ title: "Nivel eliminado" });
+                                                                        fetchModuleData();
+                                                                    }
+                                                                });
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                             <p className="text-sm text-slate-500">
                                                 {level.contents?.length || 0} contenido(s)
                                             </p>

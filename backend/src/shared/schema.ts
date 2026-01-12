@@ -24,6 +24,8 @@ export const usuarios = pgTable("usuarios", {
   email: varchar("email", { length: 100 }).unique(),
   password: varchar("password", { length: 255 }),
   activo: boolean("activo").default(true),
+  avatar: varchar("avatar", { length: 255 }).default('avatar_boy'),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
 });
 
 // 4. Tabla de Módulos
@@ -124,6 +126,17 @@ export const recursos = pgTable("recursos", {
   fechaSubida: timestamp("fecha_subida").defaultNow(),
 });
 
+// 14. Progreso de Niveles
+export const progresoNiveles = pgTable("progreso_niveles", {
+  id: serial("id").primaryKey(),
+  estudianteId: integer("estudiante_id").references(() => usuarios.id),
+  nivelId: integer("nivel_id").references(() => niveles.id),
+  porcentajeCompletado: integer("porcentaje_completado").default(0),
+  completado: boolean("completado").default(false),
+  fechaInicio: timestamp("fecha_inicio").defaultNow(),
+  fechaCompletado: timestamp("fecha_completado"),
+});
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -137,6 +150,7 @@ export const insertActividadSchema = createInsertSchema(actividades);
 export const insertEntregaSchema = createInsertSchema(entregas);
 export const insertRankingAwardSchema = createInsertSchema(rankingAwards);
 export const insertCertificadoSchema = createInsertSchema(certificados);
+export const insertProgresoNivelSchema = createInsertSchema(progresoNiveles);
 
 // Types
 export type Role = typeof roles.$inferSelect;
@@ -174,3 +188,6 @@ export type InsertRankingAward = z.infer<typeof insertRankingAwardSchema>;
 
 export type Certificado = typeof certificados.$inferSelect;
 export type InsertCertificado = z.infer<typeof insertCertificadoSchema>;
+
+export type ProgresoNivel = typeof progresoNiveles.$inferSelect;
+export type InsertProgresoNivel = z.infer<typeof insertProgresoNivelSchema>;

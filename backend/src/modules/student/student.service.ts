@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and } from 'drizzle-orm';
 
 @Injectable()
 export class StudentService {
@@ -84,5 +84,138 @@ export class StudentService {
             .from(schema.contenidos)
             .where(eq(schema.contenidos.nivelId, levelId));
         return contents;
+    }
+
+    async calculateLevelProgress(studentId: number, levelId: number) {
+        // Get all activities for this level
+        const activities = await this.db.select()
+            .from(schema.actividades)
+            .where(eq(schema.actividades.nivelId, levelId));
+
+        if (activities.length === 0) {
+            return { porcentajeCompletado: 100, completado: true }; // No activities = auto-complete
+        }
+
+        // Get student's submissions for these activities
+        const activityIds = activities.map(a => a.id);
+        const submissions = await this.db.select()
+            .from(schema.entregas)
+            .where(eq(schema.entregas.estudianteId, studentId));
+
+        const completedActivities = submissions.filter(s =>
+            activityIds.includes(s.actividadId!) && s.calificacionNumerica !== null
+        );
+
+        const porcentajeCompletado = Math.round((completedActivities.length / activities.length) * 100);
+        const completado = porcentajeCompletado === 100;
+
+        return { porcentajeCompletado, completado };
+    }
+
+    async updateLevelProgress(studentId: number, levelId: number) {
+        const { porcentajeCompletado, completado } = await this.calculateLevelProgress(studentId, levelId);
+
+        // Check if progress record exists
+        const existing = await this.db.select()
+            .from(schema.progresoNiveles)
+            .where(and(
+                eq(schema.progresoNiveles.estudianteId, studentId),
+                eq(schema.progresoNiveles.nivelId, levelId)
+            ))
+            .limit(1);
+
+        if (existing.length > 0) {
+            // Update existing
+            await this.db.update(schema.progresoNiveles)
+                .set({
+                    porcentajeCompletado,
+                    completado,
+                    fechaCompletado: completado ? new Date() : null
+                })
+                .where(eq(schema.progresoNiveles.id, existing[0].id));
+        } else {
+            // Create new
+            await this.db.insert(schema.progresoNiveles).values({
+                estudianteId: studentId,
+                nivelId: levelId,
+                porcentajeCompletado,
+                completado,
+                fechaCompletado: completado ? new Date() : null
+            });
+        }
+
+        // If completed, unlock next level
+        if (completado) {
+            await this.unlockNextLevel(studentId, levelId);
+        }
+
+        return { porcentajeCompletado, completado };
+    }
+
+    async unlockNextLevel(studentId: number, currentLevelId: number) {
+        // Get current level info
+        const currentLevel = await this.db.select()
+            .from(schema.niveles)
+            .where(eq(schema.niveles.id, currentLevelId))
+            .limit(1);
+
+        if (currentLevel.length === 0) return;
+
+        const moduleId = currentLevel[0].moduloId;
+        const currentOrder = currentLevel[0].orden;
+
+        // Find next level
+        const nextLevel = await this.db.select()
+            .from(schema.niveles)
+            .where(and(
+                eq(schema.niveles.moduloId, moduleId!),
+                eq(schema.niveles.orden, currentOrder! + 1)
+            ))
+            .limit(1);
+
+        if (nextLevel.length === 0) return; // No next level
+
+        // Create progress record for next level (unlocked but not started)
+        const existingNext = await this.db.select()
+            .from(schema.progresoNiveles)
+            .where(and(
+                eq(schema.progresoNiveles.estudianteId, studentId),
+                eq(schema.progresoNiveles.nivelId, nextLevel[0].id)
+            ))
+            .limit(1);
+
+        if (existingNext.length === 0) {
+            await this.db.insert(schema.progresoNiveles).values({
+                estudianteId: studentId,
+                nivelId: nextLevel[0].id,
+                porcentajeCompletado: 0,
+                completado: false
+            });
+        }
+    }
+
+    async getStudentLevelProgress(studentId: number, moduleId: number) {
+        // Get all levels for module
+        const levels = await this.db.select()
+            .from(schema.niveles)
+            .where(eq(schema.niveles.moduloId, moduleId))
+            .orderBy(asc(schema.niveles.orden));
+
+        // Get progress for each level
+        const progress = await this.db.select()
+            .from(schema.progresoNiveles)
+            .where(eq(schema.progresoNiveles.estudianteId, studentId));
+
+        return levels.map((level, index) => {
+            const levelProgress = progress.find(p => p.nivelId === level.id);
+            const isUnlocked = index === 0 || levelProgress !== undefined;
+
+            return {
+                ...level,
+                porcentajeCompletado: levelProgress?.porcentajeCompletado || 0,
+                completado: levelProgress?.completado || false,
+                isUnlocked
+            };
+        });
     }
 }

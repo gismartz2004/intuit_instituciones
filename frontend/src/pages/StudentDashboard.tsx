@@ -1,44 +1,78 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { Star, Lock, Check, Zap, Play, Trophy, Flame } from "lucide-react";
+import { Star, Zap, Play, Trophy, MapPin, Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Assets
-import mapBg from "@/assets/gamification/map_bg.png";
-import avatarBoy from "@/assets/gamification/avatar_boy.png";
+import zoneMalecon from "@/assets/gamification/zone_malecon.png";
+import zonePenas from "@/assets/gamification/zone_penas.png";
+import zoneSantaAna from "@/assets/gamification/zone_santa_ana.png";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+
+// Avatar Assets
+import avatarBoy from "@/assets/avatars/avatar_boy.png";
+import avatarGirl from "@/assets/avatars/avatar_girl.png";
+import avatarRobot from "@/assets/avatars/avatar_robot.png";
+import avatarPet from "@/assets/avatars/avatar_pet.png";
+
+const AVATAR_MAP: Record<string, string> = {
+  'avatar_boy': avatarBoy,
+  'avatar_girl': avatarGirl,
+  'avatar_robot': avatarRobot,
+  'avatar_pet': avatarPet,
+};
 
 interface StudentDashboardProps {
   user: {
     name: string;
     id: string;
     role: string;
+    avatar?: string;
+    onboardingCompleted?: boolean;
   };
 }
+
+const ZONES = [
+  { id: 'malecon', name: 'Sector 1: Malecón 2000 Tech', bg: zoneMalecon, color: 'from-green-500 to-emerald-600' },
+  { id: 'penas', name: 'Sector 2: Barrio Las Peñas Digital', bg: zonePenas, color: 'from-blue-500 to-indigo-600' },
+  { id: 'santa_ana', name: 'Sector 3: Puerto Santa Ana Cyber', bg: zoneSantaAna, color: 'from-violet-500 to-purple-600' },
+];
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [modules, setModules] = useState<any[]>([]);
   const [progress, setProgress] = useState<any>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [currentAvatar, setCurrentAvatar] = useState(avatarBoy);
+  const [levelProgress, setLevelProgress] = useState<Record<number, any>>({});
 
   useEffect(() => {
     if (user?.id) {
+      // Refresh user data to check onboarding status
+      fetch(`http://localhost:3000/api/usuarios/${user.id}`)
+        .then(res => res.json())
+        .then(userData => {
+          if (!userData.onboardingCompleted) {
+            setShowOnboarding(true);
+          }
+          if (userData.avatar && AVATAR_MAP[userData.avatar]) {
+            setCurrentAvatar(AVATAR_MAP[userData.avatar]);
+          }
+        });
+
       fetchModules();
       fetchProgress();
+      fetchLevelProgress();
     }
   }, [user]);
 
-  // Scroll to active level on load
-  useEffect(() => {
-    if (modules.length > 0) {
-      setTimeout(() => {
-        const activeNode = document.querySelector('.active-level-node');
-        if (activeNode) {
-          activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 500);
+  const handleOnboardingComplete = (avatarId: string) => {
+    setShowOnboarding(false);
+    if (AVATAR_MAP[avatarId]) {
+      setCurrentAvatar(AVATAR_MAP[avatarId]);
     }
-  }, [modules]);
+    // Optimistically update local storage if needed, or just state
+  };
 
   const fetchModules = async () => {
     try {
@@ -47,16 +81,10 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         const data = await res.json();
         const mappedData = data.map((mod: any, idx: number) => ({
           ...mod,
+          // Assign zone based on index mock mock
+          zoneIndex: Math.min(Math.floor(idx / 2), 2),
           levels: mod.levels?.map((lvl: any, lIdx: number) => ({
             ...lvl,
-            // Map ZigZag Logic: Alternating Left/Right offsets
-            // Base center is 0. 
-            // 0 -> 0 (Center)
-            // 1 -> -100 (Left)
-            // 2 -> 100 (Right)
-            // Simple Sine wave pattern
-            xOffset: Math.sin(lIdx) * 120,
-            status: "active", // Logic should come from backend, assuming active for demo if not provided
             type: lIdx === 0 ? "start" : (lIdx === mod.levels.length - 1 ? "trophy" : "star")
           })) || []
         }));
@@ -79,142 +107,172 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     }
   };
 
+  const fetchLevelProgress = async () => {
+    try {
+      // Fetch progress for all modules
+      const progressMap: Record<number, any> = {};
+      for (const mod of modules) {
+        const res = await fetch(`http://localhost:3000/api/student/${user.id}/module/${mod.id}/progress`);
+        if (res.ok) {
+          const data = await res.json();
+          data.forEach((level: any) => {
+            progressMap[level.id] = level;
+          });
+        }
+      }
+      setLevelProgress(progressMap);
+    } catch (error) {
+      console.error("Error fetching level progress:", error);
+    }
+  };
+
+  // Group modules by zone
+  const modulesByZone = ZONES.map((zone, zIdx) => ({
+    ...zone,
+    modules: modules.filter(m => m.zoneIndex === zIdx)
+  }));
+
   return (
-    <div className="relative h-screen overflow-hidden bg-[#87CEEB]">
+    <div className="relative h-screen bg-[#1a1b26] overflow-hidden flex flex-col">
 
-      {/* City Map Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0 opacity-100"
-        style={{ backgroundImage: `url(${mapBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-      >
-        {/* Overlay for better text contrast if needed, reducing opacity */}
-        {/* <div className="absolute inset-0 bg-white/20" /> */}
-      </div>
-
-      {/* Floating HUD - Points & Avatar */}
+      {/* Floating HUD */}
       {progress && (
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="absolute top-4 right-4 z-50 flex gap-3"
+          className="fixed top-4 right-4 z-50 flex gap-3 pointer-events-none"
         >
-          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-xl border-b-4 border-slate-200 flex items-center gap-2">
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border-2 border-slate-200 flex items-center gap-2 pointer-events-auto">
             <div className="bg-orange-500 rounded-full p-1">
               <Zap className="w-4 h-4 text-white" fill="currentColor" />
             </div>
             <span className="font-black text-orange-600 text-lg">{progress.totalPoints || 0}</span>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-xl border-b-4 border-slate-200 flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform">
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border-2 border-slate-200 flex items-center gap-2 pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
             <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-blue-400 overflow-hidden">
-              <img src={avatarBoy} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-slate-700">{user.name}</span>
           </div>
         </motion.div>
       )}
 
-      {/* Scrollable Map Path */}
-      <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto overflow-x-hidden z-10 pb-32 custom-scrollbar">
-        <div className="min-h-screen w-full flex flex-col items-center pt-32 pb-64 relative">
+      {/* Main Scrollable Area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar scroll-smooth">
+        {modulesByZone.map((zoneData, zIdx) => (
+          zoneData.modules.length > 0 && (
+            <div key={zoneData.id} className="relative w-full min-h-screen flex flex-col items-center">
 
-          {/* SVG Path Connector (Simplified visual connector) */}
-          <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-visible">
-            {/* We would render path lines here if we calculated exact coordinates. 
-                    For now, we use a CSS-based approach for the "Road" look or simple dashed lines between nodes 
-                */}
-          </svg>
-
-          {modules.map((mod) => (
-            <div key={mod.id} className="w-full max-w-md flex flex-col items-center mb-24 relative">
-
-              {/* Module Start Banner */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                className="mb-12 bg-white/95 backdrop-blur shadow-2xl rounded-3xl p-6 border-b-8 border-slate-200 text-center relative max-w-sm"
+              {/* Zone Background */}
+              <div
+                className="absolute inset-0 bg-cover bg-center pointer-events-none z-0"
+                style={{ backgroundImage: `url(${zoneData.bg})` }}
               >
-                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{mod.nombreModulo}</h2>
-                <p className="text-slate-500 font-bold text-sm">Mundo {mod.id}</p>
-              </motion.div>
+                <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#1a1b26]/80" />
+              </div>
 
-              {/* Levels Path */}
-              <div className="flex flex-col items-center gap-16 w-full relative">
-                {mod.levels?.map((level: any, idx: number) => {
-                  // Calculate Zig Zag
-                  const xOffset = idx % 2 === 0 ? 0 : (idx % 4 === 1 ? -80 : 80);
-                  const isLocked = false; // logic placeholder
-                  const isActive = idx === 0; // Simulate first level active for demo if no proper status
+              {/* Zone Marker */}
+              <div className="sticky top-0 z-40 w-full flex justify-center py-6 pointer-events-none">
+                <motion.div
+                  initial={{ y: -50, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  className={`bg-gradient-to-r ${zoneData.color} text-white px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-4 border-white/20 backdrop-blur-md flex items-center gap-2 uppercase tracking-wide`}
+                >
+                  <MapPin className="w-5 h-5" />
+                  {zoneData.name}
+                </motion.div>
+              </div>
 
-                  return (
-                    <div
-                      key={level.id}
-                      className={`relative flex justify-center transition-all duration-500 ${isActive ? 'active-level-node' : ''}`}
-                      style={{ transform: `translateX(${xOffset}px)` }}
+              {/* Modules in this Zone */}
+              <div className="relative z-10 w-full max-w-2xl pt-20 pb-32 flex flex-col items-center gap-32">
+                {zoneData.modules.map((mod: any, mIdx: number) => (
+                  <div key={mod.id} className="w-full flex flex-col items-center">
+
+                    {/* Module Signpost */}
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl text-center mb-16 border-b-8 border-slate-200 max-w-sm relative group cursor-pointer"
                     >
-                      {/* Road Segment behind */}
-                      {idx < mod.levels.length - 1 && (
-                        <div
-                          className="absolute top-1/2 left-1/2 w-32 h-24 border-dashed border-4 border-white/60 -z-10 rounded-full"
-                          style={{
-                            transform: `translate(-50%, 0) rotate(${idx % 2 === 0 ? '-30deg' : '30deg'})`,
-                            width: '140px',
-                            height: '100px'
-                          }}
-                        />
-                      )}
-
-                      {/* Avatar Standing on Active Level */}
-                      {isActive && (
-                        <motion.div
-                          initial={{ y: -50, opacity: 0, scale: 0 }}
-                          animate={{ y: -85, opacity: 1, scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                          className="absolute left-1/2 -translate-x-1/2 z-30 w-24 h-24 pointer-events-none drop-shadow-2xl"
-                        >
-                          <img src={avatarBoy} alt="You" className="w-full h-full object-contain" />
-                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/40 blur-md w-12 h-4 rounded-full" />
-                        </motion.div>
-                      )}
-
-                      <Link href={`/level/${level.id}`}>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className={cn(
-                            "w-20 h-20 rounded-full flex items-center justify-center border-b-8 shadow-[0_10px_20px_rgba(0,0,0,0.2)] relative z-20 transition-all",
-                            isActive
-                              ? "bg-yellow-400 border-yellow-600"
-                              : "bg-slate-200 border-slate-300"
-                          )}
-                        >
-                          <div className="absolute -top-1 -left-1 w-full h-full rounded-full border-4 border-white/30" />
-
-                          {level.type === 'start' && <Play className="w-8 h-8 text-white fill-current" />}
-                          {level.type === 'star' && <Star className="w-8 h-8 text-white fill-current" />}
-                          {level.type === 'trophy' && <Trophy className="w-8 h-8 text-white fill-current" />}
-
-                          {/* Star Rating below level */}
-                          <div className="absolute -bottom-8 flex gap-0.5">
-                            {[1, 2, 3].map(s => (
-                              <Star key={s} className="w-3 h-3 text-yellow-400 fill-current" />
-                            ))}
-                          </div>
-                        </motion.button>
-                      </Link>
-
-                      {/* Level Number */}
-                      <div className="absolute top-0 -right-2 bg-white text-slate-800 text-xs font-black w-6 h-6 flex items-center justify-center rounded-full border-2 border-slate-100 shadow-md z-30">
-                        {idx + 1}
+                      <div className={`absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r ${zoneData.color} text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+                        Módulo {mod.id}
                       </div>
+                      <h3 className="text-2xl font-black text-slate-800 uppercase leading-none mt-2">{mod.nombreModulo}</h3>
+                    </motion.div>
+
+                    {/* Levels Path */}
+                    <div className="flex flex-col gap-12 items-center relative w-full">
+                      {mod.levels?.map((lvl: any, lIdx: number) => {
+                        // ZigZag Calculation (Global index feel)
+                        const globalIdx = mIdx * 10 + lIdx;
+                        const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -120 : 120);
+                        const isActive = zIdx === 0 && mIdx === 0 && lIdx === 0;
+
+                        return (
+                          <div key={lvl.id} className="relative group" style={{ transform: `translateX(${xOffset}px)` }}>
+                            {/* Path Connector Line (Dotted) */}
+                            {lIdx < mod.levels.length - 1 && (
+                              <div
+                                className="absolute top-1/2 left-1/2 w-1 h-32 border-l-4 border-dashed border-white/80 -z-10 origin-top"
+                                style={{
+                                  height: '140px',
+                                  transform: `rotate(${globalIdx % 2 === 0 ? '-25deg' : '25deg'}) translateX(-50%)`
+                                }}
+                              />
+                            )}
+
+                            {isActive && (
+                              <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-30 w-28 h-28 pointer-events-none drop-shadow-2xl animate-bounce-slow">
+                                <img src={currentAvatar} alt="You" className="w-full h-full object-contain" />
+                              </div>
+                            )}
+
+                            <Link href={`/level/${lvl.id}`}>
+                              <motion.button
+                                whileHover={{ scale: 1.2, rotate: [0, -5, 5, 0] }}
+                                whileTap={{ scale: 0.9 }}
+                                className={cn(
+                                  "w-20 h-20 rounded-full flex items-center justify-center border-4 shadow-[0_10px_20px_rgba(0,0,0,0.4)] relative z-20 transition-all",
+                                  isActive
+                                    ? "bg-gradient-to-b from-yellow-300 to-yellow-500 border-white shadow-[0_0_30px_rgba(234,179,8,0.6)]"
+                                    : "bg-slate-100 border-slate-300 hover:border-white"
+                                )}
+                              >
+                                {lvl.type === 'start' && <Play className={cn("w-8 h-8 fill-current", isActive ? "text-white" : "text-slate-400")} />}
+                                {lvl.type === 'star' && <Star className={cn("w-8 h-8 fill-current", isActive ? "text-white" : "text-slate-400")} />}
+                                {lvl.type === 'trophy' && <Trophy className={cn("w-8 h-8 fill-current", isActive ? "text-white" : "text-slate-400")} />}
+                              </motion.button>
+                            </Link>
+
+                            {/* Level Number */}
+                            <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 bg-white text-slate-900 w-8 h-8 rounded-full flex items-center justify-center font-black border-2 border-slate-200 shadow-md">
+                              {lIdx + 1}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )
-                })}
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          )
+        ))}
+
+        {/* Coming Soon Section */}
+        <div className="w-full py-32 bg-[#0f172a] text-center text-slate-500">
+          <MapPin className="w-16 h-16 mx-auto mb-4 opacity-20" />
+          <p className="uppercase font-bold tracking-widest text-sm">Próximamente más sectores</p>
         </div>
       </div>
-    </div>
+
+
+      <OnboardingWizard
+        isOpen={showOnboarding}
+        userId={user.id}
+        onComplete={handleOnboardingComplete}
+      />
+    </div >
   );
 }

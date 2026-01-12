@@ -19,4 +19,20 @@ export class StudentController {
     async getLevelContents(@Param('levelId', ParseIntPipe) levelId: number) {
         return this.studentService.getLevelContents(levelId);
     }
+
+    @Get(':id/module/:moduleId/progress')
+    async getModuleLevelProgress(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('moduleId', ParseIntPipe) moduleId: number
+    ) {
+        return this.studentService.getStudentLevelProgress(studentId, moduleId);
+    }
+
+    @Get(':id/level/:levelId/progress')
+    async getLevelProgress(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('levelId', ParseIntPipe) levelId: number
+    ) {
+        return this.studentService.calculateLevelProgress(studentId, levelId);
+    }
 }

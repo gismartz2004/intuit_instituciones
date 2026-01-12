@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, NotFoundException, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, NotFoundException, ParseIntPipe } from '@nestjs/common';
 import { ModulesService } from './modules.service';
 
 @Controller('modulos')
@@ -50,5 +50,10 @@ export class ModulesController {
     @Post('contenidos')
     async createContent(@Body() body: any) {
         return this.modulesService.createContent(body);
+    }
+
+    @Delete(':id')
+    async deleteModule(@Param('id', ParseIntPipe) id: number) {
+        return this.modulesService.deleteModule(id);
     }
 }

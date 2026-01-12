@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, UserPlus, Shield, Activity, Monitor, Layout, Box, Users, BookOpen, GraduationCap, TrendingUp, BarChart3, Clock } from "lucide-react";
+import { Search, Plus, UserPlus, Shield, Activity, Monitor, Layout, Box, Users, BookOpen, GraduationCap, TrendingUp, BarChart3, Clock, Trash2, Ban, CheckCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -215,6 +215,48 @@ export default function AdminDashboard() {
       }
     } catch (e) {
       toast({ title: "Error", description: "No se pudo actualizar el plan", variant: "destructive" });
+    }
+  };
+
+  const handleToggleActive = async (user: any) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/usuarios/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activo: !user.activo })
+      });
+      if (res.ok) {
+        toast({ title: "Estado actualizado", description: `Usuario ${!user.activo ? 'activado' : 'desactivado'}.` });
+        fetchUsers();
+      }
+    } catch (e) {
+      toast({ title: "Error", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm("¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.")) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/usuarios/${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast({ title: "Usuario eliminado" });
+        fetchUsers();
+      }
+    } catch (e) {
+      toast({ title: "Error", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteModule = async (moduleId: number) => {
+    if (!confirm("¿Estás seguro de eliminar este módulo? Se borrarán todos los niveles y contenidos.")) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/modulos/${moduleId}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast({ title: "Módulo eliminado" });
+        fetchModules();
+      }
+    } catch (e) {
+      toast({ title: "Error", variant: "destructive" });
     }
   };
 
@@ -460,9 +502,25 @@ export default function AdminDashboard() {
                           )) : <span className="text-slate-300 italic text-xs">Sin módulos</span>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 font-bold">
-                          Configurar
+
+                      <TableCell className="text-right flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={user.activo ? "text-green-500 hover:text-green-700 hover:bg-green-50" : "text-slate-400 hover:text-slate-600"}
+                          onClick={() => handleToggleActive(user)}
+                          title={user.activo ? "Desactivar Cuenta" : "Activar Cuenta"}
+                        >
+                          {user.activo ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleDeleteUser(user.id)}
+                          title="Eliminar Usuario"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -585,6 +643,15 @@ export default function AdminDashboard() {
                             >
                               Ver Detalles
                             </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteModule(mod.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -634,6 +701,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </TabsContent>
+
 
         <TabsContent value="monitoring">
           <div className="space-y-6">
@@ -698,7 +766,7 @@ export default function AdminDashboard() {
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
-    </div>
+      </Tabs >
+    </div >
   );
 }

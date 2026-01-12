@@ -122,4 +122,28 @@ export class ModulesService {
         const [assignment] = await this.db.insert(schema.asignaciones).values(data).returning();
         return assignment;
     }
+
+    async deleteModule(moduleId: number) {
+        // 1. Delete assignments
+        await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.moduloId, moduleId));
+
+        // 2. Get Levels to delete their contents first
+        const levels = await this.db.select().from(schema.niveles).where(eq(schema.niveles.moduloId, moduleId));
+
+        for (const level of levels) {
+            await this.db.delete(schema.contenidos).where(eq(schema.contenidos.nivelId, level.id));
+            await this.db.delete(schema.actividades).where(eq(schema.actividades.nivelId, level.id));
+        }
+
+        // 3. Delete Levels
+        await this.db.delete(schema.niveles).where(eq(schema.niveles.moduloId, moduleId));
+
+        // 4. Delete Certificados
+        await this.db.delete(schema.certificados).where(eq(schema.certificados.moduloId, moduleId));
+
+        // 5. Delete Module
+        await this.db.delete(schema.modulos).where(eq(schema.modulos.id, moduleId));
+
+        return { success: true };
+    }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, NotFoundException, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, NotFoundException, ParseIntPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { InsertUsuario, insertUsuarioSchema } from 'src/shared/schema';
 
@@ -32,5 +32,10 @@ export class UsersController {
     @Patch(':id')
     async updateUser(@Param('id', ParseIntPipe) id: number, @Body() updates: any) {
         return this.usersService.updateUser(id, updates);
+    }
+
+    @Delete(':id')
+    async deleteUser(@Param('id', ParseIntPipe) id: number) {
+        return this.usersService.deleteUser(id);
     }
 }

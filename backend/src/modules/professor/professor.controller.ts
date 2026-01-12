@@ -82,4 +82,9 @@ export class ProfessorController {
     async deleteContent(@Param('id', ParseIntPipe) contentId: number) {
         return this.professorService.deleteContent(contentId);
     }
+
+    @Delete('levels/:id')
+    async deleteLevel(@Param('id', ParseIntPipe) levelId: number) {
+        return this.professorService.deleteLevel(levelId);
+    }
 }

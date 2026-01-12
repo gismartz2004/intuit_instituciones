@@ -140,4 +140,15 @@ export class ProfessorService {
             //.where(eq(schema.recursos.profesorId, profesorId)) // Descomentar cuando tengamos auth real
             .orderBy(asc(schema.recursos.fechaSubida));
     }
+
+    async deleteLevel(levelId: number) {
+        // Cascade delete contents
+        await this.db.delete(schema.contenidos).where(eq(schema.contenidos.nivelId, levelId));
+        // Cascade delete activities
+        await this.db.delete(schema.actividades).where(eq(schema.actividades.nivelId, levelId));
+
+        // Delete the level itself
+        await this.db.delete(schema.niveles).where(eq(schema.niveles.id, levelId));
+        return { success: true };
+    }
 }

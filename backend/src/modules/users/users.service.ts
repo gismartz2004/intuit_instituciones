@@ -61,4 +61,25 @@ export class UsersService {
             .returning();
         return updatedUser;
     }
+
+    async deleteUser(id: number) {
+        // Delete related data first (Manual Cascade)
+        // 1. Assignments (Asignaciones)
+        await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.estudianteId, id));
+        await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.profesorId, id));
+
+        // 2. Point Logs (PuntosLog)
+        await this.db.delete(schema.puntosLog).where(eq(schema.puntosLog.estudianteId, id));
+
+        // 3. Deliveries (Entregas)
+        await this.db.delete(schema.entregas).where(eq(schema.entregas.estudianteId, id));
+
+        // 4. Certificates and Rankings
+        await this.db.delete(schema.certificados).where(eq(schema.certificados.estudianteId, id));
+        await this.db.delete(schema.rankingAwards).where(eq(schema.rankingAwards.estudianteId, id));
+
+        // Finally delete the user
+        await this.db.delete(schema.usuarios).where(eq(schema.usuarios.id, id));
+        return { success: true };
+    }
 }

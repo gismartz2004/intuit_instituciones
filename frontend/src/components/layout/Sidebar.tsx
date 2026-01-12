@@ -15,9 +15,13 @@ import {
   Bot,
   Award,
   FileText,
-  Cpu
+  Cpu,
+  Menu,
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import generatedImage from '@assets/generated_images/arg_academy_logo.png'
+import { Button } from "@/components/ui/button";
 
 type Role = "student" | "admin" | "professor";
 
@@ -25,7 +29,7 @@ interface SidebarProps {
   currentRole: Role;
   onRoleChange: (role: Role) => void;
   onLogout: () => void;
-  userPlanId?: number; // Add plan ID prop
+  userPlanId?: number;
 }
 
 const iconMap: Record<string, any> = {
@@ -39,7 +43,7 @@ const iconMap: Record<string, any> = {
   Shield,
   Settings,
   GraduationCap,
-  Gift: Store, // Using Store icon for Gift
+  Gift: Store,
   Cpu
 };
 
@@ -47,6 +51,7 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
   const [location] = useLocation();
   const [studentLinks, setStudentLinks] = useState<any[]>([]);
 
+  // Fetch logic preserved
   useEffect(() => {
     if (currentRole === "student" && userPlanId) {
       fetchPlanFeatures();
@@ -63,15 +68,12 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
           icon: iconMap[item.icon] || Book,
           label: item.label
         }));
-        // Manually append Lab for now if backend doesn't send it
         if (!links.find((l: any) => l.href === '/arduino-lab')) {
           links.push({ href: "/arduino-lab", icon: Cpu, label: "Laboratorio" });
         }
         setStudentLinks(links);
       }
     } catch (error) {
-      console.error("Error fetching plan features:", error);
-      // Fallback to basic plan
       setStudentLinks([
         { href: "/dashboard", icon: Book, label: "Aprende" },
         { href: "/profile", icon: User, label: "Perfil" },
@@ -86,13 +88,10 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
     { href: "/profile", icon: Settings, label: "Configuración" },
   ];
 
-  // Professor links are now dynamically set into studentLinks state based on the useEffect logic
-  // The original professorLinks array is no longer directly used for rendering if the useEffect handles it.
-  // Keeping it here for reference or if the dynamic setting is only for student.
   const professorLinks = [
     { href: "/teach", icon: GraduationCap, label: "Mis Módulos" },
-    { href: "/files", icon: FileText, label: "Sistema de Archivos" },
-    { href: "/profile", icon: Settings, label: "Configuración" },
+    { href: "/files", icon: FileText, label: "Archivos" },
+    { href: "/profile", icon: Settings, label: "Perfil" },
   ];
 
   const links = currentRole === "admin" ? adminLinks :
@@ -100,49 +99,88 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
       studentLinks;
 
   return (
-    <div className="flex h-screen w-[280px] flex-col border-r-2 border-slate-200 bg-white p-4 fixed left-0 top-0 z-10 hidden md:flex">
-      <div className="mb-8 px-4 flex items-center gap-2">
-        <img src={generatedImage} alt="ARG Academy" className="h-10 w-10 object-contain" />
-        <h1 className="text-2xl font-extrabold text-[#0047AB] tracking-tighter">
-          ARG
-        </h1>
+    <div className="hidden md:flex flex-col w-[280px] h-screen bg-white fixed left-0 top-0 z-50 shadow-2xl border-r border-slate-100">
+
+      {/* Brand Header using Glassmorphism */}
+      <div className="relative h-24 flex items-center px-6 overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -translate-y-10 translate-x-10 pointer-events-none" />
+        <div className="flex items-center gap-3 z-10">
+          <div className="relative group cursor-pointer">
+            <div className="absolute inset-0 bg-blue-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
+            <img src={generatedImage} alt="Logo" className="h-12 w-12 object-contain relative rounded-xl shadow-sm bg-white p-1" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 leading-none tracking-tight">ARG</h1>
+            <span className="text-xs font-bold text-blue-600 tracking-widest uppercase">Academy</span>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 space-y-2">
+      {/* Navigation Links */}
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
         {links.map((link) => {
           const isActive = location === link.href;
           return (
             <Link key={link.href} href={link.href}>
               <div
                 className={cn(
-                  "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer border-2 border-transparent",
+                  "group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden",
                   isActive
-                    ? "bg-[#E5F3FF] text-[#0047AB] border-[#84D8FF]"
-                    : "text-slate-500 hover:bg-slate-100"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 translate-x-1"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-                <link.icon className={cn("h-6 w-6", isActive ? "fill-[#0047AB]" : "")} />
-                {link.label}
+                {/* Active Indicator Glow */}
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl -z-10" />
+                )}
+
+                <div className={cn(
+                  "p-2 rounded-xl transition-colors",
+                  isActive ? "bg-white/20" : "bg-slate-100 group-hover:bg-white border border-slate-100 group-hover:border-slate-200 group-hover:shadow-sm"
+                )}>
+                  <link.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-500 group-hover:text-blue-600")} />
+                </div>
+
+                <span className={cn("font-bold text-sm tracking-wide", isActive ? "text-white" : "")}>
+                  {link.label}
+                </span>
+
+                {isActive && (
+                  <ChevronRight className="ml-auto w-4 h-4 text-white/70 animate-pulse" />
+                )}
               </div>
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t-2 border-slate-100 pt-4 px-4 space-y-4">
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-4 w-full rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="h-6 w-6" />
-          Cerrar Sesión
-        </button>
-
-        <div className="flex items-center gap-3 text-slate-400">
-          <div className="bg-slate-100 p-2 rounded-lg">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+      {/* Bottom Action Area */}
+      <div className="p-4 mt-auto space-y-4">
+        {/* Premium Upgrade Card (Visual Only) */}
+        {currentRole === 'student' && (
+          <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl p-4 text-white relative overflow-hidden shadow-lg group cursor-pointer hover:shadow-xl transition-shadow">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -translate-y-5 translate-x-5" />
+            <div className="flex items-start justify-between relative z-10">
+              <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                <Sparkles className="w-5 h-5 text-yellow-300 fill-current" />
+              </div>
+            </div>
+            <div className="mt-3 relative z-10">
+              <p className="font-bold text-sm">Plan Pro</p>
+              <p className="text-[10px] text-white/70 leading-tight mt-1">Desbloquea todos los niveles y skins.</p>
+            </div>
           </div>
-          <p className="text-xs font-bold uppercase">Sistema Online</p>
+        )}
+
+        <div className="border-t border-slate-100 pt-4">
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all font-bold text-sm group"
+          >
+            <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </div>
     </div>
