@@ -28,7 +28,8 @@ export class ProfessorService {
             return {
                 ...mod,
                 studentsCount: studentAssignments.length,
-                students: studentAssignments.map(s => s.user)
+                students: studentAssignments.map(s => s.user),
+                levels: await this.db.select().from(schema.niveles).where(eq(schema.niveles.moduloId, mod.id)).orderBy(asc(schema.niveles.orden))
             };
         }));
 

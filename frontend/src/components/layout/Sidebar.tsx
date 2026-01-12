@@ -14,7 +14,8 @@ import {
   Settings,
   Bot,
   Award,
-  FileText
+  FileText,
+  Cpu
 } from "lucide-react";
 import generatedImage from '@assets/generated_images/arg_academy_logo.png'
 
@@ -38,7 +39,8 @@ const iconMap: Record<string, any> = {
   Shield,
   Settings,
   GraduationCap,
-  Gift: Store // Using Store icon for Gift
+  Gift: Store, // Using Store icon for Gift
+  Cpu
 };
 
 export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }: SidebarProps) {
@@ -61,6 +63,10 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
           icon: iconMap[item.icon] || Book,
           label: item.label
         }));
+        // Manually append Lab for now if backend doesn't send it
+        if (!links.find((l: any) => l.href === '/arduino-lab')) {
+          links.push({ href: "/arduino-lab", icon: Cpu, label: "Laboratorio" });
+        }
         setStudentLinks(links);
       }
     } catch (error) {
@@ -68,7 +74,8 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
       // Fallback to basic plan
       setStudentLinks([
         { href: "/dashboard", icon: Book, label: "Aprende" },
-        { href: "/profile", icon: User, label: "Perfil" }
+        { href: "/profile", icon: User, label: "Perfil" },
+        { href: "/arduino-lab", icon: Cpu, label: "Laboratorio" }
       ]);
     }
   };

@@ -15,6 +15,7 @@ import ProCourses from "@/pages/ProCourses";
 import GamerRaffle from "@/pages/GamerRaffle";
 import LevelViewer from "@/pages/LevelViewer";
 import FileSystem from "@/pages/FileSystem";
+import ArduinoLab from "@/pages/ArduinoLab";
 import { Toaster } from "@/components/ui/toaster";
 
 function App() {
@@ -44,7 +45,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      {user && location !== "/login" && location !== "/lab" && (
+      {user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && (
         <>
           <Sidebar
             currentRole={user.role}
@@ -56,7 +57,7 @@ function App() {
         </>
       )}
 
-      <main className={`flex-1 min-h-screen bg-slate-50/50 ${user && location !== "/login" && location !== "/lab" ? "md:ml-[280px] pb-20 md:pb-0" : ""}`}>
+      <main className={`flex-1 min-h-screen bg-slate-50/50 ${user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" ? "md:ml-[280px] pb-20 md:pb-0" : ""}`}>
         <Switch>
           <Route path="/login">
             {user ? <Redirect to="/" /> : <Login onLogin={handleLogin} />}
@@ -79,6 +80,7 @@ function App() {
           </Route>
           <Route path="/teach/module/:id" component={CourseEditor} />
           <Route path="/lab" component={CodingLab} />
+          <Route path="/arduino-lab" component={ArduinoLab} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/ai-tutor" component={AITutor} />
           <Route path="/pro-courses" component={ProCourses} />

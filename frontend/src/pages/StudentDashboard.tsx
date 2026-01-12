@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { Star, Lock, Check, Zap, Play, Trophy, Flame, Target } from "lucide-react";
+import { Star, Lock, Check, Zap, Play, Trophy, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Assets
+import mapBg from "@/assets/gamification/map_bg.png";
+import avatarBoy from "@/assets/gamification/avatar_boy.png";
 
 interface StudentDashboardProps {
   user: {
@@ -15,6 +19,7 @@ interface StudentDashboardProps {
 export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [modules, setModules] = useState<any[]>([]);
   const [progress, setProgress] = useState<any>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -23,6 +28,18 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     }
   }, [user]);
 
+  // Scroll to active level on load
+  useEffect(() => {
+    if (modules.length > 0) {
+      setTimeout(() => {
+        const activeNode = document.querySelector('.active-level-node');
+        if (activeNode) {
+          activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+  }, [modules]);
+
   const fetchModules = async () => {
     try {
       const res = await fetch(`http://localhost:3000/api/student/${user.id}/modules`);
@@ -30,12 +47,17 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         const data = await res.json();
         const mappedData = data.map((mod: any, idx: number) => ({
           ...mod,
-          color: idx % 2 === 0 ? "from-emerald-400 to-green-500" : "from-purple-400 to-violet-500",
           levels: mod.levels?.map((lvl: any, lIdx: number) => ({
             ...lvl,
-            type: lIdx === 0 ? "star" : (lIdx === mod.levels.length - 1 ? "trophy" : "book"),
-            status: "active",
-            x: (lIdx % 2 === 0) ? 0 : (lIdx % 4 === 1 ? -40 : 40)
+            // Map ZigZag Logic: Alternating Left/Right offsets
+            // Base center is 0. 
+            // 0 -> 0 (Center)
+            // 1 -> -100 (Left)
+            // 2 -> 100 (Right)
+            // Simple Sine wave pattern
+            xOffset: Math.sin(lIdx) * 120,
+            status: "active", // Logic should come from backend, assuming active for demo if not provided
+            type: lIdx === 0 ? "start" : (lIdx === mod.levels.length - 1 ? "trophy" : "star")
           })) || []
         }));
         setModules(mappedData);
@@ -58,239 +80,141 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      {/* Enhanced User Profile Header - Bottom Right */}
+    <div className="relative h-screen overflow-hidden bg-[#87CEEB]">
+
+      {/* City Map Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0 opacity-100"
+        style={{ backgroundImage: `url(${mapBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      >
+        {/* Overlay for better text contrast if needed, reducing opacity */}
+        {/* <div className="absolute inset-0 bg-white/20" /> */}
+      </div>
+
+      {/* Floating HUD - Points & Avatar */}
       {progress && (
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="fixed bottom-4 right-4 z-50 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/50 p-3 w-[220px]"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="absolute top-4 right-4 z-50 flex gap-3"
         >
-          <div className="flex items-center gap-2 mb-2">
-            {/* Compact Avatar */}
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                {user.name[0].toUpperCase()}
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-xl border-b-4 border-slate-200 flex items-center gap-2">
+            <div className="bg-orange-500 rounded-full p-1">
+              <Zap className="w-4 h-4 text-white" fill="currentColor" />
             </div>
-
-            {/* Compact Name */}
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-slate-800 text-sm truncate">{user.name}</p>
-              <p className="text-[10px] text-slate-500 font-medium">Estudiante</p>
-            </div>
+            <span className="font-black text-orange-600 text-lg">{progress.totalPoints || 0}</span>
           </div>
 
-          {/* Compact Stats Grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* Points Card */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl p-2 border border-orange-200/50"
-            >
-              <div className="flex items-center gap-1 mb-1">
-                <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center">
-                  <Zap className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-[9px] font-bold text-orange-700 uppercase">Pts</span>
-              </div>
-              <p className="text-xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                {progress.totalPoints || 0}
-              </p>
-            </motion.div>
-
-            {/* Streak Card */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="bg-gradient-to-br from-red-50 to-pink-100 rounded-xl p-2 border border-red-200/50"
-            >
-              <div className="flex items-center gap-1 mb-1">
-                <div className="w-5 h-5 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
-                  <Flame className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-[9px] font-bold text-red-700 uppercase">Racha</span>
-              </div>
-              <p className="text-xl font-black bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-                0
-              </p>
-            </motion.div>
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-xl border-b-4 border-slate-200 flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-blue-400 overflow-hidden">
+              <img src={avatarBoy} alt="Avatar" className="w-full h-full object-cover" />
+            </div>
+            <span className="font-bold text-slate-700">{user.name}</span>
           </div>
         </motion.div>
       )}
 
-      {/* Main Content */}
-      <div className="flex justify-center pb-24 pt-12 px-4">
-        <div className="w-full max-w-[700px]">
-          {modules.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center text-slate-500 mt-20 bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-lg"
-            >
-              <Target className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <p className="text-lg font-semibold">No tienes módulos asignados aún</p>
-              <p className="text-sm text-slate-400 mt-2">Contacta a tu profesor para comenzar</p>
-            </motion.div>
-          ) : (
-            <AnimatePresence>
-              {modules.map((mod, modIdx) => {
-                const moduleProgress = progress?.moduleProgress?.find((p: any) => p.moduloId === mod.id);
+      {/* Scrollable Map Path */}
+      <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto overflow-x-hidden z-10 pb-32 custom-scrollbar">
+        <div className="min-h-screen w-full flex flex-col items-center pt-32 pb-64 relative">
 
-                return (
-                  <motion.div
-                    key={mod.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: modIdx * 0.1 }}
-                    className="mb-16"
-                  >
-                    {/* Enhanced Module Header */}
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className={cn(
-                        "rounded-3xl p-8 mb-6 text-white shadow-2xl relative overflow-hidden bg-gradient-to-br",
-                        mod.color
-                      )}
+          {/* SVG Path Connector (Simplified visual connector) */}
+          <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-visible">
+            {/* We would render path lines here if we calculated exact coordinates. 
+                    For now, we use a CSS-based approach for the "Road" look or simple dashed lines between nodes 
+                */}
+          </svg>
+
+          {modules.map((mod) => (
+            <div key={mod.id} className="w-full max-w-md flex flex-col items-center mb-24 relative">
+
+              {/* Module Start Banner */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                className="mb-12 bg-white/95 backdrop-blur shadow-2xl rounded-3xl p-6 border-b-8 border-slate-200 text-center relative max-w-sm"
+              >
+                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{mod.nombreModulo}</h2>
+                <p className="text-slate-500 font-bold text-sm">Mundo {mod.id}</p>
+              </motion.div>
+
+              {/* Levels Path */}
+              <div className="flex flex-col items-center gap-16 w-full relative">
+                {mod.levels?.map((level: any, idx: number) => {
+                  // Calculate Zig Zag
+                  const xOffset = idx % 2 === 0 ? 0 : (idx % 4 === 1 ? -80 : 80);
+                  const isLocked = false; // logic placeholder
+                  const isActive = idx === 0; // Simulate first level active for demo if no proper status
+
+                  return (
+                    <div
+                      key={level.id}
+                      className={`relative flex justify-center transition-all duration-500 ${isActive ? 'active-level-node' : ''}`}
+                      style={{ transform: `translateX(${xOffset}px)` }}
                     >
-                      {/* Decorative Elements */}
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
-                      <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl translate-y-24 -translate-x-24"></div>
-
-                      <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex-1">
-                            <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold mb-3">
-                              MÓDULO ACTIVO
-                            </div>
-                            <h2 className="text-3xl font-black mb-2">{mod.nombreModulo}</h2>
-                            <p className="opacity-90 font-medium text-sm">
-                              {mod.duracionDias ? `${mod.duracionDias} Días de duración` : "Módulo de aprendizaje"}
-                            </p>
-                          </div>
-                          <Link href={`/unit/${mod.id}`}>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-8 rounded-2xl transition-all border-2 border-white/30 shadow-lg"
-                            >
-                              EMPEZAR
-                            </motion.button>
-                          </Link>
-                        </div>
-
-                        {/* Enhanced Progress Bar */}
-                        {moduleProgress && (
-                          <div className="mt-6">
-                            <div className="flex justify-between text-sm mb-3 font-semibold">
-                              <span>Progreso: Día {moduleProgress.daysElapsed} de {moduleProgress.totalDays}</span>
-                              <span className="bg-white/20 px-3 py-1 rounded-full">{moduleProgress.progressPercentage}%</span>
-                            </div>
-                            <div className="w-full bg-black/20 backdrop-blur-sm rounded-full h-4 overflow-hidden shadow-inner">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${moduleProgress.progressPercentage}%` }}
-                                transition={{ duration: 1, ease: "easeOut" }}
-                                className="bg-white rounded-full h-4 shadow-lg relative"
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/40 to-white/0 animate-pulse"></div>
-                              </motion.div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-
-                    {/* Enhanced Lesson Path */}
-                    <div className="flex flex-col items-center gap-8 relative">
-                      {/* Connecting Line */}
-                      <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-200 via-slate-300 to-slate-200 -translate-x-1/2 -z-10"></div>
-
-                      {mod.levels && mod.levels.length > 0 ? (
-                        mod.levels.map((level: any, idx: number) => (
-                          <LessonNode key={level.id} lesson={level} index={idx} />
-                        ))
-                      ) : (
-                        <p className="text-slate-400 italic bg-white/80 px-6 py-4 rounded-2xl">
-                          No hay niveles disponibles
-                        </p>
+                      {/* Road Segment behind */}
+                      {idx < mod.levels.length - 1 && (
+                        <div
+                          className="absolute top-1/2 left-1/2 w-32 h-24 border-dashed border-4 border-white/60 -z-10 rounded-full"
+                          style={{
+                            transform: `translate(-50%, 0) rotate(${idx % 2 === 0 ? '-30deg' : '30deg'})`,
+                            width: '140px',
+                            height: '100px'
+                          }}
+                        />
                       )}
+
+                      {/* Avatar Standing on Active Level */}
+                      {isActive && (
+                        <motion.div
+                          initial={{ y: -50, opacity: 0, scale: 0 }}
+                          animate={{ y: -85, opacity: 1, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                          className="absolute left-1/2 -translate-x-1/2 z-30 w-24 h-24 pointer-events-none drop-shadow-2xl"
+                        >
+                          <img src={avatarBoy} alt="You" className="w-full h-full object-contain" />
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/40 blur-md w-12 h-4 rounded-full" />
+                        </motion.div>
+                      )}
+
+                      <Link href={`/level/${level.id}`}>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className={cn(
+                            "w-20 h-20 rounded-full flex items-center justify-center border-b-8 shadow-[0_10px_20px_rgba(0,0,0,0.2)] relative z-20 transition-all",
+                            isActive
+                              ? "bg-yellow-400 border-yellow-600"
+                              : "bg-slate-200 border-slate-300"
+                          )}
+                        >
+                          <div className="absolute -top-1 -left-1 w-full h-full rounded-full border-4 border-white/30" />
+
+                          {level.type === 'start' && <Play className="w-8 h-8 text-white fill-current" />}
+                          {level.type === 'star' && <Star className="w-8 h-8 text-white fill-current" />}
+                          {level.type === 'trophy' && <Trophy className="w-8 h-8 text-white fill-current" />}
+
+                          {/* Star Rating below level */}
+                          <div className="absolute -bottom-8 flex gap-0.5">
+                            {[1, 2, 3].map(s => (
+                              <Star key={s} className="w-3 h-3 text-yellow-400 fill-current" />
+                            ))}
+                          </div>
+                        </motion.button>
+                      </Link>
+
+                      {/* Level Number */}
+                      <div className="absolute top-0 -right-2 bg-white text-slate-800 text-xs font-black w-6 h-6 flex items-center justify-center rounded-full border-2 border-slate-100 shadow-md z-30">
+                        {idx + 1}
+                      </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          )}
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
-  );
-}
-
-function LessonNode({ lesson, index }: { lesson: any; index: number }) {
-  const isLocked = lesson.status === "locked";
-  const isActive = lesson.status === "active";
-
-  return (
-    <motion.div
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
-      className="relative z-10"
-      style={{ transform: `translateX(${lesson.x}px)` }}
-    >
-      <Link href={isLocked ? "#" : `/level/${lesson.id}`}>
-        <motion.div
-          whileHover={{ scale: 1.1, rotate: 5 }}
-          whileTap={{ scale: 0.95 }}
-          className="group relative cursor-pointer"
-        >
-          {/* Glow Effect */}
-          {isActive && (
-            <div className="absolute inset-0 bg-blue-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
-          )}
-
-          {/* Shadow/Depth */}
-          <div
-            className={cn(
-              "absolute top-3 left-0 w-full h-full rounded-2xl transition-all",
-              isLocked ? "bg-slate-300" : "bg-blue-800"
-            )}
-          />
-
-          {/* Main Button */}
-          <div
-            className={cn(
-              "w-24 h-24 rounded-2xl flex items-center justify-center relative transition-all border-4 z-10 shadow-xl",
-              isLocked
-                ? "bg-slate-200 border-slate-300 text-slate-400"
-                : isActive
-                  ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-300 text-white shadow-[0_0_30px_rgba(59,130,246,0.5)]"
-                  : "bg-gradient-to-br from-blue-400 to-blue-500 border-blue-400 text-white"
-            )}
-          >
-            {lesson.type === "star" && <Star className="w-10 h-10 fill-current drop-shadow-lg" />}
-            {lesson.type === "book" && <Check className="w-10 h-10 stroke-[4] drop-shadow-lg" />}
-            {lesson.type === "trophy" && <Trophy className="w-10 h-10 fill-current drop-shadow-lg" />}
-
-            {isActive && (
-              <motion.div
-                initial={{ y: -10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ repeat: Infinity, duration: 1, repeatType: "reverse" }}
-                className="absolute -top-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase shadow-lg border-2 border-white"
-              >
-                ¡Empezar!
-              </motion.div>
-            )}
-
-            {/* Level Number Badge */}
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center font-black text-xs text-slate-700 shadow-lg border-2 border-slate-100">
-              {index + 1}
-            </div>
-          </div>
-        </motion.div>
-      </Link>
-    </motion.div>
   );
 }
