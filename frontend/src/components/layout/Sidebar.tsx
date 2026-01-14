@@ -21,7 +21,6 @@ import {
   Sparkles
 } from "lucide-react";
 import generatedImage from '@assets/generated_images/arg_academy_logo.png'
-import { Button } from "@/components/ui/button";
 
 type Role = "student" | "admin" | "professor";
 
@@ -77,7 +76,8 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
       setStudentLinks([
         { href: "/dashboard", icon: Book, label: "Aprende" },
         { href: "/profile", icon: User, label: "Perfil" },
-        { href: "/arduino-lab", icon: Cpu, label: "Laboratorio" }
+        { href: "/arduino-lab", icon: Cpu, label: "Laboratorio" },
+        { href: "/dashboard-3d", icon: Sparkles, label: "Mapa 3D (Beta)" }
       ]);
     }
   };
@@ -124,7 +124,7 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
             <Link key={link.href} href={link.href}>
               <div
                 className={cn(
-                  "group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden",
+                  "m-2 group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden",
                   isActive
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 translate-x-1"
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
@@ -158,7 +158,7 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
       {/* Bottom Action Area */}
       <div className="p-4 mt-auto space-y-4">
         {/* Premium Upgrade Card (Visual Only) */}
-        {currentRole === 'student' && (
+        {/* {currentRole === 'student' && (
           <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl p-4 text-white relative overflow-hidden shadow-lg group cursor-pointer hover:shadow-xl transition-shadow">
             <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -translate-y-5 translate-x-5" />
             <div className="flex items-start justify-between relative z-10">
@@ -171,7 +171,7 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
               <p className="text-[10px] text-white/70 leading-tight mt-1">Desbloquea todos los niveles y skins.</p>
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="border-t border-slate-100 pt-4">
           <button

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import StudentDashboard from "@/pages/StudentDashboard";
+import StudentDashboard3D from "@/pages/StudentDashboard3D";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ProfessorDashboard from "@/pages/ProfessorDashboard";
 import CodingLab from "@/pages/CodingLab";
@@ -72,6 +73,9 @@ function App() {
 
           <Route path="/dashboard">
             <StudentDashboard user={user!} />
+          </Route>
+          <Route path="/dashboard-3d">
+            <StudentDashboard3D user={user!} />
           </Route>
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/users" component={AdminDashboard} />
