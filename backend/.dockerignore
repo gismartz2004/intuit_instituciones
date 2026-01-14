@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Build outputs
+dist
+build
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+
+# Testing (Opcional: puedes dejarlos fuera si no corres tests en el build)
+coverage
+.nyc_output
+
+# IDE
+.vscode
+.idea
+*.swp
+.DS_Store
+
+# Git
+.git
+.gitignore
+
+# Archivos pesados innecesarios
+build_errors.txt

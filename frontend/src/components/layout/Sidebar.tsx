@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Sparkles
 } from "lucide-react";
-import generatedImage from '@assets/generated_images/arg_academy_logo.png'
+import generatedImage from '@/assets/generated_images/arg_academy_logo.png';
 
 type Role = "student" | "admin" | "professor";
 
