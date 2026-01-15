@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import apiClient from "@/services/api.client";
 import {
   Book,
   Trophy,
@@ -59,19 +60,16 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
 
   const fetchPlanFeatures = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/plans/${userPlanId}/features`);
-      if (res.ok) {
-        const planData = await res.json();
-        const links = planData.sidebar.map((item: any) => ({
-          href: item.path,
-          icon: iconMap[item.icon] || Book,
-          label: item.label
-        }));
-        if (!links.find((l: any) => l.href === '/arduino-lab')) {
-          links.push({ href: "/arduino-lab", icon: Cpu, label: "Laboratorio" });
-        }
-        setStudentLinks(links);
+      const planData = await apiClient.get<any>(`/api/plans/${userPlanId}/features`);
+      const links = planData.sidebar.map((item: any) => ({
+        href: item.path,
+        icon: iconMap[item.icon] || Book,
+        label: item.label
+      }));
+      if (!links.find((l: any) => l.href === '/arduino-lab')) {
+        links.push({ href: "/arduino-lab", icon: Cpu, label: "Laboratorio" });
       }
+      setStudentLinks(links);
     } catch (error) {
       setStudentLinks([
         { href: "/dashboard", icon: Book, label: "Aprende" },
