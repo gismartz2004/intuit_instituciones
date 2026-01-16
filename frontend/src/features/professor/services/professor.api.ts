@@ -33,7 +33,19 @@ export interface CreateContentPayload {
   orden: number;
 }
 
+export interface CreateModulePayload {
+  title: string;
+  description: string;
+  professorId: string;
+}
+
 export const professorApi = {
+  /**
+   * Crear un nuevo módulo
+   */
+  async createModule(payload: CreateModulePayload): Promise<any> {
+    return apiClient.post<any>('/api/modules', payload);
+  },
   /**
    * Obtener los módulos asignados al profesor
    */
@@ -91,6 +103,13 @@ export const professorApi = {
   },
 
   /**
+   * Eliminar contenido
+   */
+  async deleteContent(contentId: number): Promise<void> {
+    return apiClient.delete<void>(`/api/professor/contents/${contentId}`);
+  },
+
+  /**
    * Obtener recursos del profesor
    */
   async getResources(): Promise<any[]> {
@@ -102,16 +121,26 @@ export const professorApi = {
    */
   async uploadFile(formData: FormData): Promise<any> {
     // Special case for file upload - use fetch directly
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/professor/upload`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const response = await fetch(`${baseUrl}/api/professor/upload`, {
       method: 'POST',
       body: formData,
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al subir archivo');
     }
-    
+
     return response.json();
+  },
+
+  // RAG Templates
+  async saveRagTemplate(levelId: number, data: any): Promise<any> {
+    return apiClient.post(`/professor/levels/${levelId}/rag`, data);
+  },
+
+  async getRagTemplate(levelId: number): Promise<any> {
+    return apiClient.get(`/professor/levels/${levelId}/rag`);
   },
 };
 

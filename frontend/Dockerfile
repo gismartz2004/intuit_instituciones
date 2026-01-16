@@ -25,8 +25,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments for environment variables
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Build the application
 RUN npm run build
@@ -50,12 +50,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create non-root user for better security
 RUN addgroup -g 1001 -S nginx-group && \
-    adduser -S nginx-user -u 1001 -G nginx-group && \
-    chown -R nginx-user:nginx-group /usr/share/nginx/html && \
-    chown -R nginx-user:nginx-group /var/cache/nginx && \
-    chown -R nginx-user:nginx-group /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx-user:nginx-group /var/run/nginx.pid
+  adduser -S nginx-user -u 1001 -G nginx-group && \
+  chown -R nginx-user:nginx-group /usr/share/nginx/html && \
+  chown -R nginx-user:nginx-group /var/cache/nginx && \
+  chown -R nginx-user:nginx-group /var/log/nginx && \
+  touch /var/run/nginx.pid && \
+  chown -R nginx-user:nginx-group /var/run/nginx.pid
 
 # Switch to non-root user
 USER nginx-user

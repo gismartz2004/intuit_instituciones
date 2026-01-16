@@ -5,11 +5,11 @@
 
 const getEnvVar = (key: string, defaultValue?: string): string => {
   const value = import.meta.env[key] || defaultValue;
-  
+
   if (!value) {
     console.warn(`⚠️ Environment variable ${key} is not defined`);
   }
-  
+
   return value || '';
 };
 
@@ -18,20 +18,20 @@ export const env = {
    * API Base URL - URL del backend
    * @default 'http://localhost:3000'
    */
-  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', 'http://localhost:3000'),
-  
+  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', 'http://localhost:8080'),
+
   /**
    * Nombre de la aplicación
    * @default 'ARG Academy'
    */
   APP_NAME: getEnvVar('VITE_APP_NAME', 'ARG Academy'),
-  
+
   /**
    * Ambiente de ejecución
    * @default 'development'
    */
   NODE_ENV: getEnvVar('MODE', 'development'),
-  
+
   /**
    * Habilitar analytics
    * @default false
