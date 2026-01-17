@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import professorApi from "@/features/professor/services/professor.api";
 import { useRoute, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+
+import RagEditor from "./RagEditor";
 
 interface Content {
     id: number;
@@ -26,6 +29,7 @@ interface Level {
     tituloNivel: string;
     orden: number;
     contents: Content[];
+    ragTemplate?: any; // To check if exists
 }
 
 export default function CourseEditor() {
@@ -38,10 +42,43 @@ export default function CourseEditor() {
     const [showLevelDialog, setShowLevelDialog] = useState(false);
     const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
+    // RAG Editor State
+    const [editingRagLevelId, setEditingRagLevelId] = useState<number | null>(null);
+    const [ragInitialData, setRagInitialData] = useState<any>(null);
+
+    useEffect(() => {
+        if (editingRagLevelId) {
+            // Fetch existing RAG if any
+            professorApi.getRagTemplate(editingRagLevelId).then(data => {
+                if (data) setRagInitialData(data);
+                else setRagInitialData(null);
+            });
+        }
+    }, [editingRagLevelId]);
+
     // Content form states
     const [contentType, setContentType] = useState("link");
     const [contentUrl, setContentUrl] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    // Resources for file picker
+    const [resources, setResources] = useState<any[]>([]);
+    const [resourcesLoading, setResourcesLoading] = useState(false);
+
+    useEffect(() => {
+        const loadResources = async () => {
+            try {
+                setResourcesLoading(true);
+                const data = await professorApi.getResources();
+                setResources(data);
+            } catch (err) {
+                console.error("Error loading resources", err);
+            } finally {
+                setResourcesLoading(false);
+            }
+        };
+        loadResources();
+    }, []);
 
     // Code exercise states
     const [exerciseTitle, setExerciseTitle] = useState("");
@@ -60,17 +97,12 @@ export default function CourseEditor() {
 
     const fetchModuleData = async () => {
         try {
-            const modRes = await fetch(`http://localhost:3000/api/modulos/${moduleId}`);
-            if (modRes.ok) {
-                const modData = await modRes.json();
-                setModuleName(modData.nombreModulo);
-            }
+            const modData = await professorApi.getModule(moduleId);
+            setModuleName(modData.nombreModulo);
 
-            const levelsRes = await fetch(`http://localhost:3000/api/professor/modules/${moduleId}/levels`);
-            if (levelsRes.ok) {
-                const levelsData = await levelsRes.json();
-                setLevels(levelsData);
-            }
+            const levelsData = await professorApi.getModuleLevels(moduleId);
+            setLevels(levelsData);
+
             setLoading(false);
         } catch (error) {
             console.error("Error fetching module data:", error);
@@ -85,21 +117,15 @@ export default function CourseEditor() {
         }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/professor/modules/${moduleId}/levels`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tituloNivel: newLevelTitle,
-                    orden: levels.length + 1
-                })
+            await professorApi.createLevel(moduleId, {
+                tituloNivel: newLevelTitle, // Corrected from 'titulo' to 'tituloNivel' to match backend DTO
+                orden: levels.length + 1
             });
 
-            if (res.ok) {
-                toast({ title: "Éxito", description: "Nivel creado correctamente" });
-                setNewLevelTitle("");
-                setShowLevelDialog(false);
-                fetchModuleData();
-            }
+            toast({ title: "Éxito", description: "Nivel creado correctamente" });
+            setNewLevelTitle("");
+            setShowLevelDialog(false);
+            fetchModuleData();
         } catch (error) {
             toast({ title: "Error", description: "No se pudo crear el nivel", variant: "destructive" });
         }
@@ -112,7 +138,16 @@ export default function CourseEditor() {
         }
 
         let payload: any = {
-            tipo: contentType
+            titulo: "Nuevo Contenido", // Default title if not provided
+            tipo: contentType, // Corrected to match backend expected Body: { tipo, urlRecurso }
+            urlRecurso: contentUrl,      // Corrected to match backend expected Body
+            orden: 1,                   // Default order
+            // Extra fields for code exercises
+            tituloEjercicio: undefined,
+            descripcionEjercicio: undefined,
+            codigoInicial: undefined,
+            codigoEsperado: undefined,
+            lenguaje: undefined
         };
 
         if (contentType === "codigo_lab") {
@@ -123,6 +158,7 @@ export default function CourseEditor() {
             }
             payload = {
                 ...payload,
+                titulo: exerciseTitle,
                 tituloEjercicio: exerciseTitle,
                 descripcionEjercicio: exerciseDescription,
                 codigoInicial: starterCode,
@@ -149,17 +185,15 @@ export default function CourseEditor() {
         }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/professor/levels/${selectedLevel}/contents`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            // Note: createContent expects (levelId, payload)
+            // Payload needs to match CreateContentPayload interface in api
+            // interface CreateContentPayload { titulo: string; tipoContenido: string; contenido: string; orden: number; }
 
-            if (res.ok) {
-                toast({ title: "Éxito", description: "Contenido agregado correctamente" });
-                resetContentForm();
-                fetchModuleData();
-            }
+            await professorApi.createContent(selectedLevel, payload);
+
+            toast({ title: "Éxito", description: "Contenido agregado correctamente" });
+            resetContentForm();
+            fetchModuleData();
         } catch (error) {
             toast({ title: "Error", description: "No se pudo agregar el contenido", variant: "destructive" });
         }
@@ -177,14 +211,10 @@ export default function CourseEditor() {
 
     const deleteContent = async (contentId: number) => {
         try {
-            const res = await fetch(`http://localhost:3000/api/professor/contents/${contentId}`, {
-                method: 'DELETE'
-            });
+            await professorApi.deleteContent(contentId);
 
-            if (res.ok) {
-                toast({ title: "Éxito", description: "Contenido eliminado" });
-                fetchModuleData();
-            }
+            toast({ title: "Éxito", description: "Contenido eliminado" });
+            fetchModuleData();
         } catch (error) {
             toast({ title: "Error", description: "No se pudo eliminar", variant: "destructive" });
         }
@@ -202,6 +232,15 @@ export default function CourseEditor() {
 
     if (loading) {
         return <div className="p-8">Cargando...</div>;
+    }
+
+    if (editingRagLevelId) {
+        return <RagEditor
+            levelId={editingRagLevelId}
+            moduleId={Number(moduleId)}
+            initialData={ragInitialData}
+            onClose={() => setEditingRagLevelId(null)}
+        />;
     }
 
     return (
@@ -234,6 +273,9 @@ export default function CourseEditor() {
                                 <DialogContent>
                                     <DialogHeader>
                                         <DialogTitle>Crear Nuevo Nivel</DialogTitle>
+                                        <div className="text-sm text-slate-500">
+                                            Ingresa el nombre del nuevo nivel para agregarlo al módulo.
+                                        </div>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div>
@@ -274,13 +316,13 @@ export default function CourseEditor() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         if (confirm('¿Estás seguro de eliminar este nivel y todo su contenido?')) {
-                                                            // Call delete function (needs to be implemented in component body first, but for now assuming it exists or doing fetch directly)
-                                                            fetch(`http://localhost:3000/api/professor/levels/${level.id}`, { method: 'DELETE' })
-                                                                .then(res => {
-                                                                    if (res.ok) {
-                                                                        toast({ title: "Nivel eliminado" });
-                                                                        fetchModuleData();
-                                                                    }
+                                                            professorApi.deleteLevel(level.id)
+                                                                .then(() => {
+                                                                    toast({ title: "Nivel eliminado" });
+                                                                    fetchModuleData();
+                                                                })
+                                                                .catch(() => {
+                                                                    toast({ title: "Error", description: "No se pudo eliminar el nivel", variant: "destructive" });
                                                                 });
                                                         }
                                                     }}
@@ -288,9 +330,22 @@ export default function CourseEditor() {
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                            <p className="text-sm text-slate-500">
-                                                {level.contents?.length || 0} contenido(s)
-                                            </p>
+                                            <div className="flex justify-between items-center mt-2">
+                                                <p className="text-sm text-slate-500">
+                                                    {level.contents?.length || 0} contenido(s)
+                                                </p>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingRagLevelId(level.id);
+                                                    }}
+                                                >
+                                                    Guía RAG
+                                                </Button>
+                                            </div>
                                             {level.contents && level.contents.length > 0 && (
                                                 <div className="mt-3 space-y-2">
                                                     {level.contents.map((content) => (
@@ -298,7 +353,7 @@ export default function CourseEditor() {
                                                             <div className="flex items-center gap-2">
                                                                 {getContentIcon(content.tipo)}
                                                                 <span className="text-sm">
-                                                                    {content.tituloEjercicio || content.tipo.toUpperCase()}
+                                                                    {content.tituloEjercicio || (content.tipo ? content.tipo.toUpperCase() : 'CONTENIDO')}
                                                                 </span>
                                                             </div>
                                                             <Button
@@ -384,54 +439,72 @@ export default function CourseEditor() {
                                 <TabsContent value="file" className="space-y-4">
                                     <div>
                                         <Label>Seleccionar de Biblioteca</Label>
-                                        <div className="border-2 border-dashed border-slate-200 rounded-lg p-4 bg-slate-50 mt-2">
-                                            <p className="text-sm text-slate-500 text-center mb-4">Selecciona un archivo previamente subido</p>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => {
-                                                    // Here we would ideally open a dialog to select file
-                                                    // For MVP, letting them paste the URL or ID from FileSystem page
-                                                    const url = prompt("Ingresa la URL del recurso (Cópiala desde 'Sistema de Archivos'):");
-                                                    if (url) {
-                                                        const isPdf = url.includes('.pdf');
-                                                        // Correctly creating a File object mock for the UI state
-                                                        // We use a simple object that mimics the File interface property effectively needed here
-                                                        const mockFile = {
-                                                            name: url.split('/').pop() || "archivo-recurso",
-                                                            type: isPdf ? 'application/pdf' : 'application/octet-stream',
-                                                            size: 0,
-                                                            manualUrl: url
-                                                        };
+                                        <div className="mt-2">
+                                            {resourcesLoading ? (
+                                                <p className="text-sm text-slate-400">Cargando recursos...</p>
+                                            ) : (
+                                                <Select
+                                                    value={contentUrl}
+                                                    onValueChange={(val) => {
+                                                        const res = resources.find(r => r.url === val);
+                                                        if (res) {
+                                                            setContentUrl(res.url);
+                                                            // Normalize type detection
+                                                            const typeLower = (res.tipo || '').toLowerCase();
+                                                            const urlLower = res.url.toLowerCase();
 
-                                                        // Using 'as any' to bypass the strict File type requirement for this specific UI state hack
-                                                        setSelectedFile(mockFile as any);
-                                                        setContentUrl(url);
-                                                    }
-                                                }}
-                                                className="w-full"
-                                            >
-                                                <FileText className="w-4 h-4 mr-2" />
-                                                Ingresar URL de Recurso
-                                            </Button>
+                                                            const isPdf = urlLower.endsWith('.pdf') || typeLower.includes('pdf');
+                                                            const isVideo = urlLower.endsWith('.mp4') || typeLower.includes('video');
+                                                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/.test(urlLower) || typeLower.includes('image');
+
+                                                            // Update tab selection based on type
+                                                            if (isPdf) setContentType('pdf'); // Note: This might need to be 'file' depending on tab logic, but usually we want specific type
+                                                            else if (isVideo) setContentType('video'); // If you have a video tab
+                                                            else if (isImage) setContentType('image'); // If you have image support
+                                                            else setContentType('file');
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecciona un archivo..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {resources.length === 0 ? (
+                                                            <SelectItem value="none" disabled>No hay archivos subidos</SelectItem>
+                                                        ) : (
+                                                            resources.map((r: any) => (
+                                                                <SelectItem key={r.id} value={r.url}>
+                                                                    {r.nombre || r.url.split('/').pop()}
+                                                                </SelectItem>
+                                                            ))
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+
+                                            <div className="mt-4 p-4 bg-slate-50 rounded border border-slate-100">
+                                                <p className="text-sm text-slate-500 mb-2">¿No encuentras el archivo?</p>
+                                                <Button variant="outline" size="sm" onClick={() => setLocation("/files")} className="w-full">
+                                                    Ir al Gestor de Archivos (Subir Nuevo)
+                                                </Button>
+                                            </div>
+
                                             {contentUrl && (
-                                                <p className="text-sm text-green-600 mt-2 text-center">
-                                                    Recurso seleccionado: {contentUrl.split('/').pop()}
+                                                <p className="text-sm text-green-600 mt-2 text-center break-all">
+                                                    Seleccionado: {contentUrl.split('/').pop()}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
                                     <Button onClick={() => {
-                                        // Custom addContent logic for library files
                                         if (!contentUrl) {
                                             toast({ title: "Error", description: "Selecciona un recurso", variant: "destructive" });
                                             return;
                                         }
-                                        // Reuse addContent but ensure type matches
-                                        contentType === 'file' ? setContentType(contentUrl.includes('.pdf') ? 'pdf' : 'file') : null;
-                                        setTimeout(addContent, 100);
+                                        addContent();
                                     }} className="w-full">
                                         <Upload className="w-4 h-4 mr-2" />
-                                        Asignar Archivo
+                                        Asignar Archivo Seleccionado
                                     </Button>
                                 </TabsContent>
 

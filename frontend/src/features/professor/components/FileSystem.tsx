@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import professorApi from "@/features/professor/services/professor.api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,11 +29,8 @@ export default function FileSystem() {
 
     const fetchResources = async () => {
         try {
-            const res = await fetch("http://localhost:3000/api/professor/resources");
-            if (res.ok) {
-                const data = await res.json();
-                setResources(data);
-            }
+            const data = await professorApi.getResources();
+            setResources(data);
             setLoading(false);
         } catch (error) {
             console.error("Error fetching resources:", error);
@@ -50,20 +48,12 @@ export default function FileSystem() {
         formData.append("profesorId", "1"); // Hardcoded for now
 
         try {
-            const res = await fetch("http://localhost:3000/api/professor/upload", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (res.ok) {
-                toast({ title: "Éxito", description: "Archivo subido correctamente" });
-                fetchResources();
-            } else {
-                toast({ title: "Error", description: "Error al subir el archivo", variant: "destructive" });
-            }
+            await professorApi.uploadFile(formData);
+            toast({ title: "Éxito", description: "Archivo subido correctamente" });
+            fetchResources();
         } catch (error) {
             console.error(error);
-            toast({ title: "Error", description: "Error de conexión", variant: "destructive" });
+            toast({ title: "Error", description: "Error al subir el archivo", variant: "destructive" });
         } finally {
             setUploading(false);
         }

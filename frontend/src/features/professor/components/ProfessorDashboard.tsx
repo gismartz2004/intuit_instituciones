@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import professorApi from "@/features/professor/services/professor.api";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,20 +39,20 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
     fetchModules();
   }, [user.id]);
 
+  /* Refactored to use professorApi */
   const fetchModules = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/professor/${user.id}/modules`);
-      if (res.ok) {
-        const data = await res.json();
-        setModules(data);
-        // Aggregate all unique students from all modules
-        const allStudents = data.flatMap((m: any) => m.students || []);
-        // Remove duplicates by ID
-        const uniqueStudents = Array.from(new Map(allStudents.map((s: any) => [s.id, s])).values());
-        setStudents(uniqueStudents as any[]);
-      }
+      setLoading(true);
+      const data = await professorApi.getModules(user.id);
+      setModules(data);
+      // Aggregate all unique students from all modules
+      const allStudents = data.flatMap((m: any) => m.students || []);
+      // Remove duplicates by ID
+      const uniqueStudents = Array.from(new Map(allStudents.map((s: any) => [s.id, s])).values());
+      setStudents(uniqueStudents as any[]);
     } catch (error) {
       console.error("Error fetching modules:", error);
+      toast({ title: "Error", description: "No se pudieron cargar los módulos.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -59,22 +60,14 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
 
   const addModule = async () => {
     try {
-      const res = await fetch('/api/modules', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: "Nuevo Módulo",
-          description: "Descripción del módulo",
-          professorId: user.id
-        })
+      const newModule = await professorApi.createModule({
+        title: "Nuevo Módulo",
+        description: "Descripción del módulo",
+        professorId: user.id
       });
-
-      if (res.ok) {
-        const newModule = await res.json();
-        setModules([...modules, newModule]);
-        toast({ title: "Módulo creado", description: "Configura el contenido ahora." });
-        setLocation(`/teach/module/${newModule.id}`);
-      }
+      setModules([...modules, newModule]);
+      toast({ title: "Módulo creado", description: "Configura el contenido ahora." });
+      setLocation(`/teach/module/${newModule.id}`);
     } catch (error) {
       toast({ title: "Error", description: "No se pudo crear el módulo.", variant: "destructive" });
     }
@@ -96,27 +89,15 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
     }
 
     try {
-      // 1. Create User and Assign (Unified Endpoint)
-      const res = await fetch('http://localhost:3000/api/professor/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          moduleId: parseInt(moduleId)
-        })
+      await professorApi.createStudent({
+        name,
+        email,
+        password,
+        moduleId
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Error creating student");
-      }
 
       toast({ title: "Éxito", description: "Estudiante creado y asignado." });
       fetchModules(); // Refresh data
-      // Close dialog or reset form? (Optional but good UX)
-      // reset form manually or reload page
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "No se pudo realizar la operación.", variant: "destructive" });
     }

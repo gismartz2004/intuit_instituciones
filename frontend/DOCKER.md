@@ -5,17 +5,17 @@
 ```powershell
 # Build con API URL del backend local
 docker build `
-  --build-arg VITE_API_URL=http://localhost:8080 `
+  --build-arg VITE_API_BASE_URL=http://localhost:8080 `
   -t arg-academy-frontend .
 
 # Build con API URL de producción (Cloud Run)
 docker build `
-  --build-arg VITE_API_URL=https://arg-academy-backend-xxxx.run.app `
+  --build-arg VITE_API_BASE_URL=https://arg-academy-backend-xxxx.run.app `
   -t arg-academy-frontend .
 
 # Build sin cache
 docker build --no-cache `
-  --build-arg VITE_API_URL=http://localhost:8080 `
+  --build-arg VITE_API_BASE_URL=http://localhost:8080 `
   -t arg-academy-frontend .
 ```
 
@@ -90,7 +90,7 @@ docker exec frontend cat /etc/nginx/conf.d/default.conf
 
 ```powershell
 # 1. Build
-docker build --build-arg VITE_API_URL=http://localhost:8080 -t arg-academy-frontend .
+docker build --build-arg VITE_API_BASE_URL=http://localhost:8080 -t arg-academy-frontend .
 
 # 2. Run
 docker run -d --name frontend -p 8081:8080 arg-academy-frontend
@@ -111,7 +111,9 @@ cd backend
 
 # Terminal 2: Frontend (apuntando al backend)
 cd frontend
-.\docker-run.ps1 -Build -ApiUrl "http://localhost:8080"
+# Nota: El script debe actualizar para usar VITE_API_BASE_URL
+docker build --build-arg VITE_API_BASE_URL=http://localhost:8080 -t arg-academy-frontend .
+docker run -d --name frontend -p 8081:8080 arg-academy-frontend
 
 # Ahora:
 # Frontend: http://localhost:8081
@@ -221,7 +223,7 @@ $BACKEND_URL = "https://arg-academy-backend-xxxx.run.app"
 
 # Build con la URL real
 docker build `
-  --build-arg VITE_API_URL=$BACKEND_URL `
+  --build-arg VITE_API_BASE_URL=$BACKEND_URL `
   -t arg-academy-frontend .
 ```
 
@@ -231,7 +233,7 @@ docker build `
 cd frontend
 
 # Crear .env.production con la URL del backend
-"VITE_API_URL=https://arg-academy-backend-xxxx.run.app" | Out-File .env.production
+"VITE_API_BASE_URL=https://arg-academy-backend-xxxx.run.app" | Out-File .env.production
 
 # Deploy
 gcloud run deploy arg-academy-frontend `

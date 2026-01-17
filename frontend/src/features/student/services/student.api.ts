@@ -70,6 +70,13 @@ export const studentApi = {
   async getUserInfo(userId: string): Promise<any> {
     return apiClient.get<any>(`/api/usuarios/${userId}`);
   },
+
+  /**
+   * Obtener plantilla RAG de un nivel
+   */
+  async getRagTemplate(levelId: number): Promise<any> {
+    return apiClient.get<any>(`/api/professor/levels/${levelId}/rag`);
+  },
 };
 
 export default studentApi;

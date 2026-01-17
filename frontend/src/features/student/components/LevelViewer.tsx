@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, FileText, Video, Link as LinkIcon, Code, Play, Download, ExternalLink, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { studentApi } from "../services/student.api";
 
 interface Content {
     id: number;
@@ -36,15 +37,45 @@ export default function LevelViewer() {
 
     const fetchLevelContents = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/student/level/${levelId}/contents`);
-            if (res.ok) {
-                const data = await res.json();
-                setContents(data);
-                if (data.length > 0) {
-                    setSelectedContent(data[0]);
-                    if (data[0].codigoInicial) {
-                        setUserCode(data[0].codigoInicial);
-                    }
+            const data = await studentApi.getLevelContents(levelId);
+            // Map API response to Component State (Content)
+            // Map API response to Component State (Content)
+            const mappedData: Content[] = data.map((item: any) => {
+                const rawType = item.tipoContenido || item.tipo || 'unknown';
+                const lowerType = String(rawType).toLowerCase();
+
+                console.log('Processing item:', { id: item.id, rawType, lowerType, content: item });
+
+                let normalizedType = 'unknown';
+
+                // Normalize content types (Order matters!)
+                if (lowerType.includes('pdf')) normalizedType = 'pdf';
+                else if (lowerType.includes('video') || lowerType.includes('mp4') || lowerType.includes('mov')) normalizedType = 'video';
+                else if (lowerType.includes('image') || lowerType.includes('jpg') || lowerType.includes('png') || lowerType.includes('jpeg') || lowerType.includes('gif')) normalizedType = 'image';
+                else if (lowerType.includes('link') || lowerType.startsWith('http')) normalizedType = 'link';
+                else if (lowerType.includes('code') || lowerType.includes('lab') || lowerType.includes('ejercicio')) normalizedType = 'codigo_lab';
+
+                // Fallback: If we couldn't normalize but we have a raw type, use it (might be 'file' or similar)
+                if (normalizedType === 'unknown' && rawType !== 'unknown') {
+                    normalizedType = rawType;
+                }
+
+                return {
+                    id: item.id,
+                    tipo: normalizedType,
+                    urlRecurso: item.contenido || item.urlRecurso,
+                    tituloEjercicio: item.titulo || item.tituloEjercicio || 'Sin Título',
+                    descripcionEjercicio: item.descripcion || item.descripcionEjercicio || '',
+                    codigoInicial: item.codigoInicial,
+                    lenguaje: item.lenguaje
+                };
+            });
+
+            setContents(mappedData);
+            if (mappedData.length > 0) {
+                setSelectedContent(mappedData[0]);
+                if (mappedData[0].codigoInicial) {
+                    setUserCode(mappedData[0].codigoInicial);
                 }
             }
             setLoading(false);
@@ -75,9 +106,25 @@ export default function LevelViewer() {
     };
 
     const renderContentViewer = () => {
-        if (!selectedContent) return null;
+        if (!selectedContent) return (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+                    <FileText className="w-8 h-8 text-slate-300" />
+                </div>
+                <p>Selecciona un contenido del menú lateral para visualizarlo.</p>
+            </div>
+        );
 
-        switch (selectedContent.tipo) {
+        // Special RAG View Handling
+        if (selectedContent.tipo === 'rag') {
+            return (
+                <div className="h-full overflow-y-auto p-4 custom-scrollbar">
+                    <RagViewer levelId={levelId} />
+                </div>
+            );
+        }
+
+        switch (selectedContent.tipo?.toLowerCase()) {
             case 'video':
                 return (
                     <div className="space-y-4">
@@ -138,6 +185,17 @@ export default function LevelViewer() {
                                 Abrir Enlace
                             </Button>
                         </div>
+                    </div>
+                );
+
+            case 'image':
+                return (
+                    <div className="h-full flex flex-col justify-center items-center bg-slate-900 rounded-2xl p-4">
+                        <img
+                            src={selectedContent.urlRecurso}
+                            alt={selectedContent.tituloEjercicio || "Recurso de imagen"}
+                            className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
+                        />
                     </div>
                 );
 
@@ -270,7 +328,7 @@ export default function LevelViewer() {
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="font-bold text-sm truncate">
-                                                                {content.tituloEjercicio || content.tipo.toUpperCase()}
+                                                                {content.tituloEjercicio || (content.tipo ? content.tipo.toUpperCase() : 'RECURSO')}
                                                             </p>
                                                             <p className="text-xs text-slate-500">
                                                                 {content.tipo === 'codigo_lab' ? 'Ejercicio' : 'Recurso'}
