@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { studentApi } from "@/features/student/services/student.api";
-import { CheckCircle2, Target, Lightbulb, Trophy, BookOpen, Clock, Calendar } from "lucide-react";
+import { CheckCircle2, Target, Lightbulb, Trophy, BookOpen, Clock, Calendar, Award, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RagViewerProps {
@@ -49,7 +50,19 @@ export default function RagViewer({ levelId }: RagViewerProps) {
     if (loading) return <div className="p-8 text-center text-slate-400">Cargando guía de aprendizaje...</div>;
     if (!data) return <div className="p-8 text-center text-slate-400 italic">Este nivel no tiene una guía RAG asignada.</div>;
 
-    const progress = Math.round((completedSteps.length / (data.pasosGuiados?.length || 1)) * 100);
+    const ragData = data; // Alias for clarity
+    let guidedSteps = [];
+    try { guidedSteps = JSON.parse(ragData.pasosGuiados || "[]"); } catch { }
+
+    let keyConcepts = [];
+    try { keyConcepts = JSON.parse(ragData.contenidoClave || "[]"); } catch { }
+
+    let hints = [];
+    try { hints = JSON.parse(ragData.pistas || "[]"); } catch { }
+
+    let seccionesDinamicas = [];
+    try { seccionesDinamicas = JSON.parse(ragData.seccionesDinamicas || "[]"); } catch { }
+    const progress = Math.round((completedSteps.length / (guidedSteps.length || 1)) * 100);
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -59,15 +72,15 @@ export default function RagViewer({ levelId }: RagViewerProps) {
                 <div className="relative z-10">
                     <div className="flex justify-between items-start mb-4">
                         <Badge className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm">
-                            RAG: {data.modalidad}
+                            RAG: {ragData.modalidad}
                         </Badge>
                         <div className="flex gap-2 text-sm font-medium text-blue-100">
-                            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {data.mes}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {data.duracionEstimada}</span>
+                            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {ragData.mes}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {ragData.duracionEstimada}</span>
                         </div>
                     </div>
-                    <h1 className="text-3xl font-black mb-2">{data.hitoAprendizaje}</h1>
-                    <p className="text-blue-100 max-w-2xl text-lg opacity-90">{data.proposito}</p>
+                    <h1 className="text-3xl font-black mb-2">{ragData.hitoAprendizaje}</h1>
+                    <p className="text-blue-100 max-w-2xl text-lg opacity-90">{ragData.proposito}</p>
                 </div>
             </div>
 
@@ -82,7 +95,7 @@ export default function RagViewer({ levelId }: RagViewerProps) {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-slate-600 leading-relaxed font-medium">{data.objetivoAprendizaje}</p>
+                            <p className="text-slate-600 leading-relaxed font-medium">{ragData.objetivoAprendizaje}</p>
                         </CardContent>
                     </Card>
 
@@ -91,7 +104,7 @@ export default function RagViewer({ levelId }: RagViewerProps) {
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <BookOpen className="w-5 h-5 text-amber-500" /> Conceptos Clave
                         </h3>
-                        {data.contenidoClave?.map((item: any, idx: number) => (
+                        {keyConcepts.map((item: any, idx: number) => (
                             <Card key={idx} className="bg-slate-50 border-slate-200">
                                 <CardContent className="p-4">
                                     <h4 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -119,19 +132,19 @@ export default function RagViewer({ levelId }: RagViewerProps) {
                                     {progress}%
                                 </span>
                             </CardTitle>
-                            <CardDescription>{data.nombreActividad}</CardDescription>
+                            <CardDescription>{ragData.nombreActividad}</CardDescription>
                             {/* Progress Bar */}
                             <div className="h-2 w-full bg-slate-200 rounded-full mt-3 overflow-hidden">
                                 <div
                                     className="h-full bg-green-500 transition-all duration-500 ease-out"
-                                    style={{ width: `${progress}%` }}
+                                    style={{ width: `${progress}% ` }}
                                 />
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <ScrollArea className="h-[400px]">
                                 <div className="p-4 space-y-1">
-                                    {data.pasosGuiados?.map((step: any, idx: number) => (
+                                    {guidedSteps.map((step: any, idx: number) => (
                                         <div
                                             key={idx}
                                             onClick={() => toggleStep(idx)}

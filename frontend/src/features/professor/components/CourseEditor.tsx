@@ -14,6 +14,8 @@ import { toast } from "@/hooks/use-toast";
 
 import RagEditor from "./RagEditor";
 
+import HaEditor from "./HaEditor";
+
 interface Content {
     id: number;
     tipo: string;
@@ -30,6 +32,7 @@ interface Level {
     orden: number;
     contents: Content[];
     ragTemplate?: any; // To check if exists
+    haTemplate?: any; // To check if exists
 }
 
 export default function CourseEditor() {
@@ -46,6 +49,10 @@ export default function CourseEditor() {
     const [editingRagLevelId, setEditingRagLevelId] = useState<number | null>(null);
     const [ragInitialData, setRagInitialData] = useState<any>(null);
 
+    // HA Editor State
+    const [editingHaLevelId, setEditingHaLevelId] = useState<number | null>(null);
+    const [haInitialData, setHaInitialData] = useState<any>(null);
+
     useEffect(() => {
         if (editingRagLevelId) {
             // Fetch existing RAG if any
@@ -55,6 +62,15 @@ export default function CourseEditor() {
             });
         }
     }, [editingRagLevelId]);
+
+    useEffect(() => {
+        if (editingHaLevelId) {
+            professorApi.getHaTemplate(editingHaLevelId).then(data => {
+                if (data) setHaInitialData(data);
+                else setHaInitialData(null);
+            })
+        }
+    }, [editingHaLevelId]);
 
     // Content form states
     const [contentType, setContentType] = useState("link");
@@ -243,6 +259,15 @@ export default function CourseEditor() {
         />;
     }
 
+    if (editingHaLevelId) {
+        return <HaEditor
+            levelId={editingHaLevelId}
+            moduleId={Number(moduleId)}
+            initialData={haInitialData}
+            onClose={() => setEditingHaLevelId(null)}
+        />;
+    }
+
     return (
         <div className="p-8 max-w-6xl mx-auto">
             {/* Header */}
@@ -334,18 +359,32 @@ export default function CourseEditor() {
                                                 <p className="text-sm text-slate-500">
                                                     {level.contents?.length || 0} contenido(s)
                                                 </p>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setEditingRagLevelId(level.id);
-                                                    }}
-                                                >
-                                                    Guía RAG
-                                                </Button>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingRagLevelId(level.id);
+                                                        }}
+                                                    >
+                                                        Guía RAG
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs h-7 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingHaLevelId(level.id);
+                                                        }}
+                                                    >
+                                                        Hito HA
+                                                    </Button>
+                                                </div>
                                             </div>
+
                                             {level.contents && level.contents.length > 0 && (
                                                 <div className="mt-3 space-y-2">
                                                     {level.contents.map((content) => (

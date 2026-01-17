@@ -77,6 +77,13 @@ export const studentApi = {
   async getRagTemplate(levelId: number): Promise<any> {
     return apiClient.get<any>(`/api/professor/levels/${levelId}/rag`);
   },
+
+  /**
+   * Obtener plantilla HA de un nivel
+   */
+  async getHaTemplate(levelId: number): Promise<any> {
+    return apiClient.get<any>(`/api/professor/levels/${levelId}/ha`);
+  },
 };
 
 export default studentApi;

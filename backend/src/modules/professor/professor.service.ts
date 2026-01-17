@@ -141,14 +141,72 @@ export class ProfessorService {
             .orderBy(asc(schema.recursos.fechaSubida));
     }
 
+    async getHaTemplate(levelId: number) {
+        return await this.db.select().from(schema.plantillasHa).where(eq(schema.plantillasHa.nivelId, levelId)).execute().then(res => res[0]);
+    }
+
+    async createHaTemplate(levelId: number, data: any) {
+        console.log("Saving HA for level:", levelId);
+
+        // Remove 'id' if present to avoid PK violation
+        const { id, ...payload } = data;
+
+        const existing = await this.getHaTemplate(levelId);
+        if (existing) {
+            const [updated] = await this.db.update(schema.plantillasHa)
+                .set({ ...payload })
+                .where(eq(schema.plantillasHa.id, existing.id)) // Use existing ID for update
+                .returning();
+            return updated;
+        } else {
+            const [inserted] = await this.db.insert(schema.plantillasHa)
+                .values({ ...payload, nivelId: levelId })
+                .returning();
+            return inserted;
+        }
+    }
+
     async deleteLevel(levelId: number) {
+        // Cascade delete RAG
+        await this.db.delete(schema.plantillasRag).where(eq(schema.plantillasRag.nivelId, levelId));
+        // Cascade delete HA
+        await this.db.delete(schema.plantillasHa).where(eq(schema.plantillasHa.nivelId, levelId));
+
         // Cascade delete contents
         await this.db.delete(schema.contenidos).where(eq(schema.contenidos.nivelId, levelId));
+
         // Cascade delete activities
         await this.db.delete(schema.actividades).where(eq(schema.actividades.nivelId, levelId));
 
-        // Delete the level itself
+        // Delete level
         await this.db.delete(schema.niveles).where(eq(schema.niveles.id, levelId));
         return { success: true };
+    }
+
+    // RAG Templates
+    async createRagTemplate(nivelId: number, data: schema.InsertPlantillaRag) {
+        // Check if exists update, otherwise insert
+        const existing = await this.db.select().from(schema.plantillasRag).where(eq(schema.plantillasRag.nivelId, nivelId));
+
+        let result;
+        if (existing.length > 0) {
+            // Update
+            [result] = await this.db.update(schema.plantillasRag)
+                .set(data)
+                .where(eq(schema.plantillasRag.id, existing[0].id))
+                .returning();
+        } else {
+            // Insert
+            [result] = await this.db.insert(schema.plantillasRag).values({
+                ...data,
+                nivelId
+            }).returning();
+        }
+        return result;
+    }
+
+    async getRagTemplate(nivelId: number) {
+        const templates = await this.db.select().from(schema.plantillasRag).where(eq(schema.plantillasRag.nivelId, nivelId));
+        return templates[0] || null;
     }
 }

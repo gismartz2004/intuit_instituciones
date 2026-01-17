@@ -21,8 +21,8 @@ export interface CreateStudentPayload {
 }
 
 export interface CreateLevelPayload {
-  titulo: string;
-  descripcion: string;
+  tituloNivel: string;
+  descripcion?: string;
   orden: number;
 }
 
@@ -136,11 +136,20 @@ export const professorApi = {
 
   // RAG Templates
   async saveRagTemplate(levelId: number, data: any): Promise<any> {
-    return apiClient.post(`/professor/levels/${levelId}/rag`, data);
+    return apiClient.post(`/api/professor/levels/${levelId}/rag`, data);
   },
 
   async getRagTemplate(levelId: number): Promise<any> {
-    return apiClient.get(`/professor/levels/${levelId}/rag`);
+    return apiClient.get(`/api/professor/levels/${levelId}/rag`);
+  },
+
+  // HA Templates
+  async saveHaTemplate(levelId: number, data: any): Promise<any> {
+    return apiClient.post(`/api/professor/levels/${levelId}/ha`, data);
+  },
+
+  async getHaTemplate(levelId: number): Promise<any> {
+    return apiClient.get(`/api/professor/levels/${levelId}/ha`);
   },
 };
 

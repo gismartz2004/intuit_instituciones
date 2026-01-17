@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Video, Link as LinkIcon, Code, Play, Download, ExternalLink, CheckCircle } from "lucide-react";
+import { ArrowLeft, FileText, Video, Link as LinkIcon, Code, Play, Download, ExternalLink, CheckCircle, BookOpen, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { studentApi } from "../services/student.api";
+import RagViewer from "./RagViewer";
+import HaViewer from "./HaViewer";
 
 interface Content {
     id: number;
@@ -26,6 +28,7 @@ export default function LevelViewer() {
     const [loading, setLoading] = useState(true);
     const [selectedContent, setSelectedContent] = useState<Content | null>(null);
     const [userCode, setUserCode] = useState("");
+    const [viewMode, setViewMode] = useState<'content' | 'rag' | 'ha'>('content');
 
     const levelId = match && params ? (params as any).levelId : null;
 
@@ -114,15 +117,6 @@ export default function LevelViewer() {
                 <p>Selecciona un contenido del menú lateral para visualizarlo.</p>
             </div>
         );
-
-        // Special RAG View Handling
-        if (selectedContent.tipo === 'rag') {
-            return (
-                <div className="h-full overflow-y-auto p-4 custom-scrollbar">
-                    <RagViewer levelId={levelId} />
-                </div>
-            );
-        }
 
         switch (selectedContent.tipo?.toLowerCase()) {
             case 'video':
@@ -270,56 +264,96 @@ export default function LevelViewer() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 pb-20">
-            <div className="max-w-7xl mx-auto p-8">
+        <div className="min-h-screen bg-slate-50 pb-20">
+            <div className="max-w-7xl mx-auto p-4 md:p-8">
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 sticky top-0 bg-slate-50/90 backdrop-blur-sm z-30 py-4 border-b border-slate-200">
                     <Button variant="ghost" onClick={() => setLocation("/dashboard")}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
-                        Volver al Dashboard
+                        Volver
                     </Button>
+
+                    {/* View Mode Switcher */}
+                    <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex items-center">
+                        <Button
+                            variant={viewMode === 'content' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setViewMode('content')}
+                            className={viewMode === 'content' ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"}
+                        >
+                            <FileText className="w-4 h-4 mr-2" /> Contenido
+                        </Button>
+                        <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                        <Button
+                            variant={viewMode === 'rag' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setViewMode('rag')}
+                            className={viewMode === 'rag' ? "bg-cyan-600 text-white" : "text-slate-600 hover:bg-slate-100"}
+                        >
+                            <BookOpen className="w-4 h-4 mr-2" /> Guía RAG
+                        </Button>
+                        <Button
+                            variant={viewMode === 'ha' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setViewMode('ha')}
+                            className={viewMode === 'ha' ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-slate-100"}
+                        >
+                            <Trophy className="w-4 h-4 mr-2" /> Hito HA
+                        </Button>
+                    </div>
                 </div>
 
-                {contents.length === 0 ? (
-                    <Card className="border-2">
-                        <CardContent className="py-12 text-center">
-                            <p className="text-slate-400 text-lg">No hay contenido disponible en este nivel aún</p>
-                        </CardContent>
-                    </Card>
+                {/* MAIN CONTENT RENDER LOGIC */}
+                {viewMode === 'rag' ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-5 duration-500">
+                        <RagViewer levelId={levelId} />
+                    </div>
+                ) : viewMode === 'ha' ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-5 duration-500">
+                        <HaViewer levelId={levelId} />
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* Left Sidebar - Content List */}
-                        <div className="lg:col-span-1">
-                            <Card className="sticky top-4">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Contenidos del Nivel</CardTitle>
-                                    <p className="text-sm text-slate-500">{contents.length} recurso(s)</p>
-                                </CardHeader>
-                                <CardContent className="space-y-2">
-                                    {contents.map((content, idx) => (
-                                        <motion.div
-                                            key={content.id}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                        >
-                                            <Card
-                                                className={cn(
-                                                    "cursor-pointer transition-all border-2",
-                                                    selectedContent?.id === content.id
-                                                        ? "border-blue-500 bg-blue-50"
-                                                        : "border-slate-200 hover:border-slate-300"
-                                                )}
-                                                onClick={() => {
-                                                    setSelectedContent(content);
-                                                    if (content.codigoInicial) {
-                                                        setUserCode(content.codigoInicial);
-                                                    }
-                                                }}
-                                            >
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center gap-3">
+                    <>
+                        {/* CLASSIC CONTENT VIEW */}
+                        {contents.length === 0 ? (
+                            <Card className="border-2 border-dashed">
+                                <CardContent className="py-12 text-center text-slate-400">
+                                    <p className="text-lg">No hay contenido multimedia en este nivel aún</p>
+                                    <p className="text-sm">Revisa las pestañas de Guía RAG o Hito HA</p>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                {/* Left Sidebar - Content List */}
+                                <div className="lg:col-span-1">
+                                    <Card className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto">
+                                        <CardHeader className="py-4">
+                                            <CardTitle className="text-lg">Contenidos</CardTitle>
+                                            <p className="text-sm text-slate-500">{contents.length} recurso(s)</p>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2 p-2">
+                                            {contents.map((content) => (
+                                                <motion.div
+                                                    key={content.id}
+                                                    whileHover={{ scale: 1.01 }}
+                                                    whileTap={{ scale: 0.99 }}
+                                                >
+                                                    <div
+                                                        className={cn(
+                                                            "cursor-pointer transition-all p-3 rounded-lg flex items-center gap-3 border",
+                                                            selectedContent?.id === content.id
+                                                                ? "border-blue-500 bg-blue-50 shadow-sm"
+                                                                : "border-transparent hover:bg-slate-100"
+                                                        )}
+                                                        onClick={() => {
+                                                            setSelectedContent(content);
+                                                            if (content.codigoInicial) {
+                                                                setUserCode(content.codigoInicial);
+                                                            }
+                                                        }}
+                                                    >
                                                         <div className={cn(
-                                                            "w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br",
+                                                            "w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br flex-shrink-0",
                                                             getContentColor(content.tipo)
                                                         )}>
                                                             <div className="text-white">
@@ -327,37 +361,31 @@ export default function LevelViewer() {
                                                             </div>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="font-bold text-sm truncate">
+                                                            <p className={cn("font-medium text-sm truncate", selectedContent?.id === content.id ? "text-blue-700" : "text-slate-700")}>
                                                                 {content.tituloEjercicio || (content.tipo ? content.tipo.toUpperCase() : 'RECURSO')}
                                                             </p>
-                                                            <p className="text-xs text-slate-500">
-                                                                {content.tipo === 'codigo_lab' ? 'Ejercicio' : 'Recurso'}
-                                                            </p>
                                                         </div>
-                                                        {selectedContent?.id === content.id && (
-                                                            <CheckCircle className="w-5 h-5 text-blue-500" />
-                                                        )}
                                                     </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        </div>
+                                                </motion.div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </div>
 
-                        {/* Main Content Area */}
-                        <div className="lg:col-span-3">
-                            <motion.div
-                                key={selectedContent?.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                {renderContentViewer()}
-                            </motion.div>
-                        </div>
-                    </div>
+                                {/* Main Content Area */}
+                                <div className="lg:col-span-3">
+                                    <motion.div
+                                        key={selectedContent?.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        {renderContentViewer()}
+                                    </motion.div>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
@@ -367,3 +395,4 @@ export default function LevelViewer() {
 function Label({ children, className }: { children: React.ReactNode; className?: string }) {
     return <label className={className}>{children}</label>;
 }
+

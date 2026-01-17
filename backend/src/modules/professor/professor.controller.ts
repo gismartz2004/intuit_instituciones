@@ -1,38 +1,27 @@
 import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProfessorService } from './professor.service';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-
-// Helper for file naming
-const editFileName = (req: any, file: any, callback: any) => {
-    const name = file.originalname.split('.')[0];
-    const fileExtName = extname(file.originalname);
-    const randomName = Array(4)
-        .fill(null)
-        .map(() => Math.round(Math.random() * 16).toString(16))
-        .join('');
-    callback(null, `${name}-${randomName}${fileExtName}`);
-};
+import { StorageService } from '../storage/storage.service';
+import { memoryStorage } from 'multer';
 
 @Controller('professor')
 export class ProfessorController {
-    constructor(private readonly professorService: ProfessorService) { }
+    constructor(
+        private readonly professorService: ProfessorService,
+        private readonly storageService: StorageService
+    ) { }
 
     // Resource Library Endpoints
     @Post('upload')
     @UseInterceptors(FileInterceptor('file', {
-        storage: diskStorage({
-            destination: './uploads',
-            filename: editFileName,
-        }),
+        storage: memoryStorage(), // Store in memory so we can buffer upload to SFTP
     }))
     async uploadFile(@UploadedFile() file: any, @Body('profesorId') profesorId: string) {
-        // Construct the URL. Assuming backend runs on localhost:3000
-        const url = `http://localhost:3000/uploads/${file.filename}`;
+        // Upload via StorageService (Local or SFTP)
+        const url = await this.storageService.uploadFile(file);
 
         return this.professorService.createResource({
-            profesorId: parseInt(profesorId) || 1, // Default to 1 if not provided
+            profesorId: parseInt(profesorId) || 1, // Default to 1
             nombre: file.originalname,
             tipo: file.mimetype,
             url: url,
@@ -87,4 +76,27 @@ export class ProfessorController {
     async deleteLevel(@Param('id', ParseIntPipe) levelId: number) {
         return this.professorService.deleteLevel(levelId);
     }
+
+    // RAG Templates
+    @Post('levels/:id/rag')
+    async createRag(@Param('id', ParseIntPipe) levelId: number, @Body() body: any) {
+        return this.professorService.createRagTemplate(levelId, body);
+    }
+
+    @Get('levels/:id/rag')
+    async getRagTemplate(@Param('id', ParseIntPipe) levelId: number) {
+        return this.professorService.getRagTemplate(levelId);
+    }
+
+    // HA Routes
+    @Post('levels/:id/ha')
+    async createHaTemplate(@Param('id', ParseIntPipe) levelId: number, @Body() body: any) {
+        return this.professorService.createHaTemplate(levelId, body);
+    }
+
+    @Get('levels/:id/ha')
+    async getHaTemplate(@Param('id', ParseIntPipe) levelId: number) {
+        return this.professorService.getHaTemplate(levelId);
+    }
+
 }

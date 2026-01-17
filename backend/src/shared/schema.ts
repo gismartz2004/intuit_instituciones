@@ -147,6 +147,94 @@ export const progresoNiveles = pgTable('progreso_niveles', {
   fechaCompletado: timestamp('fecha_completado'),
 });
 
+// 15. Plantillas RAG (Recuperación Autónoma Guiada)
+export const plantillasRag = pgTable('plantillas_rag', {
+  id: serial('id').primaryKey(),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+  // Identificación General
+  programa: varchar('programa', { length: 255 }),
+  modulo: varchar('modulo', { length: 255 }),
+  hitoAprendizaje: varchar('hito_aprendizaje', { length: 255 }),
+  mes: varchar('mes', { length: 50 }),
+  semana: varchar('semana', { length: 50 }),
+  tipoRag: varchar('tipo_rag', { length: 50 }), // Técnica / Práctica / Mixta
+  modalidad: varchar('modalidad', { length: 50 }), // Autónoma / Asincrónica
+  duracionEstimada: varchar('duracion_estimada', { length: 50 }),
+
+  // Propósito y Objetivos
+  proposito: text('proposito'),
+  objetivoAprendizaje: text('objetivo_aprendizaje'),
+
+  // Contenido Clave (Stored as JSON: [{titulo, descripcion}])
+  contenidoClave: text('contenido_clave'), // JSON stringified
+
+  // Actividad Autónoma
+  nombreActividad: varchar('nombre_actividad', { length: 255 }),
+  descripcionDesafio: text('descripcion_desafio'),
+  pasosGuiados: text('pasos_guiados'), // JSON stringified: [{paso, completado}]
+
+  // Ayudas
+  pistas: text('pistas'), // JSON stringified: [pista1, pista2...]
+
+  // Evidencia
+  tipoEvidencia: varchar('tipo_evidencia', { length: 100 }),
+  cantidadEvidencias: integer('cantidad_evidencias'),
+
+  // Competencias (JSON)
+  competenciasTecnicas: text('competencias_tecnicas'),
+  competenciasBlandas: text('competencias_blandas'),
+
+  // Impacto
+  porcentajeAporte: integer('porcentaje_aporte'),
+  actualizaRadar: boolean('actualiza_radar').default(false),
+  regularizaAsistencia: boolean('regulariza_asistencia').default(false),
+
+  // Criterios de Finalización
+  criterioEvidencia: boolean('criterio_evidencia').default(false),
+  criterioPasos: boolean('criterio_pasos').default(false),
+  criterioTiempo: boolean('criterio_tiempo').default(false),
+
+  // Secciones Dinámicas Globales (Para expandir la plantilla)
+  seccionesDinamicas: text('secciones_dinamicas'), // JSON: [{ titulo, tipo: 'texto'|'checklist', contenido: string | [] }]
+
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
+// 16. Plantillas HA (Hito de Aprendizaje)
+export const plantillasHa = pgTable('plantillas_ha', {
+  id: serial('id').primaryKey(),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+
+  // 1. Fase
+  fase: varchar('fase', { length: 255 }),
+
+  // 2. Objetivo de la semana
+  objetivoSemana: text('objetivo_semana'),
+
+  // 3. Concepto Clave
+  conceptoClave: text('concepto_clave'),
+
+  // 4. Pasos Guiados (Checklist)
+  pasosGuiados: text('pasos_guiados'), // JSON stringified
+
+  // 5. Resultado Esperado
+  resultadoEsperado: text('resultado_esperado'),
+  // Nota: El "Estado" (Logrado/En Proceso) se guarda en el progreso del estudiante, no en la plantilla.
+
+  // 6. Evidencia
+  evidenciaTipos: text('evidencia_tipos'), // JSON Array: ['Imagen', 'Video']
+  evidenciaDescripcion: text('evidencia_descripcion'),
+
+  // 7. Pregunta de Reflexión
+  preguntaReflexion: text('pregunta_reflexion'),
+
+  // Secciones Dinámicas
+  seccionesDinamicas: text('secciones_dinamicas'), // JSON
+
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -201,3 +289,11 @@ export type InsertCertificado = z.infer<typeof insertCertificadoSchema>;
 
 export type ProgresoNivel = typeof progresoNiveles.$inferSelect;
 export type InsertProgresoNivel = z.infer<typeof insertProgresoNivelSchema>;
+
+export const insertPlantillaRagSchema = createInsertSchema(plantillasRag);
+export type PlantillaRag = typeof plantillasRag.$inferSelect;
+export type InsertPlantillaRag = z.infer<typeof insertPlantillaRagSchema>;
+
+export const insertPlantillaHaSchema = createInsertSchema(plantillasHa);
+export type PlantillaHa = typeof plantillasHa.$inferSelect;
+export type InsertPlantillaHa = z.infer<typeof insertPlantillaHaSchema>;
