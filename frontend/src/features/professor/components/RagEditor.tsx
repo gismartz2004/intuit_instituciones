@@ -105,13 +105,14 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
         try {
             const payload = {
                 ...formData,
+                fechaCreacion: null,
                 nivelId: levelId,
                 contenidoClave: JSON.stringify(keyConcepts),
                 pasosGuiados: JSON.stringify(guidedSteps),
                 pistas: JSON.stringify(hints),
                 seccionesDinamicas: JSON.stringify(dynamicSections)
             };
-
+            console.log("Saving RAG with payload:", payload);
             await professorApi.saveRagTemplate(levelId, payload);
             toast({ title: "Plantilla RAG guardada exitosamente" });
             if (onClose) onClose();
