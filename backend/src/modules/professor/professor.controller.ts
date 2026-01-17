@@ -85,7 +85,13 @@ export class ProfessorController {
 
     @Get('levels/:id/rag')
     async getRagTemplate(@Param('id', ParseIntPipe) levelId: number) {
-        return this.professorService.getRagTemplate(levelId);
+        try {
+            const ragTemplate = await this.professorService.getRagTemplate(levelId);
+            return ragTemplate;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
     }
 
     // HA Routes
