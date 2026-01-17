@@ -26,7 +26,9 @@ COPY . .
 
 # Build arguments for environment variables
 ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=https://arg-academy-fe-591566273209.europe-west1.run.app
+# imprimir variable para debug
+RUN echo "VITE_API_BASE_URL is set to: $VITE_API_BASE_URL"
 
 # Build the application
 RUN npm run build
