@@ -212,24 +212,29 @@ export class ProfessorService {
 
   async createHaTemplate(levelId: number, data: any) {
     console.log('Saving HA for level:', levelId);
+    try {
+      // Remove 'id' if present to avoid PK violation
+      const { id, ...payload } = data;
+      payload.fechaCreacion = null;
 
-    // Remove 'id' if present to avoid PK violation
-    const { id, ...payload } = data;
-
-    const existing = await this.getHaTemplate(levelId);
-    if (existing) {
-      const [updated] = await this.db
-        .update(schema.plantillasHa)
-        .set({ ...payload })
-        .where(eq(schema.plantillasHa.id, existing.id)) // Use existing ID for update
-        .returning();
-      return updated;
-    } else {
-      const [inserted] = await this.db
-        .insert(schema.plantillasHa)
-        .values({ ...payload, nivelId: levelId })
-        .returning();
-      return inserted;
+      const existing = await this.getHaTemplate(levelId);
+      if (existing) {
+        const [updated] = await this.db
+          .update(schema.plantillasHa)
+          .set({ ...payload })
+          .where(eq(schema.plantillasHa.id, existing.id)) // Use existing ID for update
+          .returning();
+        return updated;
+      } else {
+        const [inserted] = await this.db
+          .insert(schema.plantillasHa)
+          .values({ ...payload, nivelId: levelId })
+          .returning();
+        return inserted;
+      }
+    } catch (error) {
+      console.log('Error in createHaTemplate:', error);
+      throw new BadRequestException('Error en la creación de la plantilla HA');
     }
   }
 

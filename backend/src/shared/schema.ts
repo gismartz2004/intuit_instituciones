@@ -234,7 +234,6 @@ export const plantillasHa = pgTable('plantillas_ha', {
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
-
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);

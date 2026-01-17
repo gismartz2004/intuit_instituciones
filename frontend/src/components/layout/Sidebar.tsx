@@ -83,6 +83,7 @@ export function Sidebar({ currentRole, onRoleChange, onLogout, userPlanId = 1 }:
   const adminLinks = [
     { href: "/admin", icon: Shield, label: "Panel Admin" },
     { href: "/admin/users", icon: User, label: "Usuarios" },
+    { href: "/admin/modules", icon: Book, label: "Módulos" },
     { href: "/profile", icon: Settings, label: "Configuración" },
   ];
 
