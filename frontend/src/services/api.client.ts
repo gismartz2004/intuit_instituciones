@@ -22,7 +22,7 @@ class ApiClient {
     method: HTTPMethod = 'GET',
     options: RequestOptions = {}
   ): Promise<T> {
-    const { params, ...fetchOptions } = options;
+    const { params, body, ...fetchOptions } = options;
 
     // Construir URL con query params si existen
     let url = `${this.baseURL}${endpoint}`;
@@ -33,12 +33,17 @@ class ApiClient {
       url += `?${queryString}`;
     }
 
+    const headers: Record<string, string> = { ...fetchOptions.headers as any };
+
+    // Si el body no es FormData, ponemos el content-type por defecto
+    if (!(body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const config: RequestInit = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...fetchOptions.headers,
-      },
+      headers,
+      body,
       ...fetchOptions,
     };
 
@@ -66,23 +71,26 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    const processedBody = body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined);
     return this.request<T>(endpoint, 'POST', {
       ...options,
-      body: body ? JSON.stringify(body) : undefined,
+      body: processedBody as any,
     });
   }
 
   async put<T>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    const processedBody = body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined);
     return this.request<T>(endpoint, 'PUT', {
       ...options,
-      body: body ? JSON.stringify(body) : undefined,
+      body: processedBody as any,
     });
   }
 
   async patch<T>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    const processedBody = body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined);
     return this.request<T>(endpoint, 'PATCH', {
       ...options,
-      body: body ? JSON.stringify(body) : undefined,
+      body: processedBody as any,
     });
   }
 

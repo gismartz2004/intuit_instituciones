@@ -92,26 +92,80 @@ export class StudentService {
     }
 
     async calculateLevelProgress(studentId: number, levelId: number) {
-        // Get all activities for this level
+        // 1. Traditional Activities
         const activities = await this.db.select()
             .from(schema.actividades)
             .where(eq(schema.actividades.nivelId, levelId));
 
-        if (activities.length === 0) {
-            return { porcentajeCompletado: 100, completado: true }; // No activities = auto-complete
+        let totalTasks = activities.length;
+        let completedTasks = 0;
+
+        if (activities.length > 0) {
+            const submissions = await this.db.select()
+                .from(schema.entregas)
+                .where(eq(schema.entregas.estudianteId, studentId));
+
+            const activityIds = activities.map(a => a.id);
+            completedTasks = submissions.filter(s =>
+                activityIds.includes(s.actividadId!) && s.calificacionNumerica !== null
+            ).length;
         }
 
-        // Get student's submissions for these activities
-        const activityIds = activities.map(a => a.id);
-        const submissions = await this.db.select()
-            .from(schema.entregas)
-            .where(eq(schema.entregas.estudianteId, studentId));
+        // 2. RAG Guides (RAG Templates associated with this level)
+        const rags = await this.db.select()
+            .from(schema.plantillasRag)
+            .where(eq(schema.plantillasRag.nivelId, levelId));
 
-        const completedActivities = submissions.filter(s =>
-            activityIds.includes(s.actividadId!) && s.calificacionNumerica !== null
-        );
+        for (const rag of rags) {
+            totalTasks += 1;
 
-        const porcentajeCompletado = Math.round((completedActivities.length / activities.length) * 100);
+            const ragSubmissions = await this.db.select()
+                .from(schema.entregasRag)
+                .where(and(
+                    eq(schema.entregasRag.estudianteId, studentId),
+                    eq(schema.entregasRag.plantillaRagId, rag.id)
+                ));
+
+            const pasos = (rag.pasosGuiados as any[]) || [];
+            if (pasos.length === 0) {
+                completedTasks += 1;
+                continue;
+            }
+
+            const submittedIndices = new Set(ragSubmissions.map(s => s.pasoIndice));
+            const allRequiredSubmitted = pasos.every((p, idx) =>
+                !p.requiereEntregable || submittedIndices.has(idx)
+            );
+
+            if (allRequiredSubmitted) {
+                completedTasks += 1;
+            }
+        }
+
+        // 3. HA Guides (HA Templates associated with this level)
+        const has = await this.db.select()
+            .from(schema.plantillasHa)
+            .where(eq(schema.plantillasHa.nivelId, levelId));
+
+        for (const ha of has) {
+            totalTasks += 1;
+            const haSubmissions = await this.db.select()
+                .from(schema.entregasHa)
+                .where(and(
+                    eq(schema.entregasHa.estudianteId, studentId),
+                    eq(schema.entregasHa.plantillaHaId, ha.id)
+                ));
+
+            if (haSubmissions.length > 0) {
+                completedTasks += 1;
+            }
+        }
+
+        if (totalTasks === 0) {
+            return { porcentajeCompletado: 100, completado: true };
+        }
+
+        const porcentajeCompletado = Math.min(100, Math.round((completedTasks / totalTasks) * 100));
         const completado = porcentajeCompletado === 100;
 
         return { porcentajeCompletado, completado };
@@ -134,8 +188,8 @@ export class StudentService {
             await this.db.update(schema.progresoNiveles)
                 .set({
                     porcentajeCompletado,
-                    completado,
-                    fechaCompletado: completado ? new Date() : null
+                    completado: completado || existing[0].completado, // Don't un-complete if already done
+                    fechaCompletado: (completado && !existing[0].completado) ? new Date() : existing[0].fechaCompletado
                 })
                 .where(eq(schema.progresoNiveles.id, existing[0].id));
         } else {
@@ -149,8 +203,8 @@ export class StudentService {
             });
         }
 
-        // If completed, unlock next level
-        if (completado) {
+        // If newly completed, unlock next level
+        if (completado && (existing.length === 0 || !existing[0].completado)) {
             await this.unlockNextLevel(studentId, levelId);
         }
 
@@ -404,6 +458,12 @@ export class StudentService {
     async submitHaEvidence(data: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }) {
         const { studentId, plantillaHaId, archivosUrls, comentarioEstudiante } = data;
 
+        // Get levelId for this template
+        const template = await this.db.select({ nivelId: schema.plantillasHa.nivelId })
+            .from(schema.plantillasHa)
+            .where(eq(schema.plantillasHa.id, plantillaHaId))
+            .limit(1);
+
         // Check if evidence already exists
         const existing = await this.db.select()
             .from(schema.entregasHa)
@@ -413,16 +473,17 @@ export class StudentService {
             ))
             .limit(1);
 
+        let resId: number;
         if (existing.length > 0) {
             // Update existing
             await this.db.update(schema.entregasHa)
                 .set({
-                    archivosUrls: JSON.stringify(archivosUrls), // Overwrite or append logic should be handled by caller if needed, here we just save what we get
+                    archivosUrls: JSON.stringify(archivosUrls),
                     comentarioEstudiante: comentarioEstudiante || existing[0].comentarioEstudiante,
-                    fechaSubida: new Date() // Update timestamp
+                    fechaSubida: new Date()
                 })
                 .where(eq(schema.entregasHa.id, existing[0].id));
-            return { success: true, action: 'updated', id: existing[0].id };
+            resId = existing[0].id;
         } else {
             // Create new
             const res = await this.db.insert(schema.entregasHa).values({
@@ -432,12 +493,25 @@ export class StudentService {
                 comentarioEstudiante: comentarioEstudiante,
                 validado: false
             }).returning();
-            return { success: true, action: 'created', id: res[0].id };
+            resId = res[0].id;
         }
+
+        // Trigger progress update
+        if (template.length > 0 && template[0].nivelId) {
+            await this.updateLevelProgress(studentId, template[0].nivelId);
+        }
+
+        return { success: true, action: existing.length > 0 ? 'updated' : 'created', id: resId };
     }
 
     async submitRagProgress(data: { studentId: number; plantillaRagId: number; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
         const { studentId, plantillaRagId, pasoIndice, archivoUrl, tipoArchivo } = data;
+
+        // Get levelId for this template
+        const template = await this.db.select({ nivelId: schema.plantillasRag.nivelId })
+            .from(schema.plantillasRag)
+            .where(eq(schema.plantillasRag.id, plantillaRagId))
+            .limit(1);
 
         await this.db.insert(schema.entregasRag).values({
             estudianteId: studentId,
@@ -450,6 +524,11 @@ export class StudentService {
 
         // Add points for submission
         await this.addXP(studentId, 50, 'Entrega de avance RAG');
+
+        // Trigger progress update
+        if (template.length > 0 && template[0].nivelId) {
+            await this.updateLevelProgress(studentId, template[0].nivelId);
+        }
 
         return { success: true, pasoIndice };
     }

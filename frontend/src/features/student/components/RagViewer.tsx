@@ -25,6 +25,9 @@ import {
   FileText,
   ArrowRight,
   Sparkles,
+  Zap,
+  Brain,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AvatarGuide from "./AvatarGuide";
@@ -206,9 +209,14 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
         const res = await studentApi.uploadEvidence(file);
         setMissionEvidenceUrl(res.url);
 
-        // Submit immediately or wait?
-        // Let's submit as an initial rag progress or just store it.
-        // For now just store URL.
+        // Submit to database immediately with pasoIndice -1 (Initial Evidence)
+        await studentApi.submitRagProgress({
+          studentId: getStudentId(),
+          plantillaRagId: data.id,
+          pasoIndice: -1, // Special index for initial evidence
+          archivoUrl: res.url,
+          tipoArchivo: file.type || 'unknown'
+        });
 
         onAddPoints?.(50, "Evidencia principal subida");
         setAvatarState({
@@ -218,7 +226,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
         });
       } catch (error) {
         setAvatarState({ emotion: 'sad', message: 'Error al subir la evidencia.', isVisible: true });
-        setMissionEvidence(null); // Reset on error so user can try again or see they need to retry
+        setMissionEvidence(null);
       } finally {
         setIsUploading(false);
       }
@@ -430,32 +438,77 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
             </Card>
 
             {(ragData.competenciasTecnicas || ragData.competenciasBlandas) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                {/* TECHNICAL SKILLS */}
                 {ragData.competenciasTecnicas && (
-                  <Card className="bg-blue-50 border-blue-200">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-bold text-blue-800">
+                  <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-none shadow-lg overflow-hidden relative group hover:shadow-xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Zap className="w-24 h-24 text-cyan-600" />
+                    </div>
+                    <CardHeader className="pb-2 relative z-10">
+                      <CardTitle className="text-lg font-black text-cyan-800 flex items-center gap-2">
+                        <div className="p-2 bg-cyan-100 rounded-lg">
+                          <Zap className="w-5 h-5 text-cyan-600" />
+                        </div>
                         Competencias Técnicas
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-xs text-blue-700 whitespace-pre-line">
-                        {ragData.competenciasTecnicas}
-                      </p>
+                    <CardContent className="relative z-10 pt-2">
+                      <div className="flex flex-wrap gap-2">
+                        {ragData.competenciasTecnicas.split(/\n|•/).map((skill: string, i: number) => {
+                          const cleanSkill = skill.trim();
+                          if (!cleanSkill) return null;
+                          return (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.1 * i }}
+                              className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg text-sm font-semibold text-cyan-700 shadow-sm border border-cyan-100 flex items-center gap-2 hover:scale-105 transition-transform cursor-default"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                              {cleanSkill}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
+
+                {/* SOFT SKILLS */}
                 {ragData.competenciasBlandas && (
-                  <Card className="bg-purple-50 border-purple-200">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-bold text-purple-800">
+                  <Card className="bg-gradient-to-br from-fuchsia-50 to-pink-50 border-none shadow-lg overflow-hidden relative group hover:shadow-xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Brain className="w-24 h-24 text-fuchsia-600" />
+                    </div>
+                    <CardHeader className="pb-2 relative z-10">
+                      <CardTitle className="text-lg font-black text-fuchsia-800 flex items-center gap-2">
+                        <div className="p-2 bg-fuchsia-100 rounded-lg">
+                          <Brain className="w-5 h-5 text-fuchsia-600" />
+                        </div>
                         Competencias Blandas
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-xs text-purple-700 whitespace-pre-line">
-                        {ragData.competenciasBlandas}
-                      </p>
+                    <CardContent className="relative z-10 pt-2">
+                      <div className="flex flex-wrap gap-2">
+                        {ragData.competenciasBlandas.split(/\n|•/).map((skill: string, i: number) => {
+                          const cleanSkill = skill.trim();
+                          if (!cleanSkill) return null;
+                          return (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.1 * i + 0.3 }}
+                              className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg text-sm font-semibold text-fuchsia-700 shadow-sm border border-fuchsia-100 flex items-center gap-2 hover:scale-105 transition-transform cursor-default"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-fuchsia-400" />
+                              {cleanSkill}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -754,24 +807,44 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                 <Award className="w-7 h-7 text-amber-500" /> Competencias Ganadas
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {ragData.competenciasTecnicas && (
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 shadow-lg">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg font-bold text-blue-800 flex items-center gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                    <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-none shadow-lg overflow-hidden relative group hover:shadow-xl transition-all duration-300 h-full">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Zap className="w-24 h-24 text-cyan-600" />
+                      </div>
+                      <CardHeader className="pb-3 relative z-10">
+                        <CardTitle className="text-lg font-black text-cyan-800 flex items-center gap-2">
+                          <div className="p-2 bg-cyan-100 rounded-lg">
+                            <Zap className="w-5 h-5 text-cyan-600" />
+                          </div>
                           Competencias Técnicas
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-blue-700 whitespace-pre-line leading-relaxed">
-                          {ragData.competenciasTecnicas}
-                        </p>
+                      <CardContent className="relative z-10">
+                        <div className="flex flex-wrap gap-2">
+                          {ragData.competenciasTecnicas.split(/\n|•/).map((skill: string, i: number) => {
+                            const cleanSkill = skill.trim();
+                            if (!cleanSkill) return null;
+                            return (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.1 * i + 0.4 }}
+                                className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg text-sm font-semibold text-cyan-700 shadow-sm border border-cyan-100 flex items-center gap-2"
+                              >
+                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                {cleanSkill}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -783,17 +856,37 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 shadow-lg">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg font-bold text-purple-800 flex items-center gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                    <Card className="bg-gradient-to-br from-fuchsia-50 to-pink-50 border-none shadow-lg overflow-hidden relative group hover:shadow-xl transition-all duration-300 h-full">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Brain className="w-24 h-24 text-fuchsia-600" />
+                      </div>
+                      <CardHeader className="pb-3 relative z-10">
+                        <CardTitle className="text-lg font-black text-fuchsia-800 flex items-center gap-2">
+                          <div className="p-2 bg-fuchsia-100 rounded-lg">
+                            <Brain className="w-5 h-5 text-fuchsia-600" />
+                          </div>
                           Competencias Blandas
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-purple-700 whitespace-pre-line leading-relaxed">
-                          {ragData.competenciasBlandas}
-                        </p>
+                      <CardContent className="relative z-10">
+                        <div className="flex flex-wrap gap-2">
+                          {ragData.competenciasBlandas.split(/\n|•/).map((skill: string, i: number) => {
+                            const cleanSkill = skill.trim();
+                            if (!cleanSkill) return null;
+                            return (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.1 * i + 0.6 }}
+                                className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg text-sm font-semibold text-fuchsia-700 shadow-sm border border-fuchsia-100 flex items-center gap-2"
+                              >
+                                <div className="w-2 h-2 rounded-full bg-fuchsia-400" />
+                                {cleanSkill}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
