@@ -234,6 +234,59 @@ export const plantillasHa = pgTable('plantillas_ha', {
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
+// 17. Logros (Achievements)
+export const logros = pgTable('logros', {
+  id: serial('id').primaryKey(),
+  titulo: varchar('titulo', { length: 100 }),
+  descripcion: text('descripcion'),
+  icono: varchar('icono', { length: 50 }),
+  xpRequerida: integer('xp_requerida'),
+  condicionTipo: varchar('condicion_tipo', { length: 50 }), // LEVEL_REACHED, STREAK, MISSION_COMPLETE
+  condicionValor: integer('condicion_valor'),
+});
+
+// 18. Logros Desbloqueados
+export const logrosDesbloqueados = pgTable('logros_desbloqueados', {
+  id: serial('id').primaryKey(),
+  estudianteId: integer('estudiante_id').references(() => usuarios.id),
+  logroId: integer('logro_id').references(() => logros.id),
+  fechaDesbloqueo: timestamp('fecha_desbloqueo').defaultNow(),
+});
+
+// 19. Gamificación Estudiante (Estado Actual)
+export const gamificacionEstudiante = pgTable('gamificacion_estudiante', {
+  id: serial('id').primaryKey(),
+  estudianteId: integer('estudiante_id').references(() => usuarios.id).unique(),
+  xpTotal: integer('xp_total').default(0),
+  nivelActual: integer('nivel_actual').default(1),
+  puntosDisponibles: integer('puntos_disponibles').default(0), // Para tienda
+  rachaDias: integer('racha_dias').default(0),
+  ultimaRachaUpdate: timestamp('ultima_racha_update'),
+});
+
+// 20. Entregas RAG
+export const entregasRag = pgTable('entregas_rag', {
+  id: serial('id').primaryKey(),
+  estudianteId: integer('estudiante_id').references(() => usuarios.id),
+  plantillaRagId: integer('plantilla_rag_id').references(() => plantillasRag.id),
+  pasoIndice: integer('paso_indice'), // Qué paso es (0, 1, 2...)
+  archivoUrl: text('archivo_url'),
+  tipoArchivo: varchar('tipo_archivo', { length: 50 }),
+  feedbackAvatar: text('feedback_avatar'),
+  fechaSubida: timestamp('fecha_subida').defaultNow(),
+});
+
+// 21. Entregas HA (Evidencia Hito)
+export const entregasHa = pgTable('entregas_ha', {
+  id: serial('id').primaryKey(),
+  estudianteId: integer('estudiante_id').references(() => usuarios.id),
+  plantillaHaId: integer('plantilla_ha_id').references(() => plantillasHa.id),
+  archivosUrls: text('archivos_urls'), // JSON Array stringified
+  comentarioEstudiante: text('comentario_estudiante'),
+  validado: boolean('validado').default(false),
+  fechaSubida: timestamp('fecha_subida').defaultNow(),
+});
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -296,3 +349,24 @@ export type InsertPlantillaRag = z.infer<typeof insertPlantillaRagSchema>;
 export const insertPlantillaHaSchema = createInsertSchema(plantillasHa);
 export type PlantillaHa = typeof plantillasHa.$inferSelect;
 export type InsertPlantillaHa = z.infer<typeof insertPlantillaHaSchema>;
+
+export const insertLogroSchema = createInsertSchema(logros);
+export const insertLogroDesbloqueadoSchema = createInsertSchema(logrosDesbloqueados);
+export const insertGamificacionEstudianteSchema = createInsertSchema(gamificacionEstudiante);
+export const insertEntregaRagSchema = createInsertSchema(entregasRag);
+export const insertEntregaHaSchema = createInsertSchema(entregasHa);
+
+export type Logro = typeof logros.$inferSelect;
+export type InsertLogro = z.infer<typeof insertLogroSchema>;
+
+export type LogroDesbloqueado = typeof logrosDesbloqueados.$inferSelect;
+export type InsertLogroDesbloqueado = z.infer<typeof insertLogroDesbloqueadoSchema>;
+
+export type GamificacionEstudiante = typeof gamificacionEstudiante.$inferSelect;
+export type InsertGamificacionEstudiante = z.infer<typeof insertGamificacionEstudianteSchema>;
+
+export type EntregaRag = typeof entregasRag.$inferSelect;
+export type InsertEntregaRag = z.infer<typeof insertEntregaRagSchema>;
+
+export type EntregaHa = typeof entregasHa.$inferSelect;
+export type InsertEntregaHa = z.infer<typeof insertEntregaHaSchema>;

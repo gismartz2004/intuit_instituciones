@@ -1,12 +1,17 @@
+
 import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
 import { eq, asc, and } from 'drizzle-orm';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class StudentService {
-    constructor(@Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>) { }
+    constructor(
+        @Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>,
+        private storageService: StorageService
+    ) { }
 
     async getStudentModules(studentId: number) {
         // 1. Get Assigned Modules
@@ -217,5 +222,167 @@ export class StudentService {
                 isUnlocked
             };
         });
+    }
+
+    // =========== GAMIFICATION ===========
+    async getGamificationStats(studentId: number) {
+        let gamification = await this.db.select()
+            .from(schema.gamificacionEstudiante)
+            .where(eq(schema.gamificacionEstudiante.estudianteId, studentId))
+            .limit(1);
+
+        if (gamification.length === 0) {
+            // Initialize gamification for student
+            await this.db.insert(schema.gamificacionEstudiante).values({
+                estudianteId: studentId,
+                xpTotal: 0,
+                nivelActual: 1,
+                puntosDisponibles: 0,
+                rachaDias: 0
+            });
+            gamification = await this.db.select()
+                .from(schema.gamificacionEstudiante)
+                .where(eq(schema.gamificacionEstudiante.estudianteId, studentId))
+                .limit(1);
+        }
+
+        // Get total points from puntos_log
+        const pointsResult = await this.db.select({ total: schema.puntosLog.cantidad })
+            .from(schema.puntosLog)
+            .where(eq(schema.puntosLog.estudianteId, studentId));
+
+        const totalPoints = pointsResult.reduce((sum, row) => sum + (row.total || 0), 0);
+
+        // Get unlocked achievements
+        const achievements = await this.db.select({
+            logro: schema.logros,
+            fechaDesbloqueo: schema.logrosDesbloqueados.fechaDesbloqueo
+        })
+            .from(schema.logrosDesbloqueados)
+            .innerJoin(schema.logros, eq(schema.logrosDesbloqueados.logroId, schema.logros.id))
+            .where(eq(schema.logrosDesbloqueados.estudianteId, studentId));
+
+        return {
+            ...gamification[0],
+            totalPoints,
+            achievements: achievements.map(a => ({
+                ...a.logro,
+                unlockedAt: a.fechaDesbloqueo
+            }))
+        };
+    }
+
+    async addXP(studentId: number, amount: number, reason: string) {
+        // Update gamification record
+        const current = await this.db.select()
+            .from(schema.gamificacionEstudiante)
+            .where(eq(schema.gamificacionEstudiante.estudianteId, studentId))
+            .limit(1);
+
+        if (current.length === 0) {
+            await this.getGamificationStats(studentId); // Initialize
+        }
+
+        const newXP = (current[0]?.xpTotal || 0) + amount;
+        const newLevel = this.calculateLevelFromXP(newXP);
+
+        await this.db.update(schema.gamificacionEstudiante)
+            .set({
+                xpTotal: newXP,
+                nivelActual: newLevel,
+                puntosDisponibles: (current[0]?.puntosDisponibles || 0) + amount
+            })
+            .where(eq(schema.gamificacionEstudiante.estudianteId, studentId));
+
+        // Log points
+        await this.db.insert(schema.puntosLog).values({
+            estudianteId: studentId,
+            cantidad: amount,
+            motivo: reason
+        });
+
+        return { newXP, newLevel, amount, reason };
+    }
+
+    private calculateLevelFromXP(xp: number): number {
+        const levels = [
+            { level: 1, minXP: 0 },
+            { level: 2, minXP: 500 },
+            { level: 3, minXP: 1500 },
+            { level: 4, minXP: 3000 },
+            { level: 5, minXP: 5000 },
+            { level: 6, minXP: 8000 },
+            { level: 7, minXP: 12000 },
+        ];
+
+        for (let i = levels.length - 1; i >= 0; i--) {
+            if (xp >= levels[i].minXP) {
+                return levels[i].level;
+            }
+        }
+        return 1;
+    }
+
+    // =========== FILE UPLOADS ===========
+    async uploadHaEvidence(
+        studentId: number,
+        haId: number,
+        file: Express.Multer.File,
+        comentario?: string
+    ) {
+        const fileUrl = await this.storageService.uploadFile(file);
+
+        // Check if evidence already exists
+        const existing = await this.db.select()
+            .from(schema.entregasHa)
+            .where(and(
+                eq(schema.entregasHa.estudianteId, studentId),
+                eq(schema.entregasHa.plantillaHaId, haId)
+            ))
+            .limit(1);
+
+        if (existing.length > 0) {
+            // Update existing
+            const currentUrls = JSON.parse(existing[0].archivosUrls || '[]');
+            currentUrls.push(fileUrl);
+
+            await this.db.update(schema.entregasHa)
+                .set({
+                    archivosUrls: JSON.stringify(currentUrls),
+                    comentarioEstudiante: comentario || existing[0].comentarioEstudiante
+                })
+                .where(eq(schema.entregasHa.id, existing[0].id));
+        } else {
+            // Create new
+            await this.db.insert(schema.entregasHa).values({
+                estudianteId: studentId,
+                plantillaHaId: haId,
+                archivosUrls: JSON.stringify([fileUrl]),
+                comentarioEstudiante: comentario,
+                validado: false
+            });
+        }
+
+        return { success: true, fileUrl };
+    }
+
+    async uploadRagEvidence(
+        studentId: number,
+        ragId: number,
+        stepIndex: number,
+        file: Express.Multer.File
+    ) {
+        const fileUrl = await this.storageService.uploadFile(file);
+
+        await this.db.insert(schema.entregasRag).values({
+            estudianteId: studentId,
+            plantillaRagId: ragId,
+            pasoIndice: stepIndex,
+            archivoUrl: fileUrl,
+            tipoArchivo: file.mimetype,
+            feedbackAvatar: '¡Excelente trabajo! Entregable recibido.'
+        });
+
+        return { success: true, fileUrl, stepIndex };
     }
 }

@@ -1,4 +1,5 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Param, ParseIntPipe, Body, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { StudentService } from './student.service';
 
 @Controller('student')
@@ -34,5 +35,40 @@ export class StudentController {
         @Param('levelId', ParseIntPipe) levelId: number
     ) {
         return this.studentService.calculateLevelProgress(studentId, levelId);
+    }
+
+    @Get(':id/gamification')
+    async getGamificationStats(@Param('id', ParseIntPipe) studentId: number) {
+        return this.studentService.getGamificationStats(studentId);
+    }
+
+    @Post(':id/xp/add')
+    async addXP(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Body() body: { amount: number; reason: string }
+    ) {
+        return this.studentService.addXP(studentId, body.amount, body.reason);
+    }
+
+    @Post(':id/evidence/ha/:haId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadHaEvidence(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('haId', ParseIntPipe) haId: number,
+        @UploadedFile() file: Express.Multer.File,
+        @Body() body: { comentario?: string }
+    ) {
+        return this.studentService.uploadHaEvidence(studentId, haId, file, body.comentario);
+    }
+
+    @Post(':id/evidence/rag/:ragId/:stepIndex')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadRagEvidence(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('ragId', ParseIntPipe) ragId: number,
+        @Param('stepIndex', ParseIntPipe) stepIndex: number,
+        @UploadedFile() file: Express.Multer.File
+    ) {
+        return this.studentService.uploadRagEvidence(studentId, ragId, stepIndex, file);
     }
 }

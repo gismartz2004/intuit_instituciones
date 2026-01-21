@@ -1,19 +1,58 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { studentApi } from "@/features/student/services/student.api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Target, Lightbulb, Trophy, FileText, MessageSquare, ListTodo, Circle } from "lucide-react";
+import { CheckCircle, Target, Lightbulb, Trophy, FileText, MessageSquare, ListTodo, Circle, ArrowRight, Sparkles } from "lucide-react";
+import AvatarGuide from "./AvatarGuide";
+import { AvatarState } from "@/types/gamification";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface HaViewerProps {
     levelId: number;
+    onAddPoints?: (amount: number, reason: string) => void;
 }
 
-export default function HaViewer({ levelId }: HaViewerProps) {
+type HaSection = 'intro' | 'context' | 'evidence' | 'reflection' | 'completion';
+
+export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
     const [haData, setHaData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [currentSection, setCurrentSection] = useState<HaSection>('intro');
+    const [evidenceFiles, setEvidenceFiles] = useState<{ type: string, file: File | null }[]>([]);
+    const [reflection, setReflection] = useState("");
+
+    const [avatarState, setAvatarState] = useState<AvatarState>({
+        isVisible: true,
+        emotion: 'thinking',
+        message: "¡Bienvenido al Hito de Aprendizaje! Aquí demostrarás todo lo que has aprendido."
+    });
+
+    // Proactive hints on idle
+    useEffect(() => {
+        if (currentSection === 'intro') return;
+
+        const idleTimer = setTimeout(() => {
+            if (currentSection === 'evidence' && evidenceFiles.length === 0) {
+                setAvatarState({
+                    emotion: 'waiting',
+                    message: "No olvides subir tu evidencia. Haz clic en el área para simular la carga.",
+                    isVisible: true
+                });
+            } else if (currentSection === 'reflection' && reflection.length < 10) {
+                setAvatarState({
+                    emotion: 'thinking',
+                    message: "Escribe al menos unas palabras sobre lo que aprendiste. ¡Me interesa saber!",
+                    isVisible: true
+                });
+            }
+        }, 20000); // Show hint after 20 seconds of inactivity
+
+        return () => clearTimeout(idleTimer);
+    }, [currentSection, evidenceFiles, reflection]);
 
     useEffect(() => {
         studentApi.getHaTemplate(levelId)
@@ -21,6 +60,79 @@ export default function HaViewer({ levelId }: HaViewerProps) {
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     }, [levelId]);
+
+    const handleNextSection = () => {
+        const sections: HaSection[] = ['intro', 'context', 'evidence', 'reflection', 'completion'];
+        const currentIndex = sections.indexOf(currentSection);
+
+        if (currentIndex < sections.length - 1) {
+            const nextSection = sections[currentIndex + 1];
+            setCurrentSection(nextSection);
+
+            switch (nextSection) {
+                case 'context':
+                    setAvatarState({
+                        emotion: 'neutral',
+                        message: "Revisemos el contexto: el concepto clave y lo que debes lograr.",
+                        isVisible: true
+                    });
+                    onAddPoints?.(25, "Sección desbloqueada");
+                    break;
+                case 'evidence':
+                    setAvatarState({
+                        emotion: 'happy',
+                        message: "Ahora es momento de subir tu evidencia. ¡Muestra lo que has creado!",
+                        isVisible: true
+                    });
+                    onAddPoints?.(50, "Evidencia iniciada");
+                    break;
+                case 'reflection':
+                    setAvatarState({
+                        emotion: 'thinking',
+                        message: "Por último, reflexiona sobre tu aprendizaje. ¿Qué aprendiste?",
+                        isVisible: true
+                    });
+                    break;
+                case 'completion':
+                    setAvatarState({
+                        emotion: 'celebrating',
+                        message: "¡Felicitaciones! Has completado el Hito de Aprendizaje.",
+                        isVisible: true
+                    });
+                    onAddPoints?.(300, "¡Hito HA Completado!");
+                    break;
+            }
+        }
+    };
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleEvidenceUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const type = file.type.startsWith('image/') ? 'Imagen' : file.type.startsWith('video/') ? 'Video' : 'Documento';
+
+            setEvidenceFiles(prev => {
+                const existing = prev.findIndex(e => e.type === type);
+                if (existing >= 0) {
+                    const updated = [...prev];
+                    updated[existing] = { type, file };
+                    return updated;
+                }
+                return [...prev, { type, file }];
+            });
+            onAddPoints?.(100, "Evidencia subida");
+            setAvatarState({
+                emotion: 'happy',
+                message: `¡Genial! Has subido "${file.name}". Continúa cuando estés listo.`,
+                isVisible: true
+            });
+        }
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
 
     if (loading) return <div className="p-8 text-center text-slate-500">Cargando Hito de Aprendizaje...</div>;
 
@@ -43,150 +155,310 @@ export default function HaViewer({ levelId }: HaViewerProps) {
 
     return (
         <ScrollArea className="h-full">
-            <div className="max-w-4xl mx-auto p-6 space-y-8 pb-20">
+            <div className="max-w-4xl mx-auto p-6 space-y-8 pb-32">
 
-                {/* HEADLINE */}
-                <div className="text-center space-y-2 mb-8">
-                    <Badge variant="outline" className="mb-2 border-cyan-500 text-cyan-600 bg-cyan-50">
-                        Hito de Aprendizaje
-                    </Badge>
-                    <h1 className="text-3xl font-bold text-slate-800">
-                        {haData.fase || "Fase de Aprendizaje"}
-                    </h1>
-                    <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        {haData.objetivoSemana}
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Concepto Clave */}
-                    <Card className="border-none shadow-md bg-white">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-amber-600 flex items-center gap-2">
-                                <Lightbulb className="w-5 h-5" /> Concepto Clave
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                                {haData.conceptoClave || "Sin concepto definido."}
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Resultado Esperado */}
-                    <Card className="border-none shadow-md bg-white">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-green-600 flex items-center gap-2">
-                                <Target className="w-5 h-5" /> Resultado Esperado
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                                {haData.resultadoEsperado || "Sin resultado definido."}
-                            </p>
-                            <div className="mt-4 flex gap-2">
-                                <Badge variant="secondary">Logrado</Badge>
-                                <Badge variant="outline" className="opacity-50">En proceso</Badge>
-                                <Badge variant="outline" className="opacity-50">No logrado</Badge>
+                {/* Section Progress Indicator */}
+                <div className="flex items-center justify-center gap-2 mb-6">
+                    {['intro', 'context', 'evidence', 'reflection', 'completion'].map((section, idx) => (
+                        <div key={section} className="flex items-center">
+                            <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                                currentSection === section
+                                    ? "bg-purple-600 text-white scale-110"
+                                    : ['intro', 'context', 'evidence', 'reflection', 'completion'].indexOf(currentSection) > idx
+                                        ? "bg-green-500 text-white"
+                                        : "bg-slate-200 text-slate-400"
+                            )}>
+                                {idx + 1}
                             </div>
-                        </CardContent>
-                    </Card>
+                            {idx < 4 && <div className="w-8 h-1 bg-slate-200 mx-1" />}
+                        </div>
+                    ))}
                 </div>
 
-                {/* Pasos Guiados */}
-                <Card className="border-none shadow-md overflow-hidden">
-                    <div className="bg-blue-50/50 p-4 border-b border-blue-100 flex items-center gap-2">
-                        <ListTodo className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-bold text-blue-800">Pasos Guiados</h3>
-                    </div>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-100">
-                            {pasosGuiados.map((item: any, i: number) => (
-                                <div key={i} className="p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors">
-                                    <div className="mt-1">
-                                        <Circle className="w-4 h-4 text-slate-300" />
+                {/* Avatar Guide Fixed Position */}
+                <div className="fixed bottom-6 right-6 z-50 max-w-sm">
+                    <AvatarGuide
+                        emotion={avatarState.emotion}
+                        message={avatarState.message}
+                        responseOptions={avatarState.responseOptions}
+                        className="shadow-2xl border-white/50 backdrop-blur-md bg-white/90"
+                    />
+                </div>
+
+                <AnimatePresence mode="wait">
+                    {/* INTRO SECTION */}
+                    {currentSection === 'intro' && (
+                        <motion.div
+                            key="intro"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                                <div className="relative z-10 text-center">
+                                    <Trophy className="w-16 h-16 mx-auto mb-4 text-yellow-300" />
+                                    <Badge variant="outline" className="mb-4 border-white/50 text-white bg-white/20">
+                                        Hito de Aprendizaje
+                                    </Badge>
+                                    <h1 className="text-4xl font-black mb-4">
+                                        {haData.fase || "Fase de Aprendizaje"}
+                                    </h1>
+                                    <p className="text-lg text-cyan-100 max-w-2xl mx-auto">
+                                        {haData.objetivoSemana}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-center">
+                                <Button
+                                    onClick={handleNextSection}
+                                    size="lg"
+                                    className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg"
+                                >
+                                    Comenzar <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* CONTEXT SECTION */}
+                    {currentSection === 'context' && (
+                        <motion.div
+                            key="context"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Concepto Clave */}
+                                <Card className="border-none shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-amber-600 flex items-center gap-2">
+                                            <Lightbulb className="w-5 h-5" /> Concepto Clave
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                                            {haData.conceptoClave || "Sin concepto definido."}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Resultado Esperado */}
+                                <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-green-600 flex items-center gap-2">
+                                            <Target className="w-5 h-5" /> Resultado Esperado
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                                            {haData.resultadoEsperado || "Sin resultado definido."}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* Pasos Guiados */}
+                            {pasosGuiados.length > 0 && (
+                                <Card className="border-none shadow-md overflow-hidden">
+                                    <div className="bg-blue-50/50 p-4 border-b border-blue-100 flex items-center gap-2">
+                                        <ListTodo className="w-5 h-5 text-blue-600" />
+                                        <h3 className="font-bold text-blue-800">Pasos Guiados</h3>
                                     </div>
-                                    <p className="text-slate-700">{item.paso}</p>
-                                </div>
-                            ))}
-                            {pasosGuiados.length === 0 && (
-                                <p className="p-6 text-center text-slate-400 italic">No hay pasos guiados.</p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Evidencia */}
-                <Card className="border-none shadow-md bg-slate-50 border-2 border-dashed border-slate-200">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-700">
-                            <FileText className="w-5 h-5" /> Evidencia Requerida
-                        </CardTitle>
-                        <CardDescription>Sube tu evidencia para completar este hito</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex flex-wrap gap-2 mb-4">
-                            {evidenciaTipos.map((tipo: string) => (
-                                <Badge key={tipo} className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-none">
-                                    {tipo}
-                                </Badge>
-                            ))}
-                        </div>
-                        <p className="text-slate-600 mb-4">{haData.evidenciaDescripcion}</p>
-
-                        {/* Placeholder upload button - Actual upload would go here */}
-                        <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-white hover:bg-slate-50 transition-colors cursor-pointer">
-                            <FileText className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                            <p className="text-sm font-medium text-slate-600">Click para subir evidencia</p>
-                            <p className="text-xs text-slate-400 mt-1">Soporta: {evidenciaTipos.join(", ")}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Pregunta Reflexión */}
-                <Card className="bg-indigo-50 border-none shadow-sm">
-                    <CardContent className="p-6 flex gap-4">
-                        <MessageSquare className="w-8 h-8 text-indigo-400 flex-shrink-0" />
-                        <div className="space-y-2">
-                            <h4 className="font-bold text-indigo-900">Pregunta de Reflexión</h4>
-                            <p className="text-indigo-800 text-lg font-medium italic">
-                                "{haData.preguntaReflexion}"
-                            </p>
-                            <textarea
-                                className="w-full mt-4 p-3 rounded-lg border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400 min-h-[100px]"
-                                placeholder="Escribe tu reflexión aquí..."
-                            ></textarea>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Dynamic Sections */}
-                {seccionesDinamicas.map((section: any, idx: number) => (
-                    <Card key={idx} className="border-none shadow-md">
-                        <CardHeader className="pb-2 border-b border-slate-100">
-                            <CardTitle className="text-slate-800 flex items-center gap-2">
-                                {section.tipo === 'checklist' ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <FileText className="w-5 h-5 text-blue-500" />}
-                                {section.titulo}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-4">
-                            {section.tipo === 'texto' ? (
-                                <p className="text-slate-700 whitespace-pre-line leading-relaxed">{section.contenido}</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {(section.contenido || []).map((item: any, i: number) => (
-                                        <div key={i} className="flex items-start gap-3">
-                                            <div className="mt-1">
-                                                <input type="checkbox" className="w-4 h-4 rounded text-blue-600 border-slate-300" />
-                                            </div>
-                                            <span className="text-slate-700">{item.texto}</span>
+                                    <CardContent className="p-0">
+                                        <div className="divide-y divide-slate-100">
+                                            {pasosGuiados.map((item: any, i: number) => (
+                                                <div key={i} className="p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors">
+                                                    <div className="mt-1">
+                                                        <Circle className="w-4 h-4 text-slate-300" />
+                                                    </div>
+                                                    <p className="text-slate-700">{item.paso}</p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            <div className="flex justify-center">
+                                <Button
+                                    onClick={handleNextSection}
+                                    size="lg"
+                                    className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                                >
+                                    Subir Evidencia <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* EVIDENCE SECTION */}
+                    {currentSection === 'evidence' && (
+                        <motion.div
+                            key="evidence"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-dashed border-purple-200">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-purple-700">
+                                        <FileText className="w-6 h-6" /> Evidencia Requerida
+                                    </CardTitle>
+                                    <CardDescription className="text-base">Sube tu evidencia para completar este hito</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {evidenciaTipos.map((tipo: string) => (
+                                            <Badge key={tipo} className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-none">
+                                                {tipo}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                    <p className="text-slate-600 mb-4">{haData.evidenciaDescripcion}</p>
+
+                                    {/* Real File Input */}
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/*,video/*,application/pdf"
+                                        onChange={handleEvidenceUpload}
+                                    />
+
+                                    {/* Upload Trigger Area */}
+                                    <div
+                                        className={cn(
+                                            "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
+                                            evidenceFiles.length > 0
+                                                ? "bg-green-50 border-green-300"
+                                                : "bg-white border-purple-300 hover:bg-purple-50"
+                                        )}
+                                        onClick={triggerFileInput}
+                                    >
+                                        {evidenceFiles.length > 0 ? (
+                                            <>
+                                                <CheckCircle className="w-12 h-12 mx-auto text-green-600 mb-2" />
+                                                <p className="text-lg font-bold text-green-700">✓ Evidencia Subida</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileText className="w-12 h-12 mx-auto text-purple-400 mb-2" />
+                                                <p className="text-sm font-medium text-slate-600">Click para subir evidencia</p>
+                                                <p className="text-xs text-slate-400 mt-1">Soporta: {evidenciaTipos.join(", ")}</p>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Show Uploaded Files */}
+                                    {evidenceFiles.length > 0 && (
+                                        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                                            <p className="text-sm font-bold text-green-700 mb-2">✓ Archivos subidos:</p>
+                                            <ul className="space-y-1">
+                                                {evidenceFiles.map((item, idx) => (
+                                                    <li key={idx} className="text-sm text-green-600 flex items-center gap-2">
+                                                        <CheckCircle className="w-4 h-4" />
+                                                        <span>{item.file?.name || 'Archivo'} ({item.type})</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Only show button when evidence is uploaded */}
+                            {evidenceFiles.length > 0 && (
+                                <div className="flex justify-center">
+                                    <Button
+                                        onClick={handleNextSection}
+                                        size="lg"
+                                        className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+                                    >
+                                        Reflexionar <ArrowRight className="w-5 h-5 ml-2" />
+                                    </Button>
                                 </div>
                             )}
-                        </CardContent>
-                    </Card>
-                ))}
+                        </motion.div>
+                    )}
+
+                    {/* REFLECTION SECTION */}
+                    {currentSection === 'reflection' && (
+                        <motion.div
+                            key="reflection"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <Card className="bg-indigo-50 border-none shadow-lg">
+                                <CardContent className="p-8 flex gap-4">
+                                    <MessageSquare className="w-10 h-10 text-indigo-400 flex-shrink-0" />
+                                    <div className="space-y-4 flex-1">
+                                        <h4 className="font-bold text-indigo-900 text-xl">Pregunta de Reflexión</h4>
+                                        <p className="text-indigo-800 text-lg font-medium italic">
+                                            "{haData.preguntaReflexion}"
+                                        </p>
+                                        <textarea
+                                            value={reflection}
+                                            onChange={(e) => setReflection(e.target.value)}
+                                            className="w-full mt-4 p-4 rounded-lg border-2 border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400 min-h-[150px]"
+                                            placeholder="Escribe tu reflexión aquí..."
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="flex justify-center">
+                                <Button
+                                    onClick={handleNextSection}
+                                    disabled={reflection.length < 10}
+                                    size="lg"
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg disabled:opacity-50"
+                                >
+                                    Finalizar <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* COMPLETION SECTION */}
+                    {currentSection === 'completion' && (
+                        <motion.div
+                            key="completion"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="space-y-6"
+                        >
+                            <Card className="border-4 border-cyan-400 bg-gradient-to-br from-cyan-50 to-blue-50 shadow-2xl">
+                                <CardContent className="p-12 text-center">
+                                    <Trophy className="w-24 h-24 text-yellow-500 mx-auto mb-6 animate-bounce" />
+                                    <h2 className="text-4xl font-black text-slate-800 mb-4">
+                                        ¡Hito Completado!
+                                    </h2>
+                                    <p className="text-xl text-slate-600 mb-6">
+                                        Has demostrado tu dominio en: <strong>{haData.fase}</strong>
+                                    </p>
+                                    <div className="flex gap-4 justify-center">
+                                        <Badge className="bg-green-500 text-white text-lg px-4 py-2">
+                                            +300 Puntos
+                                        </Badge>
+                                        <Badge className="bg-cyan-500 text-white text-lg px-4 py-2">
+                                            Evidencia Aprobada
+                                        </Badge>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
             </div>
         </ScrollArea>

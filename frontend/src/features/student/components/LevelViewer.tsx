@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import { studentApi } from "../services/student.api";
 import RagViewer from "./RagViewer";
 import HaViewer from "./HaViewer";
+import EnhancedGamificationHud from "./EnhancedGamificationHud";
+import { GamificationState, pointsToXP, calculateLevel, getXPToNextLevel } from "@/types/gamification";
 
 interface Content {
   id: number;
@@ -40,6 +42,23 @@ export default function LevelViewer() {
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [userCode, setUserCode] = useState("");
   const [viewMode, setViewMode] = useState<"content" | "rag" | "ha">("rag");
+
+  // Gamification State with XP
+  const [gameState, setGameState] = useState<GamificationState>({
+    points: 1250,
+    level: 5,
+    streak: 3,
+    xp: 2100,
+    xpToNextLevel: 900,
+  });
+
+  const handleAddPoints = (amount: number, reason: string) => {
+    setGameState(prev => ({
+      ...prev,
+      points: prev.points + amount,
+      lastAward: { amount, reason }
+    }));
+  };
 
   const levelId = match && params ? (params as any).levelId : null;
 
@@ -380,14 +399,17 @@ export default function LevelViewer() {
           </div>
         </div>
 
+        {/* Enhanced Gamification HUD */}
+        <EnhancedGamificationHud state={gameState} /> {/* Updated HUD */}
+
         {/* MAIN CONTENT RENDER LOGIC */}
         {viewMode === "rag" ? (
           <div className="animate-in fade-in slide-in-from-bottom-5 duration-500">
-            <RagViewer levelId={levelId} />
+            <RagViewer levelId={levelId} onAddPoints={handleAddPoints} />
           </div>
         ) : viewMode === "ha" ? (
           <div className="animate-in fade-in slide-in-from-bottom-5 duration-500">
-            <HaViewer levelId={levelId} />
+            <HaViewer levelId={levelId} onAddPoints={handleAddPoints} />
           </div>
         ) : (
           <>
