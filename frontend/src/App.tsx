@@ -4,13 +4,13 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { StudentDashboard, StudentDashboard3D, LevelViewer } from "@/features/student";
 import { AdminDashboard } from "@/features/admin";
-import { ProfessorDashboard, CourseEditor, FileSystem } from "@/features/professor";
+import { ProfessorDashboard, CourseEditor, FileSystem, GradingDashboard } from "@/features/professor";
 import { CodingLab, ArduinoLab } from "@/features/labs";
 import { Login } from "@/features/auth";
 import { Leaderboard } from "@/features/leaderboard";
 import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
-import { GamerRaffle } from "@/features/gamification";
+import { GamerRaffle, MissionsHub } from "@/features/gamification";
 import { Toaster } from "@/components/ui/toaster";
 
 function App() {
@@ -76,6 +76,7 @@ function App() {
           <Route path="/teach">
             <ProfessorDashboard user={user!} />
           </Route>
+          <Route path="/teach/grading" component={GradingDashboard} />
           <Route path="/teach/module/:id" component={CourseEditor} />
           <Route path="/lab" component={CodingLab} />
           <Route path="/arduino-lab" component={ArduinoLab} />
@@ -84,6 +85,7 @@ function App() {
           <Route path="/pro-courses" component={ProCourses} />
           <Route path="/gamer-raffle" component={GamerRaffle} />
           <Route path="/level/:levelId" component={LevelViewer} />
+          <Route path="/missions" component={MissionsHub} />
           <Route path="/files" component={FileSystem} />
           <Route path="/profile">
             {user ? <Profile user={user} /> : <Redirect to="/login" />}

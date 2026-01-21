@@ -324,65 +324,57 @@ export class StudentService {
     }
 
     // =========== FILE UPLOADS ===========
-    async uploadHaEvidence(
-        studentId: number,
-        haId: number,
-        file: Express.Multer.File,
-        comentario?: string
-    ) {
-        const fileUrl = await this.storageService.uploadFile(file);
+    // =========== SUBMISSIONS (URL BASED) ===========
+    async submitHaEvidence(data: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }) {
+        const { studentId, plantillaHaId, archivosUrls, comentarioEstudiante } = data;
 
         // Check if evidence already exists
         const existing = await this.db.select()
             .from(schema.entregasHa)
             .where(and(
                 eq(schema.entregasHa.estudianteId, studentId),
-                eq(schema.entregasHa.plantillaHaId, haId)
+                eq(schema.entregasHa.plantillaHaId, plantillaHaId)
             ))
             .limit(1);
 
         if (existing.length > 0) {
             // Update existing
-            const currentUrls = JSON.parse(existing[0].archivosUrls || '[]');
-            currentUrls.push(fileUrl);
-
             await this.db.update(schema.entregasHa)
                 .set({
-                    archivosUrls: JSON.stringify(currentUrls),
-                    comentarioEstudiante: comentario || existing[0].comentarioEstudiante
+                    archivosUrls: JSON.stringify(archivosUrls), // Overwrite or append logic should be handled by caller if needed, here we just save what we get
+                    comentarioEstudiante: comentarioEstudiante || existing[0].comentarioEstudiante,
+                    fechaSubida: new Date() // Update timestamp
                 })
                 .where(eq(schema.entregasHa.id, existing[0].id));
+            return { success: true, action: 'updated', id: existing[0].id };
         } else {
             // Create new
-            await this.db.insert(schema.entregasHa).values({
+            const res = await this.db.insert(schema.entregasHa).values({
                 estudianteId: studentId,
-                plantillaHaId: haId,
-                archivosUrls: JSON.stringify([fileUrl]),
-                comentarioEstudiante: comentario,
+                plantillaHaId: plantillaHaId,
+                archivosUrls: JSON.stringify(archivosUrls),
+                comentarioEstudiante: comentarioEstudiante,
                 validado: false
-            });
+            }).returning();
+            return { success: true, action: 'created', id: res[0].id };
         }
-
-        return { success: true, fileUrl };
     }
 
-    async uploadRagEvidence(
-        studentId: number,
-        ragId: number,
-        stepIndex: number,
-        file: Express.Multer.File
-    ) {
-        const fileUrl = await this.storageService.uploadFile(file);
+    async submitRagProgress(data: { studentId: number; plantillaRagId: number; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
+        const { studentId, plantillaRagId, pasoIndice, archivoUrl, tipoArchivo } = data;
 
         await this.db.insert(schema.entregasRag).values({
             estudianteId: studentId,
-            plantillaRagId: ragId,
-            pasoIndice: stepIndex,
-            archivoUrl: fileUrl,
-            tipoArchivo: file.mimetype,
+            plantillaRagId: plantillaRagId,
+            pasoIndice: pasoIndice,
+            archivoUrl: archivoUrl,
+            tipoArchivo: tipoArchivo,
             feedbackAvatar: '¡Excelente trabajo! Entregable recibido.'
         });
 
-        return { success: true, fileUrl, stepIndex };
+        // Add points for submission
+        await this.addXP(studentId, 50, 'Entrega de avance RAG');
+
+        return { success: true, pasoIndice };
     }
 }

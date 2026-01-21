@@ -48,18 +48,24 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
         if (initialData) {
             setFormData({
                 ...initialData,
-                evidenciaTipos: initialData.evidenciaTipos ? JSON.parse(initialData.evidenciaTipos) : []
+                evidenciaTipos: typeof initialData.evidenciaTipos === 'string'
+                    ? JSON.parse(initialData.evidenciaTipos)
+                    : initialData.evidenciaTipos || []
             });
 
             if (initialData.pasosGuiados) {
                 try {
-                    setPasosGuiados(JSON.parse(initialData.pasosGuiados));
+                    setPasosGuiados(typeof initialData.pasosGuiados === 'string'
+                        ? JSON.parse(initialData.pasosGuiados)
+                        : initialData.pasosGuiados);
                 } catch (e) { console.error(e); }
             }
 
             if (initialData.seccionesDinamicas) {
                 try {
-                    setDynamicSections(JSON.parse(initialData.seccionesDinamicas));
+                    setDynamicSections(typeof initialData.seccionesDinamicas === 'string'
+                        ? JSON.parse(initialData.seccionesDinamicas)
+                        : initialData.seccionesDinamicas);
                 } catch (e) { console.error(e); }
             }
         }

@@ -22,8 +22,16 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
     const [haData, setHaData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentSection, setCurrentSection] = useState<HaSection>('intro');
-    const [evidenceFiles, setEvidenceFiles] = useState<{ type: string, file: File | null }[]>([]);
+    const [evidenceFiles, setEvidenceFiles] = useState<{ type: string, file: File | null, url?: string }[]>([]);
     const [reflection, setReflection] = useState("");
+
+    const getStudentId = () => {
+        const userStr = localStorage.getItem('arg_user');
+        if (userStr) {
+            try { return JSON.parse(userStr).id; } catch { return 1; }
+        }
+        return 1;
+    };
 
     const [avatarState, setAvatarState] = useState<AvatarState>({
         isVisible: true,
@@ -61,12 +69,27 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
             .finally(() => setLoading(false));
     }, [levelId]);
 
-    const handleNextSection = () => {
+    const handleNextSection = async () => {
         const sections: HaSection[] = ['intro', 'context', 'evidence', 'reflection', 'completion'];
         const currentIndex = sections.indexOf(currentSection);
 
         if (currentIndex < sections.length - 1) {
             const nextSection = sections[currentIndex + 1];
+
+            // Handle submission before moving to completion
+            if (nextSection === 'completion') {
+                try {
+                    await studentApi.submitHaEvidence({
+                        studentId: getStudentId(),
+                        plantillaHaId: haData.id,
+                        archivosUrls: evidenceFiles.map(e => e.url).filter((u): u is string => !!u),
+                        comentarioEstudiante: reflection
+                    });
+                } catch (error) {
+                    console.error("Error submitting HA", error);
+                }
+            }
+
             setCurrentSection(nextSection);
 
             switch (nextSection) {
@@ -107,26 +130,41 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleEvidenceUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleEvidenceUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const type = file.type.startsWith('image/') ? 'Imagen' : file.type.startsWith('video/') ? 'Video' : 'Documento';
 
+            // Optimistic update
             setEvidenceFiles(prev => {
                 const existing = prev.findIndex(e => e.type === type);
                 if (existing >= 0) {
                     const updated = [...prev];
-                    updated[existing] = { type, file };
+                    updated[existing] = { type, file }; // URL pending
                     return updated;
                 }
                 return [...prev, { type, file }];
             });
-            onAddPoints?.(100, "Evidencia subida");
-            setAvatarState({
-                emotion: 'happy',
-                message: `¡Genial! Has subido "${file.name}". Continúa cuando estés listo.`,
-                isVisible: true
-            });
+
+            // Upload
+            try {
+                setAvatarState({ emotion: 'thinking', message: 'Subiendo archivo...', isVisible: true });
+                const res = await studentApi.uploadEvidence(file);
+
+                // Update with URL
+                setEvidenceFiles(prev => prev.map(item =>
+                    item.file === file ? { ...item, url: res.url } : item
+                ));
+
+                onAddPoints?.(100, "Evidencia subida");
+                setAvatarState({
+                    emotion: 'happy',
+                    message: `¡Genial! Has subido "${file.name}". Continúa cuando estés listo.`,
+                    isVisible: true
+                });
+            } catch (error) {
+                setAvatarState({ emotion: 'waiting', message: 'Error al subir la evidencia.', isVisible: true });
+            }
         }
     };
 

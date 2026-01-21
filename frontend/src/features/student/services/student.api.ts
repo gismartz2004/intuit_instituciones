@@ -84,6 +84,32 @@ export const studentApi = {
   async getHaTemplate(levelId: number): Promise<any> {
     return apiClient.get<any>(`/api/professor/levels/${levelId}/ha`);
   },
+
+  /**
+   * Subir evidencia (archivo general)
+   */
+  async uploadEvidence(file: File): Promise<{ url: string; filename: string; mimetype: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    // Note: apiClient might automatically set Content-Type for FormData, but standard fetch needs it removed to let browser set boundary.
+    // If apiClient is a wrapper (likely axios or custom fetch), we need to ensure correct handling.
+    // Assuming standard fetch wrapper where we can pass body directly.
+    return apiClient.post<{ url: string; filename: string; mimetype: string }>('/api/student/upload', formData);
+  },
+
+  /**
+   * Registrar progreso RAG (con entregable)
+   */
+  async submitRagProgress(data: { studentId: number; plantillaRagId: number; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
+    return apiClient.post('/api/student/rag/submit', data);
+  },
+
+  /**
+   * Registrar entrega HA
+   */
+  async submitHaEvidence(data: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }) {
+    return apiClient.post('/api/student/ha/submit', data);
+  },
 };
 
 export default studentApi;

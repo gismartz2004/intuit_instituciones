@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { DatabaseModule } from 'src/database/database.module';
 
+import { JwtStrategy } from './jwt.strategy';
+
 @Module({
     imports: [
         DatabaseModule,
@@ -15,7 +17,7 @@ import { DatabaseModule } from 'src/database/database.module';
             signOptions: { expiresIn: '60m' },
         }),
     ],
-    providers: [AuthService],
+    providers: [AuthService, JwtStrategy],
     controllers: [AuthController],
     exports: [AuthService],
 })

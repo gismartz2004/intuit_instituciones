@@ -154,6 +154,9 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
           <Button onClick={addModule} className="bg-[#0047AB] gap-2">
             <Plus className="w-4 h-4" /> Nuevo Módulo
           </Button>
+          <Button onClick={() => setLocation('/teach/grading')} className="bg-amber-600 hover:bg-amber-700 gap-2">
+            <FileText className="w-4 h-4" /> Calificar Entregas
+          </Button>
         </div>
       </div>
 

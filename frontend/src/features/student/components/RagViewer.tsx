@@ -106,7 +106,19 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     fetchRag();
   }, [levelId]);
 
-  const handleStepComplete = () => {
+  const [currentUploadUrl, setCurrentUploadUrl] = useState<string | null>(null);
+  const [missionEvidenceUrl, setMissionEvidenceUrl] = useState<string | null>(null);
+
+  // Helper to get user ID
+  const getStudentId = () => {
+    const userStr = localStorage.getItem('arg_user');
+    if (userStr) {
+      try { return JSON.parse(userStr).id; } catch { return 1; }
+    }
+    return 1;
+  };
+
+  const handleStepComplete = async () => {
     const rawSteps = data?.pasosGuiados || [];
     const currentStep = rawSteps[currentStepIndex];
     const requiresDeliverable = currentStep?.requiereEntregable || false;
@@ -120,6 +132,21 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
       return;
     }
 
+    // Submit progress to backend
+    try {
+      if (requiresDeliverable && currentUploadUrl) {
+        await studentApi.submitRagProgress({
+          studentId: getStudentId(),
+          plantillaRagId: data.id,
+          pasoIndice: currentStepIndex,
+          archivoUrl: currentUploadUrl,
+          tipoArchivo: stepDeliverable?.type || 'unknown'
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting progress", error);
+    }
+
     // Mark step as complete
     if (!completedSteps.includes(currentStepIndex)) {
       setCompletedSteps(prev => [...prev, currentStepIndex]);
@@ -130,6 +157,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     if (currentStepIndex < rawSteps.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
       setStepDeliverable(null); // Reset for next step
+      setCurrentUploadUrl(null);
       setAvatarState({
         isVisible: true,
         emotion: 'happy',
@@ -147,29 +175,48 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setStepDeliverable(file);
-      onAddPoints?.(25, "Entregable subido");
-      setAvatarState({
-        emotion: 'happy',
-        message: `✓ Archivo "${file.name}" recibido. Ahora puedes completar este paso.`,
-        isVisible: true
-      });
+      try {
+        setAvatarState({ emotion: 'thinking', message: 'Subiendo archivo...', isVisible: true });
+        const res = await studentApi.uploadEvidence(file);
+        setCurrentUploadUrl(res.url);
+        onAddPoints?.(25, "Entregable subido");
+        setAvatarState({
+          emotion: 'happy',
+          message: `✓ Archivo "${file.name}" subido correctamente. Ahora puedes completar este paso.`,
+          isVisible: true
+        });
+      } catch (error) {
+        setAvatarState({ emotion: 'sad', message: 'Error al subir el archivo.', isVisible: true });
+      }
     }
   };
 
-  const handleMissionEvidenceUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMissionEvidenceUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setMissionEvidence(file);
-      onAddPoints?.(50, "Evidencia principal subida");
-      setAvatarState({
-        emotion: 'happy',
-        message: `¡Perfecto! Has subido la evidencia principal. Ahora podemos proceder a la misión.`,
-        isVisible: true
-      });
+      try {
+        setAvatarState({ emotion: 'thinking', message: 'Subiendo evidencia...', isVisible: true });
+        const res = await studentApi.uploadEvidence(file);
+        setMissionEvidenceUrl(res.url);
+
+        // Submit immediately or wait?
+        // Let's submit as an initial rag progress or just store it.
+        // For now just store URL.
+
+        onAddPoints?.(50, "Evidencia principal subida");
+        setAvatarState({
+          emotion: 'happy',
+          message: `¡Perfecto! Has subido la evidencia principal. Ahora podemos proceder a la misión.`,
+          isVisible: true
+        });
+      } catch (error) {
+        setAvatarState({ emotion: 'sad', message: 'Error al subir la evidencia.', isVisible: true });
+      }
     }
   };
 
@@ -227,10 +274,10 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           });
           break;
         case 'mission':
-          if (!missionEvidence) {
+          if (!missionEvidence || !missionEvidenceUrl) {
             setAvatarState({
               emotion: 'waiting',
-              message: "⚠️ ¡Detente! No podemos empezar la misión sin la evidencia principal.",
+              message: "⚠️ ¡Detente! Espera a que la evidencia se suba correctamente.",
               isVisible: true
             });
             setCurrentSection('evidence');

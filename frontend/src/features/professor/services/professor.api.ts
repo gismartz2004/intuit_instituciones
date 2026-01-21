@@ -151,6 +151,15 @@ export const professorApi = {
   async getHaTemplate(levelId: number): Promise<any> {
     return apiClient.get(`/api/professor/levels/${levelId}/ha`);
   },
+
+  // Grading
+  async getSubmissions(): Promise<{ rag: any[]; ha: any[] }> {
+    return apiClient.get('/api/professor/grading/submissions');
+  },
+
+  async gradeSubmission(id: number, data: { type: 'rag' | 'ha'; grade: number; feedback: string }): Promise<any> {
+    return apiClient.post(`/api/professor/grading/submissions/${id}/grade`, data);
+  },
 };
 
 export default professorApi;

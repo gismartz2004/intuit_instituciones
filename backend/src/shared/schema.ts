@@ -8,6 +8,7 @@ import {
   timestamp,
   decimal,
   date,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -166,15 +167,15 @@ export const plantillasRag = pgTable('plantillas_rag', {
   objetivoAprendizaje: text('objetivo_aprendizaje'),
 
   // Contenido Clave (Stored as JSON: [{titulo, descripcion}])
-  contenidoClave: text('contenido_clave'), // JSON stringified
+  contenidoClave: jsonb('contenido_clave'),
 
   // Actividad Autónoma
   nombreActividad: varchar('nombre_actividad', { length: 255 }),
   descripcionDesafio: text('descripcion_desafio'),
-  pasosGuiados: text('pasos_guiados'), // JSON stringified: [{paso, completado}]
+  pasosGuiados: jsonb('pasos_guiados'), // JSON: [{paso, completado, requiereEntregable}]
 
   // Ayudas
-  pistas: text('pistas'), // JSON stringified: [pista1, pista2...]
+  pistas: jsonb('pistas'), // JSON: [pista1, pista2...]
 
   // Evidencia
   tipoEvidencia: varchar('tipo_evidencia', { length: 100 }),
@@ -195,7 +196,7 @@ export const plantillasRag = pgTable('plantillas_rag', {
   criterioTiempo: boolean('criterio_tiempo').default(false),
 
   // Secciones Dinámicas Globales (Para expandir la plantilla)
-  seccionesDinamicas: text('secciones_dinamicas'), // JSON: [{ titulo, tipo: 'texto'|'checklist', contenido: string | [] }]
+  seccionesDinamicas: jsonb('secciones_dinamicas'), // JSON: [{ titulo, tipo: 'texto'|'checklist', contenido: string | [] }]
 
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
@@ -215,21 +216,21 @@ export const plantillasHa = pgTable('plantillas_ha', {
   conceptoClave: text('concepto_clave'),
 
   // 4. Pasos Guiados (Checklist)
-  pasosGuiados: text('pasos_guiados'), // JSON stringified
+  pasosGuiados: jsonb('pasos_guiados'),
 
   // 5. Resultado Esperado
   resultadoEsperado: text('resultado_esperado'),
   // Nota: El "Estado" (Logrado/En Proceso) se guarda en el progreso del estudiante, no en la plantilla.
 
   // 6. Evidencia
-  evidenciaTipos: text('evidencia_tipos'), // JSON Array: ['Imagen', 'Video']
+  evidenciaTipos: jsonb('evidencia_tipos'), // JSON Array: ['Imagen', 'Video']
   evidenciaDescripcion: text('evidencia_descripcion'),
 
   // 7. Pregunta de Reflexión
   preguntaReflexion: text('pregunta_reflexion'),
 
   // Secciones Dinámicas
-  seccionesDinamicas: text('secciones_dinamicas'), // JSON
+  seccionesDinamicas: jsonb('secciones_dinamicas'), // JSON
 
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
