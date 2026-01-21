@@ -41,6 +41,16 @@ export class StudentController {
         return this.studentService.getGamificationStats(studentId);
     }
 
+    @Get(':id/missions')
+    async getMissions(@Param('id', ParseIntPipe) studentId: number) {
+        return this.studentService.getAvailableMissions(studentId);
+    }
+
+    @Get('leaderboard/global')
+    async getLeaderboard() {
+        return this.studentService.getGlobalLeaderboard();
+    }
+
     @Post(':id/xp/add')
     async addXP(
         @Param('id', ParseIntPipe) studentId: number,

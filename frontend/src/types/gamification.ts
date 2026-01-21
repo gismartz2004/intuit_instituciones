@@ -1,4 +1,4 @@
-export type AvatarEmotion = 'neutral' | 'happy' | 'thinking' | 'celebrating' | 'waiting';
+export type AvatarEmotion = 'neutral' | 'happy' | 'thinking' | 'celebrating' | 'waiting' | 'sad' | 'alert';
 
 export interface ResponseOption {
     label: string;

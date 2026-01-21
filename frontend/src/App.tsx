@@ -1,13 +1,17 @@
+
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
-import { StudentDashboard, StudentDashboard3D, LevelViewer } from "@/features/student";
+import StudentDashboard3D from "@/pages/StudentDashboard3D";
+import Leaderboard from "@/features/leaderboard/components/Leaderboard";
+import Missions from "@/pages/Missions";
+import NotFound from "@/pages/not-found";
+import { StudentDashboard, LevelViewer } from "@/features/student";
 import { AdminDashboard } from "@/features/admin";
 import { ProfessorDashboard, CourseEditor, FileSystem, GradingDashboard } from "@/features/professor";
 import { CodingLab, ArduinoLab } from "@/features/labs";
 import { Login } from "@/features/auth";
-import { Leaderboard } from "@/features/leaderboard";
 import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
 import { GamerRaffle, MissionsHub } from "@/features/gamification";
@@ -85,7 +89,7 @@ function App() {
           <Route path="/pro-courses" component={ProCourses} />
           <Route path="/gamer-raffle" component={GamerRaffle} />
           <Route path="/level/:levelId" component={LevelViewer} />
-          <Route path="/missions" component={MissionsHub} />
+          <Route path="/missions" component={Missions} />
           <Route path="/files" component={FileSystem} />
           <Route path="/profile">
             {user ? <Profile user={user} /> : <Redirect to="/login" />}

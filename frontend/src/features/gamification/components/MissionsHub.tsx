@@ -12,29 +12,53 @@ import { motion } from "framer-motion";
 
 export default function MissionsHub() {
     const [loading, setLoading] = useState(true);
-    const [progress, setProgress] = useState<any>(null);
+    const [stats, setStats] = useState<any>(null);
 
     useEffect(() => {
         // Determine student ID (mock or from auth)
         const userStr = localStorage.getItem('arg_user');
         const studentId = userStr ? JSON.parse(userStr).id : 1;
 
-        studentApi.getProgress(studentId)
-            .then(data => setProgress(data))
+        studentApi.getGamificationStats(studentId)
+            .then(data => setStats(data))
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     }, []);
 
     const missions = [
-        { title: "Primeros Pasos", description: "Completa tu primer nivel", reward: 100, icon: <Star className="w-5 h-5 text-yellow-500" />, completed: (progress?.completedLevels || 0) > 0 },
-        { title: "Racha de Fuego", description: "Ingresa 3 días seguidos", reward: 50, icon: <Zap className="w-5 h-5 text-orange-500" />, completed: true },
-        { title: "Explorador RAG", description: "Completa una guía RAG", reward: 200, icon: <Target className="w-5 h-5 text-blue-500" />, completed: false },
-        { title: "Maestro de Hitos", description: "Aprueba un Hito de Aprendizaje", reward: 300, icon: <Trophy className="w-5 h-5 text-purple-500" />, completed: false },
+        {
+            title: "Primeros Pasos",
+            description: "Alcanza el nivel 2",
+            reward: 100,
+            icon: <Star className="w-5 h-5 text-yellow-500" />,
+            completed: (stats?.nivelActual || 1) > 1
+        },
+        {
+            title: "Racha de Fuego",
+            description: "Ingresa 3 días seguidos",
+            reward: 50,
+            icon: <Zap className="w-5 h-5 text-orange-500" />,
+            completed: (stats?.rachaDias || 0) >= 3
+        },
+        {
+            title: "Coleccionista",
+            description: "Desbloquea 1 logro",
+            reward: 200,
+            icon: <Target className="w-5 h-5 text-blue-500" />,
+            completed: (stats?.achievements?.length || 0) > 0
+        },
+        {
+            title: "Leyenda",
+            description: "Alcanza 1000 XP",
+            reward: 300,
+            icon: <Trophy className="w-5 h-5 text-purple-500" />,
+            completed: (stats?.totalPoints || 0) >= 1000
+        },
     ];
 
     const dailyMissions = [
-        { title: "Login Diario", description: "Ingresa a la plataforma", reward: 10, completed: true },
-        { title: "Revisar un recurso", description: "Abre un material de lectura", reward: 20, completed: false },
+        { title: "Login Diario", description: "Ingresa a la plataforma", reward: 10, completed: true }, // Auto-completed for now
+        { title: "Revisar un recurso", description: "Abre un material de lectura", reward: 20, completed: false }, // Placeholder
     ];
 
     return (
@@ -53,13 +77,13 @@ export default function MissionsHub() {
                         <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
                             <CardContent className="p-4 text-center">
                                 <p className="text-sm text-indigo-200 uppercase tracking-wider font-bold">Nivel Actual</p>
-                                <p className="text-3xl font-black">{progress?.completedLevels || 1}</p>
+                                <p className="text-3xl font-black">{stats?.nivelActual || 1}</p>
                             </CardContent>
                         </Card>
                         <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
                             <CardContent className="p-4 text-center">
                                 <p className="text-sm text-indigo-200 uppercase tracking-wider font-bold">XP Total</p>
-                                <p className="text-3xl font-black text-yellow-300">{progress?.totalPoints || 0}</p>
+                                <p className="text-3xl font-black text-yellow-300">{stats?.totalPoints || 0}</p>
                             </CardContent>
                         </Card>
                     </div>

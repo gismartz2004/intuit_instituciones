@@ -19,76 +19,96 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
 
     const getIcon = () => {
         switch (emotion) {
-            case 'happy': return <Smile className="w-8 h-8 text-green-500" />;
-            case 'celebrating': return <Trophy className="w-8 h-8 text-yellow-500" />;
-            case 'thinking': return <Lightbulb className="w-8 h-8 text-amber-500" />;
-            case 'waiting': return <Clock className="w-8 h-8 text-blue-500" />;
-            default: return <Bot className="w-8 h-8 text-indigo-500" />;
+            case 'happy': return <Smile className="w-6 h-6 text-green-400" />;
+            case 'celebrating': return <Trophy className="w-6 h-6 text-yellow-400" />;
+            case 'thinking': return <Lightbulb className="w-6 h-6 text-cyan-400" />;
+            case 'waiting': return <Clock className="w-6 h-6 text-blue-400" />;
+            case 'sad': return <Bot className="w-6 h-6 text-slate-400" />; // Or a specific sad icon if available
+            case 'alert': return <Bot className="w-6 h-6 text-red-500" />;
+            default: return <Bot className="w-6 h-6 text-purple-400" />;
         }
     };
 
-    const getBgColor = () => {
+    const getThemeStyles = () => {
         switch (emotion) {
-            case 'happy': return 'from-green-400 to-emerald-500';
-            case 'celebrating': return 'from-yellow-400 to-orange-500';
-            case 'thinking': return 'from-amber-400 to-orange-500';
-            case 'waiting': return 'from-blue-400 to-indigo-500';
-            default: return 'from-indigo-400 to-purple-500';
+            case 'happy': return {
+                border: 'border-green-500/50',
+                bg: 'bg-green-950/90',
+                glow: 'shadow-[0_0_20px_rgba(34,197,94,0.3)]',
+                text: 'text-green-100',
+                accent: 'bg-green-500'
+            };
+            case 'celebrating': return {
+                border: 'border-yellow-500/50',
+                bg: 'bg-yellow-950/90',
+                glow: 'shadow-[0_0_20px_rgba(234,179,8,0.3)]',
+                text: 'text-yellow-100',
+                accent: 'bg-yellow-500'
+            };
+            case 'thinking': return {
+                border: 'border-cyan-500/50',
+                bg: 'bg-slate-950/90',
+                glow: 'shadow-[0_0_20px_rgba(6,182,212,0.3)]',
+                text: 'text-cyan-100',
+                accent: 'bg-cyan-500'
+            };
+            case 'waiting': return {
+                border: 'border-blue-500/50',
+                bg: 'bg-slate-950/90',
+                glow: 'shadow-[0_0_20px_rgba(59,130,246,0.3)]',
+                text: 'text-blue-100',
+                accent: 'bg-blue-500'
+            };
+            case 'sad': return {
+                border: 'border-slate-500/50',
+                bg: 'bg-slate-900/95',
+                glow: 'shadow-[0_0_15px_rgba(148,163,184,0.2)]',
+                text: 'text-slate-300',
+                accent: 'bg-slate-500'
+            };
+            case 'alert': return {
+                border: 'border-red-500/50',
+                bg: 'bg-red-950/90',
+                glow: 'shadow-[0_0_20px_rgba(239,68,68,0.4)]',
+                text: 'text-red-100',
+                accent: 'bg-red-500'
+            };
+            default: return {
+                border: 'border-purple-500/50',
+                bg: 'bg-slate-950/90',
+                glow: 'shadow-[0_0_20px_rgba(168,85,247,0.3)]',
+                text: 'text-purple-100',
+                accent: 'bg-purple-500'
+            };
         }
     };
 
-    const getTextColor = () => {
-        switch (emotion) {
-            case 'happy': return 'text-green-800';
-            case 'celebrating': return 'text-yellow-900';
-            case 'thinking': return 'text-amber-800';
-            case 'waiting': return 'text-blue-800';
-            default: return 'text-indigo-800';
-        }
-    };
-
-    const getButtonVariant = (variant?: string) => {
-        switch (variant) {
-            case 'success': return 'bg-green-500 hover:bg-green-600 text-white';
-            case 'danger': return 'bg-red-500 hover:bg-red-600 text-white';
-            case 'secondary': return 'bg-slate-500 hover:bg-slate-600 text-white';
-            default: return cn('bg-gradient-to-r', getBgColor(), 'text-white border-0');
-        }
-    };
+    const theme = getThemeStyles();
 
     if (isMinimized) {
         return (
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="relative"
+                className="relative z-50 pointer-events-auto"
             >
                 <motion.button
                     onClick={() => setIsMinimized(false)}
                     className={cn(
-                        "w-16 h-16 rounded-full shadow-2xl flex items-center justify-center cursor-pointer",
-                        "bg-gradient-to-br hover:scale-110 transition-transform",
-                        getBgColor()
+                        "w-14 h-14 rounded-full flex items-center justify-center cursor-pointer border-2 backdrop-blur-md",
+                        theme.bg, theme.border, theme.glow
                     )}
-                    animate={{
-                        scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                 >
                     {getIcon()}
                 </motion.button>
-                {/* Notification badge for new message */}
+                {/* Notification indicator */}
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                >
-                    !
-                </motion.div>
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse ring-2 ring-black"
+                />
             </motion.div>
         );
     }
@@ -97,169 +117,107 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
         <AnimatePresence mode='wait'>
             <motion.div
                 key={message}
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                transition={{
-                    type: "spring",
-                    stiffness: 260,
-                    damping: 20
-                }}
-                className={cn("relative", className)}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className={cn("relative z-50 max-w-sm pointer-events-auto", className)}
             >
-                {/* Main card with gradient border */}
+                {/* Main Card */}
                 <div className={cn(
-                    "bg-white rounded-2xl p-1 shadow-2xl",
-                    "bg-gradient-to-br",
-                    getBgColor()
+                    "backdrop-blur-xl rounded-2xl p-0.5 shadow-2xl overflow-hidden",
+                    "bg-gradient-to-br from-white/10 to-transparent", // Glass edge effect
+                    theme.glow
                 )}>
-                    <div className="bg-white rounded-xl p-4 relative">
-                        {/* Close/Minimize button */}
-                        <button
-                            onClick={() => setIsMinimized(true)}
-                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-                        >
-                            <Minimize2 className="w-3 h-3 text-slate-600" />
-                        </button>
+                    <div className={cn(
+                        "rounded-2xl p-5 border relative overflow-hidden",
+                        theme.bg, theme.border
+                    )}>
 
-                        <div className="flex items-start gap-4 pr-6">
-                            {/* Animated Avatar Icon */}
-                            <motion.div
-                                className={cn(
-                                    "flex-shrink-0 p-3 rounded-full shadow-md",
-                                    "bg-gradient-to-br",
-                                    getBgColor()
-                                )}
-                                animate={{
-                                    rotate: emotion === 'celebrating' ? [0, -10, 10, -10, 0] : 0,
-                                    scale: emotion === 'happy' ? [1, 1.1, 1] : 1,
-                                }}
-                                transition={{
-                                    duration: emotion === 'celebrating' ? 0.5 : 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
+                        {/* Minimize Button */}
+                        <div className="absolute top-3 right-3 flex gap-2">
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10 rounded-full"
+                                onClick={() => setIsMinimized(true)}
                             >
-                                <div className="relative">
+                                <Minimize2 className="w-3 h-3" />
+                            </Button>
+                        </div>
+
+                        <div className="flex gap-4">
+                            {/* Avatar Visual */}
+                            <div className="flex-shrink-0 pt-1">
+                                <div className={cn(
+                                    "w-12 h-12 rounded-xl flex items-center justify-center border shadow-lg relative",
+                                    "bg-gradient-to-br from-slate-800 to-black border-slate-700"
+                                )}>
                                     {getIcon()}
-                                    {/* Breathing circle effect */}
-                                    <motion.div
-                                        className={cn(
-                                            "absolute inset-0 rounded-full opacity-30",
-                                            "bg-gradient-to-br",
-                                            getBgColor()
-                                        )}
-                                        animate={{
-                                            scale: [1, 1.3, 1],
-                                            opacity: [0.3, 0, 0.3],
-                                        }}
-                                        transition={{
-                                            duration: 2,
-                                            repeat: Infinity,
-                                            ease: "easeInOut"
-                                        }}
-                                    />
+                                    {/* Tech lines decoration */}
+                                    <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-slate-500/20 rounded-full" />
+                                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-slate-500/20 rounded-full" />
                                 </div>
-                            </motion.div>
+                            </div>
 
-                            <div className="flex-1 space-y-3">
-                                {/* Message with typing effect */}
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                >
-                                    <p className={cn(
-                                        "text-sm md:text-base font-medium leading-relaxed",
-                                        getTextColor()
-                                    )}>
-                                        {message}
-                                    </p>
-                                </motion.div>
+                            {/* Content */}
+                            <div className="flex-1 space-y-3 pt-1">
+                                {/* Thinking/Status Indicator */}
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className={cn("text-[10px] font-black uppercase tracking-widest opacity-70", theme.text)}>
+                                        IA {emotion}
+                                    </span>
+                                    <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", theme.accent)} />
+                                </div>
 
-                                {/* Response Options (Yes/No type questions) */}
+                                {/* Message */}
+                                <p className={cn("text-sm leading-relaxed font-medium", theme.text)}>
+                                    {message}
+                                </p>
+
+                                {/* Response Options */}
                                 {responseOptions && responseOptions.length > 0 && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.4 }}
-                                        className="flex flex-wrap gap-2"
-                                    >
+                                    <div className="flex flex-wrap gap-2 pt-1">
                                         {responseOptions.map((option, idx) => (
                                             <Button
                                                 key={idx}
                                                 size="sm"
                                                 onClick={option.onSelect}
                                                 className={cn(
-                                                    "shadow-md transition-all hover:scale-105",
-                                                    getButtonVariant(option.variant)
+                                                    "h-7 text-xs border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 text-slate-200 transition-all",
+                                                    option.variant === 'success' && "border-green-500/30 hover:border-green-400/50 hover:bg-green-500/10 text-green-200",
+                                                    option.variant === 'danger' && "border-red-500/30 hover:border-red-400/50 hover:bg-red-500/10 text-red-200"
                                                 )}
                                             >
                                                 {option.label}
                                             </Button>
                                         ))}
-                                    </motion.div>
+                                    </div>
                                 )}
 
-                                {/* Single Action Button (legacy support) */}
+                                {/* Legacy Action Button */}
                                 {actionLabel && !responseOptions && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.4 }}
-                                    >
+                                    <div className="pt-1">
                                         <Button
                                             size="sm"
                                             onClick={onAction}
+                                            variant="outline"
                                             className={cn(
-                                                "shadow-md transition-all hover:scale-105",
-                                                "bg-gradient-to-r",
-                                                getBgColor(),
-                                                "text-white border-0"
+                                                "h-8 text-xs font-bold w-full border-white/20 hover:bg-white/10 hover:text-white bg-transparent",
+                                                theme.text
                                             )}
                                         >
                                             {actionLabel}
                                         </Button>
-                                    </motion.div>
+                                    </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Animated dots indicator */}
-                        <motion.div
-                            className="flex gap-1 justify-center mt-3"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.5 }}
-                        >
-                            {[0, 1, 2].map((i) => (
-                                <motion.div
-                                    key={i}
-                                    className={cn("w-1.5 h-1.5 rounded-full", getTextColor())}
-                                    animate={{
-                                        scale: [1, 1.5, 1],
-                                        opacity: [0.3, 1, 0.3],
-                                    }}
-                                    transition={{
-                                        duration: 1.5,
-                                        repeat: Infinity,
-                                        delay: i * 0.2,
-                                    }}
-                                />
-                            ))}
-                        </motion.div>
+                        {/* Decorational Background Elements */}
+                        <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-white/5 to-transparent pointer-events-none" />
                     </div>
                 </div>
-
-                {/* Speech bubble tail */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className={cn(
-                        "absolute -bottom-3 right-8 w-6 h-6 transform rotate-45",
-                        "bg-gradient-to-br",
-                        getBgColor()
-                    )}
-                />
             </motion.div>
         </AnimatePresence>
     );

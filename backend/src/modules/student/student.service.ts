@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, asc, and } from 'drizzle-orm';
+import { eq, asc, desc, and } from 'drizzle-orm';
 import { StorageService } from '../storage/storage.service';
 
 @Injectable()
@@ -224,6 +224,65 @@ export class StudentService {
         });
     }
 
+    async getAvailableMissions(studentId: number) {
+        // Get all assignments to find relevant modules
+        const assignments = await this.db.select({ moduleId: schema.asignaciones.moduloId })
+            .from(schema.asignaciones)
+            .where(eq(schema.asignaciones.estudianteId, studentId));
+
+        if (assignments.length === 0) return [];
+
+        const moduleIds = assignments.map(a => a.moduleId).filter((id): id is number => id !== null);
+
+        // Fetch all levels for these modules
+        const allLevels = await this.db.select()
+            .from(schema.niveles)
+            .where(and(
+                // In a real scenario, use 'inArray' if available or multiple queries
+                // For simplicity, we assume one module or we loop. Let's filter in memory if needed or use raw query.
+                // Or better, let's just get all levels and filter by module ID match.
+            ))
+            .orderBy(asc(schema.niveles.orden));
+
+        // Actually, let's just iterate modules
+        let missions = [];
+
+        for (const modId of moduleIds) {
+            const levelsInfos = await this.getStudentLevelProgress(studentId, modId);
+
+            // Get RAG/HA templates info for details
+            for (const level of levelsInfos) {
+                // Fetch Rag info
+                const rag = await this.db.select({ id: schema.plantillasRag.id, nombre: schema.plantillasRag.nombreActividad, hito: schema.plantillasRag.hitoAprendizaje })
+                    .from(schema.plantillasRag)
+                    .where(eq(schema.plantillasRag.nivelId, level.id))
+                    .limit(1);
+
+                // Fetch HA info if RAG not found or secondary
+                const ha = await this.db.select({ id: schema.plantillasHa.id, fase: schema.plantillasHa.fase })
+                    .from(schema.plantillasHa)
+                    .where(eq(schema.plantillasHa.nivelId, level.id))
+                    .limit(1);
+
+                const missionName = rag[0]?.hito || ha[0]?.fase || `Nivel ${level.orden}`;
+                const description = rag[0]?.nombre || "Completar las actividades del nivel.";
+
+                missions.push({
+                    id: level.id,
+                    title: missionName,
+                    description: description,
+                    status: level.completado ? 'completed' : (level.isUnlocked ? 'active' : 'locked'),
+                    xp: 500, // Fixed for now, could be dynamic
+                    location: `Zona ${level.orden}`, // Or actual zone name if we had it
+                    type: rag.length > 0 ? 'RAG' : 'HA'
+                });
+            }
+        }
+
+        return missions;
+    }
+
+
     // =========== GAMIFICATION ===========
     async getGamificationStats(studentId: number) {
         let gamification = await this.db.select()
@@ -270,6 +329,23 @@ export class StudentService {
                 unlockedAt: a.fechaDesbloqueo
             }))
         };
+    }
+
+    async getGlobalLeaderboard(limit: number = 10) {
+        const leaderboard = await this.db.select({
+            studentId: schema.usuarios.id,
+            name: schema.usuarios.nombre,
+            avatar: schema.usuarios.avatar,
+            xp: schema.gamificacionEstudiante.xpTotal,
+            level: schema.gamificacionEstudiante.nivelActual,
+            streak: schema.gamificacionEstudiante.rachaDias
+        })
+            .from(schema.gamificacionEstudiante)
+            .innerJoin(schema.usuarios, eq(schema.gamificacionEstudiante.estudianteId, schema.usuarios.id))
+            .orderBy(desc(schema.gamificacionEstudiante.xpTotal))
+            .limit(limit);
+
+        return leaderboard;
     }
 
     async addXP(studentId: number, amount: number, reason: string) {

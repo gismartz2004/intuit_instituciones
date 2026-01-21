@@ -41,6 +41,7 @@ type RagSection = 'intro' | 'objectives' | 'concepts' | 'evidence' | 'mission' |
 export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [currentSection, setCurrentSection] = useState<RagSection>('intro');
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -160,8 +161,8 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
       setCurrentUploadUrl(null);
       setAvatarState({
         isVisible: true,
-        emotion: 'happy',
-        message: '¡Excelente! Continuemos con el siguiente paso.',
+        emotion: 'neutral',
+        message: `Paso ${currentStepIndex + 2}: ${rawSteps[currentStepIndex + 1]?.paso || "Sigue adelante."}`,
       });
     } else {
       // All steps completed
@@ -199,6 +200,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     const file = event.target.files?.[0];
     if (file) {
       setMissionEvidence(file);
+      setIsUploading(true);
       try {
         setAvatarState({ emotion: 'thinking', message: 'Subiendo evidencia...', isVisible: true });
         const res = await studentApi.uploadEvidence(file);
@@ -216,6 +218,9 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
         });
       } catch (error) {
         setAvatarState({ emotion: 'sad', message: 'Error al subir la evidencia.', isVisible: true });
+        setMissionEvidence(null); // Reset on error so user can try again or see they need to retry
+      } finally {
+        setIsUploading(false);
       }
     }
   };
@@ -283,9 +288,10 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
             setCurrentSection('evidence');
             return;
           }
+          const firstStep = ragData?.pasosGuiados?.[0]?.paso || "Comencemos.";
           setAvatarState({
             emotion: 'neutral',
-            message: "¡Es hora de la acción! Completa cada paso de la misión.",
+            message: `¡Misión iniciada! Primer paso: ${firstStep}`,
             isVisible: true
           });
           onAddPoints?.(50, "¡Misión iniciada!");
@@ -336,7 +342,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           emotion={avatarState.emotion}
           message={avatarState.message}
           responseOptions={avatarState.responseOptions}
-          className="shadow-2xl border-white/50 backdrop-blur-md bg-white/90"
+          className="max-w-md"
         />
       </div>
 
@@ -559,12 +565,13 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                   onChange={handleMissionEvidenceUpload}
                 />
                 <div
-                  onClick={() => evidenceInputRef.current?.click()}
+                  onClick={() => !isUploading && evidenceInputRef.current?.click()}
                   className={cn(
                     "border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all",
                     missionEvidence
                       ? "bg-green-50 border-green-300"
-                      : "bg-indigo-50 border-indigo-200 hover:bg-indigo-100"
+                      : "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+                    isUploading && "opacity-50 cursor-wait"
                   )}
                 >
                   {missionEvidence ? (
@@ -585,9 +592,16 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                 {missionEvidence && (
                   <Button
                     onClick={handleNextSection}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-lg"
+                    disabled={isUploading || !missionEvidenceUrl}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Ir a la Misión <ArrowRight className="w-5 h-5 ml-2" />
+                    {isUploading ? (
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 animate-spin" /> Subiendo...
+                      </span>
+                    ) : (
+                      <>Ir a la Misión <ArrowRight className="w-5 h-5 ml-2" /></>
+                    )}
                   </Button>
                 )}
               </CardContent>

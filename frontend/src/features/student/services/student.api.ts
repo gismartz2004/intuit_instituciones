@@ -35,6 +35,15 @@ export interface LevelContent {
   orden: number;
 }
 
+export interface LeaderboardEntry {
+  studentId: number;
+  name: string;
+  xp: number;
+  level: number;
+  streak: number;
+  avatar?: string;
+}
+
 export const studentApi = {
   /**
    * Obtener los módulos asignados al estudiante
@@ -110,6 +119,27 @@ export const studentApi = {
   async submitHaEvidence(data: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }) {
     return apiClient.post('/api/student/ha/submit', data);
   },
+
+  /**
+   * Obtener misiones del estudiante
+   */
+  async getMissions(studentId: number): Promise<any[]> {
+    return apiClient.get(`/api/student/${studentId}/missions`);
+  },
+
+  /**
+   * Obtener ranking global
+   */
+  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    return apiClient.get<any[]>('/api/student/leaderboard/global');
+  },
+
+  /**
+   * Obtener estadísticas de gamificación
+   */
+  async getGamificationStats(studentId: number): Promise<any> {
+    return apiClient.get<any>(`/api/student/${studentId}/gamification`);
+  }
 };
 
 export default studentApi;

@@ -141,6 +141,34 @@ export default function EnhancedGamificationHud({ state, className }: EnhancedGa
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {/* Navigation Links (Expanded Only) */}
+                        {isExpanded && (
+                            <div className="px-4 pb-4 grid grid-cols-2 gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full text-xs"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.location.href = '/leaderboard';
+                                    }}
+                                >
+                                    <Trophy className="w-3 h-3 mr-1 text-yellow-500" /> Clasificación
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full text-xs"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.location.href = '/missions';
+                                    }}
+                                >
+                                    <Zap className="w-3 h-3 mr-1 text-red-500" /> Misiones
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </motion.div>

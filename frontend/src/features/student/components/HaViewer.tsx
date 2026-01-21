@@ -163,7 +163,7 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                     isVisible: true
                 });
             } catch (error) {
-                setAvatarState({ emotion: 'waiting', message: 'Error al subir la evidencia.', isVisible: true });
+                setAvatarState({ emotion: 'alert', message: 'Error al subir la evidencia. Inténtalo de nuevo.', isVisible: true });
             }
         }
     };
@@ -220,7 +220,7 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                         emotion={avatarState.emotion}
                         message={avatarState.message}
                         responseOptions={avatarState.responseOptions}
-                        className="shadow-2xl border-white/50 backdrop-blur-md bg-white/90"
+                        className="max-w-md"
                     />
                 </div>
 
@@ -493,6 +493,14 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                                         </Badge>
                                     </div>
                                 </CardContent>
+                                <div className="p-6 bg-slate-50 border-t flex justify-center">
+                                    <Button onClick={() => window.location.href = '/missions'} variant="outline" className="mr-2">
+                                        Ver Misiones
+                                    </Button>
+                                    <Button onClick={() => window.location.href = '/dashboard'} className="bg-cyan-600 text-white">
+                                        Volver al Inicio
+                                    </Button>
+                                </div>
                             </Card>
                         </motion.div>
                     )}
