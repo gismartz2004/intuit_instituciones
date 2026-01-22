@@ -182,8 +182,13 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                     message: `¡Genial! Has subido "${file.name}". Continúa cuando estés listo.`,
                     isVisible: true
                 });
-            } catch (error) {
-                setAvatarState({ emotion: 'alert', message: 'Error al subir la evidencia. Inténtalo de nuevo.', isVisible: true });
+            } catch (error: any) {
+                console.error("HA Upload error:", error);
+                setAvatarState({
+                    emotion: 'alert',
+                    message: `Error al subir la evidencia: ${error.message || 'Verifica tu conexión y el tamaño del archivo.'}`,
+                    isVisible: true
+                });
             }
         }
     };

@@ -19,6 +19,7 @@ import { GamerRaffle, MissionsHub } from "@/features/gamification";
 import { Toaster } from "@/components/ui/toaster";
 
 import { MobileHeader } from "@/components/layout/MobileHeader";
+import { notificationService } from "@/services/notification.service";
 
 function App() {
   const [user, setUser] = useState<{ role: "student" | "admin" | "professor"; name: string; id: string; plan?: string } | null>(() => {
@@ -27,6 +28,12 @@ function App() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      notificationService.requestPermission();
+    }
+  }, [user]);
 
   const handleLogin = (role: "student" | "admin" | "professor", name: string, id: string, planId?: number) => {
     const userData = { role, name, id, plan: planId ? planId.toString() : undefined };

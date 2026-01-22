@@ -23,7 +23,11 @@ export class StudentUploadController {
     ) { }
 
     @Post('upload')
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', {
+        limits: {
+            fileSize: 10 * 1024 * 1024, // 10MB
+        },
+    }))
     async uploadFile(@UploadedFile() file: Express.Multer.File) {
         console.log('--- UPLOAD REQUEST ---');
         console.log('File received:', file ? {

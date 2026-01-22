@@ -19,28 +19,29 @@ export class StorageService {
         if (storageType === 'local') {
             return this.uploadLocal(file);
         } else if (storageType === 'sftp') {
-            return this.uploadSftp(file);
+            try {
+                return await this.uploadSftp(file);
+            } catch (error) {
+                this.logger.warn(`SFTP Upload failed, falling back to local: ${error.message}`);
+                return this.uploadLocal(file);
+            }
         } else {
             throw new Error(`Invalid STORAGE_TYPE: ${storageType}`);
         }
     }
 
     private async uploadLocal(file: Express.Multer.File): Promise<string> {
-        // Ideally this would reuse existing logic or just return the path if already saved by diskStorage
-        // But since we are moving to memoryStorage for the controller, we need to save it manually if local
         const uploadDir = './uploads';
         if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir);
+            fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        // Generate a unique filename if not already present
-        // Note: If using memoryStorage, file.filename is undefined, we use originalname + timestamp
         const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
         const filepath = path.join(uploadDir, filename);
 
+        this.logger.log(`Saving file locally to ${filepath}`);
         fs.writeFileSync(filepath, file.buffer);
 
-        // Return localhost URL
         const baseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
         return `${baseUrl}/uploads/${filename}`;
     }
@@ -51,39 +52,47 @@ export class StorageService {
             port: parseInt(process.env.FTP_PORT || '22'),
             username: process.env.FTP_USER,
             password: process.env.FTP_PASSWORD,
+            readyTimeout: 10000, // 10s
         };
 
-        try {
-            this.logger.log(`Connecting to SFTP ${config.host}:${config.port}...`);
-            await this.sftp.connect(config);
+        const maxRetries = 2;
+        let lastError: Error | null = null;
 
-            const remoteDir = process.env.FTP_REMOTE_PATH || '/public_html/uploads';
-            // Ensure directory exists (recursive)
-            const dirExists = await this.sftp.exists(remoteDir);
-            if (!dirExists) {
-                this.logger.log(`Creating remote directory: ${remoteDir}`);
-                await this.sftp.mkdir(remoteDir, true);
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                this.logger.log(`Attempt ${attempt}: Connecting to SFTP ${config.host}:${config.port}...`);
+                await this.sftp.connect(config);
+
+                const remoteDir = process.env.FTP_REMOTE_PATH || '/public_html/uploads';
+                const dirExists = await this.sftp.exists(remoteDir);
+                if (!dirExists) {
+                    this.logger.log(`Creating remote directory: ${remoteDir}`);
+                    await this.sftp.mkdir(remoteDir, true);
+                }
+
+                const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
+                const remotePath = `${remoteDir}/${filename}`;
+
+                this.logger.log(`Uploading to ${remotePath}...`);
+                await this.sftp.put(file.buffer, remotePath);
+
+                await this.sftp.end();
+
+                const publicBaseUrl = process.env.FTP_PUBLIC_URL || '';
+                const cleanBaseUrl = publicBaseUrl.replace(/\/$/, '');
+                return `${cleanBaseUrl}/${filename}`;
+
+            } catch (err) {
+                this.logger.error(`SFTP Attempt ${attempt} Failed`, err.message);
+                lastError = err;
+                try { await this.sftp.end(); } catch (e) { }
+
+                if (attempt < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+                }
             }
-
-            const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-            const remotePath = `${remoteDir}/${filename}`;
-
-            this.logger.log(`Uploading to ${remotePath}...`);
-            await this.sftp.put(file.buffer, remotePath);
-
-            await this.sftp.end();
-
-            // Return Public URL
-            const publicBaseUrl = process.env.FTP_PUBLIC_URL || '';
-            // Remove trailing slash if present
-            const cleanBaseUrl = publicBaseUrl.replace(/\/$/, '');
-            return `${cleanBaseUrl}/${filename}`;
-
-        } catch (err) {
-            this.logger.error('SFTP Upload Failed', err);
-            // Clean up connection just in case
-            try { await this.sftp.end(); } catch (e) { }
-            throw new Error('Failed to upload file to remote server');
         }
+
+        throw lastError || new Error('Failed to upload file to remote server');
     }
 }

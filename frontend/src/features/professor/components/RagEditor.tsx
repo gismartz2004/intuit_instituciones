@@ -26,6 +26,11 @@ interface GuidedStep {
     requiereEntregable?: boolean;
 }
 
+interface Hint {
+    text: string;
+    imagenUrl?: string;
+}
+
 interface RagFormData {
     programa: string;
     modulo: string;
@@ -93,7 +98,7 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
     const [guidedSteps, setGuidedSteps] = useState<GuidedStep[]>([
         { paso: "" }
     ]);
-    const [hints, setHints] = useState<string[]>([""]);
+    const [hints, setHints] = useState<Hint[]>([{ text: "" }]);
 
     // Dynamic Sections State
     const [dynamicSections, setDynamicSections] = useState<any[]>([]);
@@ -131,7 +136,10 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
             }
             if (initialData.pistas) {
                 try {
-                    setHints(typeof initialData.pistas === 'string' ? JSON.parse(initialData.pistas) : initialData.pistas);
+                    const rawHints = typeof initialData.pistas === 'string' ? JSON.parse(initialData.pistas) : initialData.pistas;
+                    // Migrate string array to object array if necessary
+                    const formattedHints = rawHints.map((h: any) => typeof h === 'string' ? { text: h } : h);
+                    setHints(formattedHints);
                 } catch (e) { console.error("Error parsing hints", e); }
             }
             if (initialData.seccionesDinamicas) {
@@ -195,12 +203,16 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
             const newSteps = [...guidedSteps];
             newSteps[pickerTarget.index] = { ...newSteps[pickerTarget.index], imagenUrl: url };
             setGuidedSteps(newSteps);
+        } else if (pickerTarget.type === 'hint' && pickerTarget.index !== undefined) {
+            const newHints = [...hints];
+            newHints[pickerTarget.index] = { ...newHints[pickerTarget.index], imagenUrl: url };
+            setHints(newHints);
         } else if (pickerTarget.type === 'general') {
             setFormData({ ...formData, imagenUrl: url });
         }
     };
 
-    const openPicker = (type: 'step' | 'concept' | 'general', index?: number) => {
+    const openPicker = (type: 'step' | 'concept' | 'hint' | 'general', index?: number) => {
         setPickerTarget({ type, index });
         setIsPickerOpen(true);
     };
@@ -495,31 +507,61 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                         </CardHeader>
                         <CardContent className="space-y-4 pt-6">
                             {hints.map((hint, index) => (
-                                <div key={index} className="flex gap-2 items-center">
-                                    <span className="text-sm font-bold text-indigo-400 w-6">#{index + 1}</span>
-                                    <Input
-                                        value={hint}
-                                        onChange={(e) => {
-                                            const newHints = [...hints];
-                                            newHints[index] = e.target.value;
-                                            setHints(newHints);
-                                        }}
-                                        placeholder={`Pista ${index + 1} para desbloquear`}
-                                    />
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => setHints(hints.filter((_, i) => i !== index))}
-                                    >
-                                        <Trash2 className="w-4 h-4 text-slate-400" />
-                                    </Button>
+                                <div key={index} className="space-y-3 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                    <div className="flex gap-2 items-center">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 font-bold">
+                                            {index + 1}
+                                        </div>
+                                        <Input
+                                            value={hint.text}
+                                            onChange={(e) => {
+                                                const newHints = [...hints];
+                                                newHints[index].text = e.target.value;
+                                                setHints(newHints);
+                                            }}
+                                            placeholder={`Pista ${index + 1} para desbloquear`}
+                                            className="flex-1"
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className={hint.imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-400"}
+                                            onClick={() => openPicker('hint', index)}
+                                        >
+                                            <ImageIcon className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-red-400 hover:text-red-600"
+                                            onClick={() => setHints(hints.filter((_, i) => i !== index))}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                    {hint.imagenUrl && (
+                                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 bg-white ml-10">
+                                            <img src={hint.imagenUrl} className="w-full h-full object-cover" />
+                                            <button
+                                                className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-lg"
+                                                onClick={() => {
+                                                    const n = [...hints];
+                                                    const { imagenUrl, ...rest } = n[index];
+                                                    n[index] = rest;
+                                                    setHints(n);
+                                                }}
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="mt-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                                onClick={() => setHints([...hints, ""])}
+                                className="mt-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 w-full border-dashed border-2"
+                                onClick={() => setHints([...hints, { text: "" }])}
                             >
                                 <Plus className="w-4 h-4 mr-2" /> Agregar Pista
                             </Button>

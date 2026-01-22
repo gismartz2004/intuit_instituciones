@@ -218,8 +218,13 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           message: `✓ Archivo "${file.name}" subido correctamente. Ahora puedes completar este paso.`,
           isVisible: true
         });
-      } catch (error) {
-        setAvatarState({ emotion: 'sad', message: 'Error al subir el archivo.', isVisible: true });
+      } catch (error: any) {
+        console.error("Upload error:", error);
+        setAvatarState({
+          emotion: 'sad',
+          message: `Error al subir el archivo: ${error.message || 'Verifica tu conexión.'}`,
+          isVisible: true
+        });
       }
     }
   };
@@ -247,8 +252,13 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           message: `¡Perfecto! Has subido la evidencia principal. Ahora podemos proceder a la misión.`,
           isVisible: true
         });
-      } catch (error) {
-        setAvatarState({ emotion: 'sad', message: 'Error al subir la evidencia.', isVisible: true });
+      } catch (error: any) {
+        console.error("Evidence upload error:", error);
+        setAvatarState({
+          emotion: 'sad',
+          message: `Error al subir la evidencia: ${error.message || 'El archivo podría ser muy pesado.'}`,
+          isVisible: true
+        });
         setMissionEvidence(null);
       } finally {
         setIsUploading(false);
@@ -591,17 +601,26 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {hints.map((hint: string, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-2 text-sm text-slate-600"
-                      >
-                        <span className="w-5 h-5 rounded-full bg-yellow-100 text-yellow-700 text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
-                          {idx + 1}
-                        </span>
-                        <span>{hint}</span>
-                      </div>
-                    ))}
+                    {hints.map((hint: any, idx: number) => {
+                      const hintText = typeof hint === 'string' ? hint : hint.text;
+                      const hintImage = typeof hint === 'object' ? hint.imagenUrl : null;
+
+                      return (
+                        <div key={idx} className="space-y-2">
+                          <div className="flex items-start gap-2 text-sm text-slate-600">
+                            <span className="w-5 h-5 rounded-full bg-yellow-100 text-yellow-700 text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                              {idx + 1}
+                            </span>
+                            <span>{hintText}</span>
+                          </div>
+                          {hintImage && (
+                            <div className="ml-7 w-full max-w-xs rounded-lg overflow-hidden border shadow-sm bg-white">
+                              <img src={hintImage} className="w-full h-auto object-cover" alt={`Pista ${idx + 1}`} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
