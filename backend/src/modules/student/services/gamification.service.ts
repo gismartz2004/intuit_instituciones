@@ -48,41 +48,50 @@ export class GamificationService {
             .where(eq(schema.gamificacionEstudiante.estudianteId, studentId))
             .limit(1);
 
+        // Check if student is Pro (Plan ID 3) for bonus
+        const studentRecord = await this.db.select({ planId: schema.usuarios.planId })
+            .from(schema.usuarios)
+            .where(eq(schema.usuarios.id, studentId))
+            .limit(1);
+
+        const isPro = studentRecord.length > 0 && studentRecord[0].planId === 3;
+        const finalAmount = isPro ? Math.floor(amount * 1.2) : amount;
+
         if (gamification.length === 0) {
             // Create initial record
             await this.db.insert(schema.gamificacionEstudiante).values({
                 estudianteId: studentId,
-                xpTotal: amount,
+                xpTotal: finalAmount,
                 nivelActual: 1,
-                puntosDisponibles: amount,
+                puntosDisponibles: finalAmount,
                 rachaDias: 0,
             });
 
             // Check if this XP is enough to level up from level 1
-            const newLevel = this.calculateLevel(amount);
+            const newLevel = this.calculateLevel(finalAmount);
             if (newLevel > 1) {
                 await this.db.update(schema.gamificacionEstudiante)
                     .set({ nivelActual: newLevel })
                     .where(eq(schema.gamificacionEstudiante.estudianteId, studentId));
 
                 await this.checkAchievements(studentId);
-                return { leveledUp: true, newLevel, xpAwarded: amount };
+                return { leveledUp: true, newLevel, xpAwarded: finalAmount };
             }
 
-            return { leveledUp: false, xpAwarded: amount };
+            return { leveledUp: false, xpAwarded: finalAmount };
         }
 
         // Update existing record
         const currentXP = gamification[0].xpTotal || 0;
         const currentLevel = gamification[0].nivelActual || 1;
-        const newXP = currentXP + amount;
+        const newXP = currentXP + finalAmount;
         const newLevel = this.calculateLevel(newXP);
 
         await this.db.update(schema.gamificacionEstudiante)
             .set({
                 xpTotal: newXP,
                 nivelActual: newLevel,
-                puntosDisponibles: sql`${schema.gamificacionEstudiante.puntosDisponibles} + ${amount}`,
+                puntosDisponibles: sql`${schema.gamificacionEstudiante.puntosDisponibles} + ${finalAmount}`,
             })
             .where(eq(schema.gamificacionEstudiante.estudianteId, studentId));
 
@@ -92,7 +101,7 @@ export class GamificationService {
         return {
             leveledUp: newLevel > currentLevel,
             newLevel: newLevel > currentLevel ? newLevel : undefined,
-            xpAwarded: amount,
+            xpAwarded: finalAmount,
         };
     }
 
@@ -183,6 +192,7 @@ export class GamificationService {
         // Update mission progress for streak-based missions
         await this.updateMissionProgress(studentId, 'STREAK_3', newStreak >= 3 ? 1 : 0);
         await this.updateMissionProgress(studentId, 'STREAK_7', newStreak >= 7 ? 1 : 0);
+        await this.updateMissionProgress(studentId, 'LOGIN_CONSECUTIVE_2', newStreak >= 2 ? 1 : 0);
 
         return { streak: newStreak, bonusXP };
     }
@@ -242,6 +252,9 @@ export class GamificationService {
      * Update mission progress
      */
     async updateMissionProgress(studentId: number, missionType: string, incrementBy: number = 1): Promise<void> {
+        // First sync weekly missions if needed
+        await this.syncWeeklyMissions(studentId);
+
         // Find active missions of this type
         const missions = await this.db.select()
             .from(schema.misiones)
@@ -261,14 +274,18 @@ export class GamificationService {
                 .limit(1);
 
             if (progress.length === 0) {
-                // Create new progress
-                await this.db.insert(schema.progresoMisiones).values({
-                    estudianteId: studentId,
-                    misionId: mission.id,
-                    progresoActual: incrementBy,
-                    completada: incrementBy >= (mission.objetivoValor || 1),
-                    fechaCompletado: incrementBy >= (mission.objetivoValor || 1) ? new Date() : null,
-                });
+                // If it's a non-daily mission and we are here, it might be a global mission
+                // or a weekly one that was sync'd. 
+                // For safety, only auto-create if it's daily. Weekly are created by sync.
+                if (mission.esDiaria) {
+                    await this.db.insert(schema.progresoMisiones).values({
+                        estudianteId: studentId,
+                        misionId: mission.id,
+                        progresoActual: incrementBy,
+                        completada: incrementBy >= (mission.objetivoValor || 1),
+                        fechaCompletado: incrementBy >= (mission.objetivoValor || 1) ? new Date() : null,
+                    });
+                }
             } else if (!progress[0].completada) {
                 // Update existing progress
                 const newProgress = (progress[0].progresoActual || 0) + incrementBy;
@@ -283,6 +300,67 @@ export class GamificationService {
                     .where(eq(schema.progresoMisiones.id, progress[0].id));
             }
         }
+    }
+
+    /**
+     * Sync weekly missions for Pro students
+     */
+    async syncWeeklyMissions(studentId: number): Promise<void> {
+        // Check student plan
+        const student = await this.db.select({ planId: schema.usuarios.planId })
+            .from(schema.usuarios)
+            .where(eq(schema.usuarios.id, studentId))
+            .limit(1);
+
+        if (student.length === 0 || student[0].planId !== 3) return; // Only Pro gets weekly sync
+
+        // Get current week start (Monday)
+        const now = new Date();
+        const day = now.getDay() || 7; // Get current day of week (1=Mon, 7=Sun)
+        const monday = new Date(now);
+        monday.setHours(0, 0, 0, 0);
+        monday.setDate(now.getDate() - (day - 1));
+
+        // Check if student has missions for this week
+        const currentMissions = await this.db.select()
+            .from(schema.progresoMisiones)
+            .where(and(
+                eq(schema.progresoMisiones.estudianteId, studentId),
+                eq(schema.progresoMisiones.semanaInicio, monday)
+            ));
+
+        if (currentMissions.length === 0) {
+            // Assign weekly missions
+            // 1. Dúo Dinámico (Login consecutive 2)
+            // 2. Avance Imparable (View 4 contents)
+            // 3. Trabajador (Complete 5 activities) - This one is seeded as global, but we can assign as weekly too
+
+            const weeklyTypes = ['LOGIN_CONSECUTIVE_2', 'VIEW_CONTENT_4', 'COMPLETE_ACTIVITY'];
+            for (const type of weeklyTypes) {
+                const mission = await this.db.select()
+                    .from(schema.misiones)
+                    .where(and(eq(schema.misiones.tipo, type), eq(schema.misiones.activa, true)))
+                    .limit(1);
+
+                if (mission.length > 0) {
+                    await this.db.insert(schema.progresoMisiones).values({
+                        estudianteId: studentId,
+                        misionId: mission[0].id,
+                        semanaInicio: monday,
+                        progresoActual: 0,
+                        completada: false
+                    });
+                }
+            }
+        }
+    }
+
+    /**
+     * Track content view
+     */
+    async trackContentView(studentId: number): Promise<void> {
+        await this.updateMissionProgress(studentId, 'VIEW_CONTENT', 1);
+        await this.updateMissionProgress(studentId, 'VIEW_CONTENT_4', 1);
     }
 
     /**
@@ -446,6 +524,26 @@ export class GamificationService {
                 esDiaria: false,
                 activa: true,
             },
+            {
+                tipo: 'LOGIN_CONSECUTIVE_2',
+                titulo: 'Dúo Dinámico',
+                descripcion: 'Ingresa 2 días seguidos',
+                xpRecompensa: 40,
+                iconoUrl: 'users',
+                objetivoValor: 1,
+                esDiaria: false,
+                activa: true,
+            },
+            {
+                tipo: 'VIEW_CONTENT_4',
+                titulo: 'Avance Imparable',
+                descripcion: 'Mira 4 contenidos seguidos',
+                xpRecompensa: 80,
+                iconoUrl: 'trending-up',
+                objetivoValor: 4,
+                esDiaria: false,
+                activa: true,
+            }
         ];
 
         for (const mission of missions) {

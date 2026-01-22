@@ -1,14 +1,19 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { 
-  Book, 
-  Trophy, 
-  Target, 
-  Store, 
-  User, 
-  Shield, 
-  GraduationCap 
+import {
+  Trophy,
+  Target,
+  User,
+  Home,
+  Menu,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger
+} from "@/components/ui/sheet";
+import { SidebarContent } from "./SidebarContent";
+import { useState } from "react";
 
 type Role = "student" | "admin" | "professor";
 
@@ -18,54 +23,75 @@ interface MobileNavProps {
 
 export function MobileNav({ currentRole }: MobileNavProps) {
   const [location] = useLocation();
+  const [open, setOpen] = useState(false);
 
   const studentLinks = [
-    { href: "/dashboard", icon: Book, label: "Aprender" },
-    { href: "/leaderboard", icon: Trophy, label: "Ranking" },
-    { href: "/quests", icon: Target, label: "Misiones" },
+    { href: "/dashboard", icon: Home, label: "Inicio" },
+    { href: "/missions", icon: Trophy, label: "Misiones" },
     { href: "/profile", icon: User, label: "Perfil" },
   ];
 
   const adminLinks = [
-    { href: "/admin", icon: Shield, label: "Admin" },
+    { href: "/admin", icon: Home, label: "Panel" },
     { href: "/admin/users", icon: User, label: "Usuarios" },
   ];
 
   const professorLinks = [
-    { href: "/teach", icon: GraduationCap, label: "Clases" },
-    { href: "/teach/create", icon: Book, label: "Crear" },
+    { href: "/teach", icon: Home, label: "Inicio" },
+    { href: "/profile", icon: User, label: "Perfil" },
   ];
 
-  const links = currentRole === "admin" ? adminLinks : 
-                currentRole === "professor" ? professorLinks : 
-                studentLinks;
+  const links = currentRole === "admin" ? adminLinks :
+    currentRole === "professor" ? professorLinks :
+      studentLinks;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50 px-4 pb-4 pt-2">
-      <div className="flex justify-around items-center">
-        {links.map((link) => {
+    <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-100 px-4 pb-6 pt-2 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+      <div className="flex justify-around items-center h-12">
+        {links.slice(0, 3).map((link) => {
           const isActive = location === link.href;
           return (
             <Link key={link.href} href={link.href}>
-              <div className="flex flex-col items-center gap-1 cursor-pointer">
-                <link.icon 
-                  className={cn(
-                    "h-6 w-6 transition-colors", 
-                    isActive ? "fill-[#0047AB] text-[#0047AB]" : "text-slate-400"
-                  )} 
-                />
-                <span 
-                  className={cn(
-                    "text-[10px] font-bold uppercase tracking-wide",
-                    isActive ? "text-[#0047AB]" : "text-slate-400"
-                  )}
-                >
+              <div
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-1 rounded-2xl transition-all",
+                  isActive ? "text-[#0047AB]" : "text-slate-400"
+                )}
+              >
+                <link.icon className={cn("h-6 w-6", isActive ? "fill-[#0047AB]/10" : "")} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">
                   {link.label}
                 </span>
               </div>
             </Link>
           );
         })}
+
+        {/* Menu Toggle for Full Sidebar */}
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <div
+              className={cn(
+                "flex flex-col items-center gap-1 px-4 py-1 rounded-2xl transition-all text-slate-400 cursor-pointer"
+              )}
+            >
+              <Menu className="h-6 w-6" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                Menú
+              </span>
+            </div>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-[280px] border-none">
+            <SidebarContent
+              currentRole={currentRole as any}
+              onLogout={() => {
+                localStorage.removeItem('edu_user');
+                window.location.href = '/login';
+              }}
+              onClose={() => setOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );

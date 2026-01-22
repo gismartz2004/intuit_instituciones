@@ -1,6 +1,7 @@
 
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import StudentDashboard3D from "@/pages/StudentDashboard3D";
@@ -16,6 +17,8 @@ import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
 import { GamerRaffle, MissionsHub } from "@/features/gamification";
 import { Toaster } from "@/components/ui/toaster";
+
+import { MobileHeader } from "@/components/layout/MobileHeader";
 
 function App() {
   const [user, setUser] = useState<{ role: "student" | "admin" | "professor"; name: string; id: string; plan?: string } | null>(() => {
@@ -42,9 +45,11 @@ function App() {
     return <Redirect to="/login" />;
   }
 
+  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab";
+
   return (
-    <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      {user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && (
+    <div className="flex min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">
+      {showNav && (
         <>
           <Sidebar
             currentRole={user.role}
@@ -52,11 +57,19 @@ function App() {
             onLogout={handleLogout}
             userPlanId={user.plan ? parseInt(user.plan) : 1}
           />
+          <MobileHeader
+            currentRole={user.role}
+            onLogout={handleLogout}
+            userPlanId={user.plan ? parseInt(user.plan) : 1}
+          />
           <MobileNav currentRole={user.role} />
         </>
       )}
 
-      <main className={`flex-1 min-h-screen bg-slate-50/50 ${user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" ? "md:ml-[280px] pb-20 md:pb-0" : ""}`}>
+      <main className={cn(
+        "flex-1 min-h-screen bg-slate-50/50",
+        showNav ? "md:ml-[280px] pt-20 md:pt-0 pb-24 md:pb-0" : ""
+      )}>
         <Switch>
           <Route path="/login">
             {user ? <Redirect to="/" /> : <Login onLogin={handleLogin} />}
@@ -89,7 +102,8 @@ function App() {
           <Route path="/pro-courses" component={ProCourses} />
           <Route path="/gamer-raffle" component={GamerRaffle} />
           <Route path="/level/:levelId" component={LevelViewer} />
-          <Route path="/missions" component={Missions} />
+          <Route path="/quests" component={MissionsHub} />
+          <Route path="/missions" component={MissionsHub} />
           <Route path="/files" component={FileSystem} />
           <Route path="/profile">
             {user ? <Profile user={user} /> : <Redirect to="/login" />}

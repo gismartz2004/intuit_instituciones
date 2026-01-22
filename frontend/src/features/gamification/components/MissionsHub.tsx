@@ -115,7 +115,7 @@ export default function MissionsHub() {
             </div>
 
             <Tabs defaultValue="daily" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
+                <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6 mx-auto md:mx-0">
                     <TabsTrigger value="daily">Diarias</TabsTrigger>
                     <TabsTrigger value="campaign">Campaña</TabsTrigger>
                 </TabsList>
@@ -136,10 +136,10 @@ export default function MissionsHub() {
                                     transition={{ delay: idx * 0.1 }}
                                 >
                                     <Card className={`border-l-4 ${mission.completada ? 'border-l-green-500 bg-green-50/50' : 'border-l-slate-300'}`}>
-                                        <CardContent className="p-6 flex justify-between items-center">
-                                            <div>
+                                        <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="flex-1">
                                                 <h3 className="font-bold text-lg text-slate-800">{mission.titulo}</h3>
-                                                <p className="text-slate-600">{mission.descripcion}</p>
+                                                <p className="text-slate-600 text-sm">{mission.descripcion}</p>
                                                 {mission.objetivoValor > 1 && (
                                                     <div className="mt-2">
                                                         <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2" />

@@ -15,9 +15,19 @@ export class StudentController {
         return this.studentService.getStudentProgress(id);
     }
 
+    @Get(':id/curriculum')
+    async getCurriculum(@Param('id', ParseIntPipe) id: number) {
+        return this.studentService.getStudentCurriculum(id);
+    }
+
     @Get('level/:levelId/contents')
     async getLevelContents(@Param('levelId', ParseIntPipe) levelId: number) {
         return this.studentService.getLevelContents(levelId);
+    }
+
+    @Post(':id/content/view')
+    async trackContentView(@Param('id', ParseIntPipe) studentId: number) {
+        return this.studentService['gamificationService'].trackContentView(studentId);
     }
 
     @Get(':id/module/:moduleId/progress')

@@ -174,6 +174,13 @@ export const studentApi = {
    */
   async getHaSubmissions(studentId: number, templateId: number): Promise<any[]> {
     return apiClient.get<any[]>(`/api/student/${studentId}/ha/${templateId}/submissions`);
+  },
+
+  /**
+   * Obtener currículo digital completo del estudiante
+   */
+  async getCurriculum(studentId: number): Promise<any> {
+    return apiClient.get<any>(`/api/student/${studentId}/curriculum`);
   }
 };
 

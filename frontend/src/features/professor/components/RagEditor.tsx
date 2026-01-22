@@ -14,6 +14,44 @@ import { toast } from "@/hooks/use-toast";
 import { ImagePickerModal } from "./ImagePickerModal";
 import { Image as ImageIcon, Camera } from "lucide-react";
 
+interface KeyConcept {
+    titulo: string;
+    descripcion: string;
+    imagenUrl?: string;
+}
+
+interface GuidedStep {
+    paso: string;
+    imagenUrl?: string;
+    requiereEntregable?: boolean;
+}
+
+interface RagFormData {
+    programa: string;
+    modulo: string;
+    hitoAprendizaje: string;
+    mes: string;
+    semana: string;
+    tipoRag: string;
+    modalidad: string;
+    duracionEstimada: string;
+    proposito: string;
+    objetivoAprendizaje: string;
+    nombreActividad: string;
+    descripcionDesafio: string;
+    tipoEvidencia: string;
+    cantidadEvidencias: number;
+    competenciasTecnicas: string;
+    competenciasBlandas: string;
+    porcentajeAporte: number;
+    actualizaRadar: boolean;
+    regularizaAsistencia: boolean;
+    criterioEvidencia: boolean;
+    criterioPasos: boolean;
+    criterioTiempo: boolean;
+    imagenUrl?: string;
+}
+
 interface RagEditorProps {
     levelId: number;
     moduleId: number;
@@ -22,7 +60,7 @@ interface RagEditorProps {
 }
 
 export default function RagEditor({ levelId, moduleId, initialData, onClose }: RagEditorProps) {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<RagFormData>({
         programa: "",
         modulo: "",
         hitoAprendizaje: "",
@@ -37,30 +75,28 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
         descripcionDesafio: "",
         tipoEvidencia: "",
         cantidadEvidencias: 1,
-        competenciasTecnicas: "", // Will store as "Técnica 1\nTécnica 2"
+        competenciasTecnicas: "",
         competenciasBlandas: "",
         porcentajeAporte: 0,
-
-        // New Fields
         actualizaRadar: false,
         regularizaAsistencia: false,
-
         criterioEvidencia: false,
         criterioPasos: false,
-        criterioTiempo: false
+        criterioTiempo: false,
+        imagenUrl: ""
     });
 
     // Dynamic Lists
-    const [keyConcepts, setKeyConcepts] = useState<{ titulo: string, descripcion: string }[]>([
+    const [keyConcepts, setKeyConcepts] = useState<KeyConcept[]>([
         { titulo: "", descripcion: "" }
     ]);
-    const [guidedSteps, setGuidedSteps] = useState<{ paso: string }[]>([
+    const [guidedSteps, setGuidedSteps] = useState<GuidedStep[]>([
         { paso: "" }
     ]);
     const [hints, setHints] = useState<string[]>([""]);
 
     // Dynamic Sections State
-    const [dynamicSections, setDynamicSections] = useState<any[]>([]); // { id, titulo, tipo, contenido }
+    const [dynamicSections, setDynamicSections] = useState<any[]>([]);
 
     const [loading, setLoading] = useState(false);
 
@@ -72,13 +108,14 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
     useEffect(() => {
         if (initialData) {
             setFormData({
+                ...formData, // Keep defaults
                 ...initialData,
-                // Ensure defaults for booleans if missing
-                actualizaRadar: initialData.actualizaRadar || false,
-                regularizaAsistencia: initialData.regularizaAsistencia || false,
-                criterioEvidencia: initialData.criterioEvidencia || false,
-                criterioPasos: initialData.criterioPasos || false,
-                criterioTiempo: initialData.criterioTiempo || false,
+                imagenUrl: initialData.imagenUrl || "",
+                actualizaRadar: !!initialData.actualizaRadar,
+                regularizaAsistencia: !!initialData.regularizaAsistencia,
+                criterioEvidencia: !!initialData.criterioEvidencia,
+                criterioPasos: !!initialData.criterioPasos,
+                criterioTiempo: !!initialData.criterioTiempo,
             });
             if (initialData.contenidoClave) {
                 try {
@@ -89,7 +126,6 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                 try {
                     setGuidedSteps(typeof initialData.pasosGuiados === 'string' ? JSON.parse(initialData.pasosGuiados) : initialData.pasosGuiados);
                 } catch (e) {
-                    // Handle simple text if legacy
                     console.error("Error parsing steps", e);
                 }
             }
@@ -153,14 +189,14 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
 
         if (pickerTarget.type === 'concept' && pickerTarget.index !== undefined) {
             const newConcepts = [...keyConcepts];
-            newConcepts[pickerTarget.index].imagenUrl = url;
+            newConcepts[pickerTarget.index] = { ...newConcepts[pickerTarget.index], imagenUrl: url };
             setKeyConcepts(newConcepts);
         } else if (pickerTarget.type === 'step' && pickerTarget.index !== undefined) {
             const newSteps = [...guidedSteps];
-            (newSteps[pickerTarget.index] as any).imagenUrl = url;
+            newSteps[pickerTarget.index] = { ...newSteps[pickerTarget.index], imagenUrl: url };
             setGuidedSteps(newSteps);
         } else if (pickerTarget.type === 'general') {
-            setFormData({ ...formData, ...({ imagenUrl: url } as any) });
+            setFormData({ ...formData, imagenUrl: url });
         }
     };
 
@@ -172,23 +208,23 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
     return (
         <div className="fixed inset-0 bg-slate-50 z-50 flex flex-col overflow-hidden animate-in fade-in duration-300">
             {/* Header Toolbar */}
-            <header className="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm flex-shrink-0">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100">
+            <header className="bg-white border-b px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm flex-shrink-0">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100 shrink-0">
                         <ArrowLeft className="w-5 h-5 text-slate-600" />
                     </Button>
-                    <div>
-                        <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-blue-600" />
-                            Editor de Plantilla RAG
+                    <div className="truncate">
+                        <h1 className="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2 truncate">
+                            <FileText className="w-5 h-5 text-blue-600 shrink-0" />
+                            Editor RAG
                         </h1>
-                        <p className="text-xs text-slate-500">Recuperación Autónoma Guiada • Nivel {levelId}</p>
+                        <p className="text-[10px] md:text-xs text-slate-500 truncate">Nivel {levelId}</p>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={onClose}>Cancelar</Button>
-                    <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 gap-2">
-                        <Save className="w-4 h-4" /> Guardar RAG
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <Button variant="outline" onClick={onClose} className="flex-1 sm:flex-none">Cancelar</Button>
+                    <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 gap-2 flex-1 sm:flex-none">
+                        <Save className="w-4 h-4" /> Guardar
                     </Button>
                 </div>
             </header>
@@ -312,7 +348,8 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                                     className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-lg"
                                                     onClick={() => {
                                                         const n = [...keyConcepts];
-                                                        delete n[index].imagenUrl;
+                                                        const { imagenUrl, ...rest } = n[index];
+                                                        n[index] = rest;
                                                         setKeyConcepts(n);
                                                     }}
                                                 >
@@ -379,10 +416,10 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                             <input
                                                 type="checkbox"
                                                 title="Requiere Entregable"
-                                                checked={(item as any).requiereEntregable || false}
+                                                checked={item.requiereEntregable || false}
                                                 onChange={(e) => {
                                                     const ns = [...guidedSteps];
-                                                    (ns[index] as any).requiereEntregable = e.target.checked;
+                                                    ns[index] = { ...ns[index], requiereEntregable: e.target.checked };
                                                     setGuidedSteps(ns);
                                                 }}
                                                 className="w-4 h-4 text-blue-600"
@@ -404,20 +441,21 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                                     variant="outline"
                                                     size="icon"
                                                     title="Agregar Imagen"
-                                                    className={(item as any).imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-400"}
+                                                    className={item.imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-400"}
                                                     onClick={() => openPicker('step', index)}
                                                 >
                                                     <ImageIcon className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                            {(item as any).imagenUrl && (
+                                            {item.imagenUrl && (
                                                 <div className="relative w-20 h-20 rounded border bg-white overflow-hidden">
-                                                    <img src={(item as any).imagenUrl} className="w-full h-full object-cover" />
+                                                    <img src={item.imagenUrl} className="w-full h-full object-cover" />
                                                     <button
                                                         className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl"
                                                         onClick={() => {
                                                             const n = [...guidedSteps];
-                                                            delete (n[index] as any).imagenUrl;
+                                                            const { imagenUrl, ...rest } = n[index];
+                                                            n[index] = rest;
                                                             setGuidedSteps(n);
                                                         }}
                                                     >
@@ -495,7 +533,7 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                 <FileText className="w-5 h-5" /> 7. Evidencia de Aprendizaje
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4 pt-6">
+                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
                             <div className="space-y-2">
                                 <Label>Tipo de evidencia</Label>
                                 <select

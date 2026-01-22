@@ -9,6 +9,9 @@ export class GamificationController {
 
     @Get('missions')
     async getMissions(@Param('studentId', ParseIntPipe) studentId: number) {
+        // First sync weekly missions for Pro students
+        await this.gamificationService.syncWeeklyMissions(studentId);
+
         // Get all active missions
         const missions = await this.gamificationService['db'].select()
             .from(schema.misiones)

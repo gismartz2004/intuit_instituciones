@@ -131,7 +131,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed top-4 right-4 z-50 flex gap-3 pointer-events-none"
+          className="fixed top-24 right-4 md:top-4 md:right-4 z-50 flex gap-3 pointer-events-none"
         >
           <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border-2 border-slate-200 flex items-center gap-2 pointer-events-auto">
             <div className="bg-orange-500 rounded-full p-1">
@@ -140,11 +140,11 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <span className="font-black text-orange-600 text-lg">{progress.totalPoints || 0}</span>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border-2 border-slate-200 flex items-center gap-2 pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
-            <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-blue-400 overflow-hidden">
+          <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-2xl border-2 border-slate-200 flex items-center gap-2 pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
+            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-100 border-2 border-blue-400 overflow-hidden">
               <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-slate-700">{user.name}</span>
+            <span className="font-bold text-slate-700 text-sm hidden md:block">{user.name}</span>
           </div>
         </motion.div>
       )}
@@ -197,7 +197,10 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                       {mod.levels?.map((lvl: any, lIdx: number) => {
                         // ZigZag Calculation (Global index feel)
                         const globalIdx = mIdx * 10 + lIdx;
-                        const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -120 : 120);
+                        // Reduced offset for mobile
+                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                        const baseOffset = isMobile ? 60 : 120;
+                        const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
                         const isActive = zIdx === 0 && mIdx === 0 && lIdx === 0;
 
                         return (

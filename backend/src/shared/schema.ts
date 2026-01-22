@@ -311,6 +311,7 @@ export const progresoMisiones = pgTable('progreso_misiones', {
   recompensaReclamada: boolean('recompensa_reclamada').default(false),
   fechaInicio: timestamp('fecha_inicio').defaultNow(),
   fechaCompletado: timestamp('fecha_completado'),
+  semanaInicio: timestamp('semana_inicio'), // For weekly mission reset/sync
 });
 
 

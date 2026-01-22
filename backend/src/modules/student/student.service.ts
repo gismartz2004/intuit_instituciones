@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, asc, desc, and } from 'drizzle-orm';
+import { eq, asc, desc, and, sql } from 'drizzle-orm';
 import { StorageService } from '../storage/storage.service';
 import { GamificationService } from './services/gamification.service';
 
@@ -592,5 +592,108 @@ export class StudentService {
                 eq(schema.entregasHa.estudianteId, studentId),
                 eq(schema.entregasHa.plantillaHaId, plantillaHaId)
             ));
+    }
+
+    async getStudentCurriculum(studentId: number) {
+        // 1. Basic user info
+        const student = await this.db.select({
+            id: schema.usuarios.id,
+            nombre: schema.usuarios.nombre,
+            email: schema.usuarios.email,
+            avatar: schema.usuarios.avatar,
+            planId: schema.usuarios.planId
+        })
+            .from(schema.usuarios)
+            .where(eq(schema.usuarios.id, studentId))
+            .limit(1);
+
+        if (student.length === 0) throw new Error('Estudiante no encontrado');
+
+        // 2. Gamification Stats
+        const stats = await this.getGamificationStats(studentId);
+
+        // 3. Module Progress
+        const moduleAssignments = await this.db.select({
+            moduloId: schema.modulos.id,
+            nombreModulo: schema.modulos.nombreModulo,
+            duracionDias: schema.modulos.duracionDias
+        })
+            .from(schema.asignaciones)
+            .innerJoin(schema.modulos, eq(schema.asignaciones.moduloId, schema.modulos.id))
+            .where(eq(schema.asignaciones.estudianteId, studentId));
+
+        const modulesDetailed = await Promise.all(moduleAssignments.map(async (mod) => {
+            // Count total levels in module
+            const levels = await this.db.select({ id: schema.niveles.id })
+                .from(schema.niveles)
+                .where(eq(schema.niveles.moduloId, mod.moduloId));
+
+            const levelIds = levels.map(l => l.id);
+
+            let completedLevels = 0;
+            if (levelIds.length > 0) {
+                const progress = await this.db.select()
+                    .from(schema.progresoNiveles)
+                    .where(and(
+                        eq(schema.progresoNiveles.estudianteId, studentId),
+                        sql`${schema.progresoNiveles.nivelId} IN (${sql.join(levelIds, sql`, `)})`,
+                        eq(schema.progresoNiveles.completado, true)
+                    ));
+                completedLevels = progress.length;
+            }
+
+            return {
+                ...mod,
+                totalLevels: levels.length,
+                completedLevels,
+                percentage: levels.length > 0 ? Math.round((completedLevels / levels.length) * 100) : 0
+            };
+        }));
+
+        // 4. Points History (Top 20)
+        const pointsHistory = await this.db.select()
+            .from(schema.puntosLog)
+            .where(eq(schema.puntosLog.estudianteId, studentId))
+            .orderBy(desc(schema.puntosLog.fechaObtencion))
+            .limit(20);
+
+        // 5. Recent Submissions (RAG & HA)
+        const recentRag = await this.db.select({
+            id: schema.entregasRag.id,
+            tipo: sql`'RAG'`,
+            titulo: schema.plantillasRag.nombreActividad,
+            fecha: schema.entregasRag.fechaSubida
+        })
+            .from(schema.entregasRag)
+            .innerJoin(schema.plantillasRag, eq(schema.entregasRag.plantillaRagId, schema.plantillasRag.id))
+            .where(eq(schema.entregasRag.estudianteId, studentId))
+            .orderBy(desc(schema.entregasRag.fechaSubida))
+            .limit(5);
+
+        const recentHa = await this.db.select({
+            id: schema.entregasHa.id,
+            tipo: sql`'HA'`,
+            titulo: schema.plantillasHa.fase,
+            fecha: schema.entregasHa.fechaSubida
+        })
+            .from(schema.entregasHa)
+            .innerJoin(schema.plantillasHa, eq(schema.entregasHa.plantillaHaId, schema.plantillasHa.id))
+            .where(eq(schema.entregasHa.estudianteId, studentId))
+            .orderBy(desc(schema.entregasHa.fechaSubida))
+            .limit(5);
+
+        const activity = [...recentRag, ...recentHa].sort((a, b) => {
+            const dateA = a.fecha ? new Date(a.fecha).getTime() : 0;
+            const dateB = b.fecha ? new Date(b.fecha).getTime() : 0;
+            return dateB - dateA;
+        }).slice(0, 10);
+
+        return {
+            student: student[0],
+            stats,
+            modules: modulesDetailed,
+            pointsHistory,
+            activity
+        };
     }
 }
