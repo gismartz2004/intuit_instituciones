@@ -19,10 +19,15 @@ export default function Leaderboard() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    const userStr = localStorage.getItem('arg_user'); // Assuming user is stored here from login
+    const userStr = localStorage.getItem('edu_user');
     if (userStr) {
-      const user = JSON.parse(userStr);
-      setCurrentUserId(user.id);
+      try {
+        const user = JSON.parse(userStr);
+        const id = user.id || user.user?.id;
+        if (id) setCurrentUserId(id);
+      } catch (e) {
+        console.error("Error parsing user for leaderboard", e);
+      }
     }
     fetchLeaderboard();
   }, []);

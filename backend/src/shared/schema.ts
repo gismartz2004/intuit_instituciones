@@ -288,6 +288,32 @@ export const entregasHa = pgTable('entregas_ha', {
   fechaSubida: timestamp('fecha_subida').defaultNow(),
 });
 
+// 22. Misiones (Mission Definitions)
+export const misiones = pgTable('misiones', {
+  id: serial('id').primaryKey(),
+  tipo: varchar('tipo', { length: 50 }), // DAILY_LOGIN, VIEW_CONTENT, COMPLETE_ACTIVITY, STREAK_3, STREAK_7
+  titulo: varchar('titulo', { length: 100 }),
+  descripcion: text('descripcion'),
+  xpRecompensa: integer('xp_recompensa'),
+  iconoUrl: varchar('icono_url', { length: 255 }),
+  objetivoValor: integer('objetivo_valor'), // e.g., 3 for "view 3 contents"
+  esDiaria: boolean('es_diaria').default(false),
+  activa: boolean('activa').default(true),
+});
+
+// 23. Progreso de Misiones (Student Mission Progress)
+export const progresoMisiones = pgTable('progreso_misiones', {
+  id: serial('id').primaryKey(),
+  estudianteId: integer('estudiante_id').references(() => usuarios.id),
+  misionId: integer('mision_id').references(() => misiones.id),
+  progresoActual: integer('progreso_actual').default(0),
+  completada: boolean('completada').default(false),
+  recompensaReclamada: boolean('recompensa_reclamada').default(false),
+  fechaInicio: timestamp('fecha_inicio').defaultNow(),
+  fechaCompletado: timestamp('fecha_completado'),
+});
+
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -356,6 +382,9 @@ export const insertLogroDesbloqueadoSchema = createInsertSchema(logrosDesbloquea
 export const insertGamificacionEstudianteSchema = createInsertSchema(gamificacionEstudiante);
 export const insertEntregaRagSchema = createInsertSchema(entregasRag);
 export const insertEntregaHaSchema = createInsertSchema(entregasHa);
+export const insertMisionSchema = createInsertSchema(misiones);
+export const insertProgresoMisionSchema = createInsertSchema(progresoMisiones);
+
 
 export type Logro = typeof logros.$inferSelect;
 export type InsertLogro = z.infer<typeof insertLogroSchema>;
@@ -371,3 +400,10 @@ export type InsertEntregaRag = z.infer<typeof insertEntregaRagSchema>;
 
 export type EntregaHa = typeof entregasHa.$inferSelect;
 export type InsertEntregaHa = z.infer<typeof insertEntregaHaSchema>;
+
+export type Mision = typeof misiones.$inferSelect;
+export type InsertMision = z.infer<typeof insertMisionSchema>;
+
+export type ProgresoMision = typeof progresoMisiones.$inferSelect;
+export type InsertProgresoMision = z.infer<typeof insertProgresoMisionSchema>;
+

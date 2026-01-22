@@ -51,7 +51,7 @@ export class StudentController {
         return this.studentService.getGlobalLeaderboard();
     }
 
-    @Post(':id/xp/add')
+    @Get(':id/xp/add')
     async addXP(
         @Param('id', ParseIntPipe) studentId: number,
         @Body() body: { amount: number; reason: string }
@@ -59,5 +59,20 @@ export class StudentController {
         return this.studentService.addXP(studentId, body.amount, body.reason);
     }
 
+    @Get(':id/rag/:templateId/submissions')
+    async getRagSubmissions(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('templateId', ParseIntPipe) templateId: number
+    ) {
+        return this.studentService.getRagSubmissions(studentId, templateId);
+    }
+
+    @Get(':id/ha/:templateId/submissions')
+    async getHaSubmissions(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('templateId', ParseIntPipe) templateId: number
+    ) {
+        return this.studentService.getHaSubmissions(studentId, templateId);
+    }
 
 }

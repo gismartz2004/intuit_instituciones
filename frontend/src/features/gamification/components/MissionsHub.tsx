@@ -13,53 +13,77 @@ import { motion } from "framer-motion";
 export default function MissionsHub() {
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
+    const [missions, setMissions] = useState<any[]>([]);
+    const [claiming, setClaiming] = useState<number | null>(null);
 
     useEffect(() => {
-        // Determine student ID (mock or from auth)
-        const userStr = localStorage.getItem('arg_user');
-        const studentId = userStr ? JSON.parse(userStr).id : 1;
-
-        studentApi.getGamificationStats(studentId)
-            .then(data => setStats(data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
+        loadData();
     }, []);
 
-    const missions = [
-        {
-            title: "Primeros Pasos",
-            description: "Alcanza el nivel 2",
-            reward: 100,
-            icon: <Star className="w-5 h-5 text-yellow-500" />,
-            completed: (stats?.nivelActual || 1) > 1
-        },
-        {
-            title: "Racha de Fuego",
-            description: "Ingresa 3 días seguidos",
-            reward: 50,
-            icon: <Zap className="w-5 h-5 text-orange-500" />,
-            completed: (stats?.rachaDias || 0) >= 3
-        },
-        {
-            title: "Coleccionista",
-            description: "Desbloquea 1 logro",
-            reward: 200,
-            icon: <Target className="w-5 h-5 text-blue-500" />,
-            completed: (stats?.achievements?.length || 0) > 0
-        },
-        {
-            title: "Leyenda",
-            description: "Alcanza 1000 XP",
-            reward: 300,
-            icon: <Trophy className="w-5 h-5 text-purple-500" />,
-            completed: (stats?.totalPoints || 0) >= 1000
-        },
-    ];
+    const loadData = async () => {
+        try {
+            const userStr = localStorage.getItem('edu_user');
+            let studentId = 1;
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    studentId = user.id || user.user?.id || 1;
+                } catch {
+                    studentId = 1;
+                }
+            }
 
-    const dailyMissions = [
-        { title: "Login Diario", description: "Ingresa a la plataforma", reward: 10, completed: true }, // Auto-completed for now
-        { title: "Revisar un recurso", description: "Abre un material de lectura", reward: 20, completed: false }, // Placeholder
-    ];
+            // Load gamification stats and missions in parallel
+            const [statsData, missionsData] = await Promise.all([
+                studentApi.getGamificationStats(studentId),
+                studentApi.getAllMissions(studentId)
+            ]);
+
+            setStats(statsData);
+            setMissions(missionsData || []);
+        } catch (err) {
+            console.error('Error loading gamification data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClaimReward = async (missionId: number) => {
+        try {
+            setClaiming(missionId);
+            const userStr = localStorage.getItem('edu_user');
+            let studentId = 1;
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    studentId = user.id || user.user?.id || 1;
+                } catch {
+                    studentId = 1;
+                }
+            }
+
+            const result = await studentApi.claimMissionReward(studentId, missionId);
+
+            if (result.success) {
+                // Reload data to reflect changes
+                await loadData();
+                // Could show a toast notification here
+                console.log(`¡Recompensa reclamada! +${result.xpAwarded} XP`);
+            }
+        } catch (err) {
+            console.error('Error claiming mission reward:', err);
+        } finally {
+            setClaiming(null);
+        }
+    };
+
+    // Separate missions by type
+    const dailyMissions = missions.filter(m => m.esDiaria);
+    const campaignMissions = missions.filter(m => !m.esDiaria);
+
+    if (loading) {
+        return <div className="container mx-auto p-8 text-center">Cargando misiones...</div>;
+    }
 
     return (
         <div className="container mx-auto p-4 md:p-8 space-y-8 pb-24">
@@ -101,30 +125,49 @@ export default function MissionsHub() {
                         <Zap className="w-6 h-6 text-orange-500" /> Misiones Diarias
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {dailyMissions.map((mission, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                            >
-                                <Card className={`border-l-4 ${mission.completed ? 'border-l-green-500 bg-green-50/50' : 'border-l-slate-300'}`}>
-                                    <CardContent className="p-6 flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-bold text-lg text-slate-800">{mission.title}</h3>
-                                            <p className="text-slate-600">{mission.description}</p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">+{mission.reward} XP</Badge>
-                                            {mission.completed ?
-                                                <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" /> Completado</Badge> :
-                                                <Button size="sm" variant="outline">Ir</Button>
-                                            }
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        ))}
+                        {dailyMissions.length === 0 ? (
+                            <p className="text-slate-500 col-span-2">No hay misiones diarias disponibles</p>
+                        ) : (
+                            dailyMissions.map((mission, idx) => (
+                                <motion.div
+                                    key={mission.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                >
+                                    <Card className={`border-l-4 ${mission.completada ? 'border-l-green-500 bg-green-50/50' : 'border-l-slate-300'}`}>
+                                        <CardContent className="p-6 flex justify-between items-center">
+                                            <div>
+                                                <h3 className="font-bold text-lg text-slate-800">{mission.titulo}</h3>
+                                                <p className="text-slate-600">{mission.descripcion}</p>
+                                                {mission.objetivoValor > 1 && (
+                                                    <div className="mt-2">
+                                                        <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2" />
+                                                        <p className="text-xs text-slate-500 mt-1">{mission.progresoActual} / {mission.objetivoValor}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">+{mission.xpRecompensa} XP</Badge>
+                                                {mission.recompensaReclamada ? (
+                                                    <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" /> Reclamado</Badge>
+                                                ) : mission.completada ? (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleClaimReward(mission.id)}
+                                                        disabled={claiming === mission.id}
+                                                    >
+                                                        {claiming === mission.id ? 'Reclamando...' : 'Reclamar'}
+                                                    </Button>
+                                                ) : (
+                                                    <Badge variant="outline">En progreso</Badge>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ))
+                        )}
                     </div>
                 </TabsContent>
 
@@ -133,43 +176,62 @@ export default function MissionsHub() {
                         <Target className="w-6 h-6 text-indigo-500" /> Misiones de Campaña
                     </h2>
                     <div className="grid grid-cols-1 gap-4">
-                        {missions.map((mission, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                            >
-                                <Card className={`overflow-hidden transition-all ${mission.completed ? 'opacity-70 bg-slate-50' : 'hover:shadow-md'}`}>
-                                    <div className="flex flex-col md:flex-row">
-                                        <div className={`w-full md:w-24 flex items-center justify-center p-6 ${mission.completed ? 'bg-slate-200' : 'bg-indigo-100'}`}>
-                                            {mission.completed ? <CheckCircle2 className="w-10 h-10 text-slate-400" /> : mission.icon}
-                                        </div>
-                                        <CardContent className="p-6 flex-1 flex justify-between items-center">
-                                            <div>
-                                                <h3 className={`font-bold text-xl ${mission.completed ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{mission.title}</h3>
-                                                <p className="text-slate-600 mb-2">{mission.description}</p>
-                                                <div className="flex gap-2">
-                                                    <Badge variant="outline" className="border-indigo-200 text-indigo-700">Recompensa: {mission.reward} XP</Badge>
+                        {campaignMissions.length === 0 ? (
+                            <p className="text-slate-500">No hay misiones de campaña disponibles</p>
+                        ) : (
+                            campaignMissions.map((mission, idx) => (
+                                <motion.div
+                                    key={mission.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                >
+                                    <Card className={`overflow-hidden transition-all ${mission.completada ? 'opacity-70 bg-slate-50' : 'hover:shadow-md'}`}>
+                                        <div className="flex flex-col md:flex-row">
+                                            <div className={`w-full md:w-24 flex items-center justify-center p-6 ${mission.completada ? 'bg-slate-200' : 'bg-indigo-100'}`}>
+                                                {mission.completada ? <CheckCircle2 className="w-10 h-10 text-slate-400" /> : <Target className="w-10 h-10 text-indigo-600" />}
+                                            </div>
+                                            <CardContent className="p-6 flex-1 flex justify-between items-center">
+                                                <div className="flex-1">
+                                                    <h3 className={`font-bold text-xl ${mission.completada ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{mission.titulo}</h3>
+                                                    <p className="text-slate-600 mb-2">{mission.descripcion}</p>
+                                                    {mission.objetivoValor > 1 && (
+                                                        <div className="mt-2 max-w-md">
+                                                            <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2" />
+                                                            <p className="text-xs text-slate-500 mt-1">{mission.progresoActual} / {mission.objetivoValor}</p>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex gap-2 mt-2">
+                                                        <Badge variant="outline" className="border-indigo-200 text-indigo-700">Recompensa: {mission.xpRecompensa} XP</Badge>
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div>
-                                                {mission.completed ?
-                                                    <Button disabled variant="ghost">Reclamado</Button> :
-                                                    <Button className="bg-indigo-600 hover:bg-indigo-700">Completar</Button>
-                                                }
-                                            </div>
-                                        </CardContent>
-                                    </div>
-                                    {!mission.completed && (
-                                        <div className="h-1 w-full bg-indigo-100">
-                                            <div className="h-full bg-indigo-500" style={{ width: '0%' }} />
+                                                <div>
+                                                    {mission.recompensaReclamada ? (
+                                                        <Button disabled variant="ghost">Reclamado</Button>
+                                                    ) : mission.completada ? (
+                                                        <Button
+                                                            className="bg-indigo-600 hover:bg-indigo-700"
+                                                            onClick={() => handleClaimReward(mission.id)}
+                                                            disabled={claiming === mission.id}
+                                                        >
+                                                            {claiming === mission.id ? 'Reclamando...' : 'Reclamar'}
+                                                        </Button>
+                                                    ) : (
+                                                        <Badge variant="outline">En progreso</Badge>
+                                                    )}
+                                                </div>
+                                            </CardContent>
                                         </div>
-                                    )}
-                                </Card>
-                            </motion.div>
-                        ))}
+                                        {!mission.completada && mission.objetivoValor > 1 && (
+                                            <div className="h-1 w-full bg-indigo-100">
+                                                <div className="h-full bg-indigo-500" style={{ width: `${(mission.progresoActual / mission.objetivoValor) * 100}%` }} />
+                                            </div>
+                                        )}
+                                    </Card>
+                                </motion.div>
+                            ))
+                        )}
                     </div>
                 </TabsContent>
             </Tabs>

@@ -26,9 +26,14 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
     const [reflection, setReflection] = useState("");
 
     const getStudentId = () => {
-        const userStr = localStorage.getItem('arg_user');
+        const userStr = localStorage.getItem('edu_user');
         if (userStr) {
-            try { return JSON.parse(userStr).id; } catch { return 1; }
+            try {
+                const user = JSON.parse(userStr);
+                return user.id || user.user?.id || 1;
+            } catch {
+                return 1;
+            }
         }
         return 1;
     };
@@ -63,10 +68,27 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
     }, [currentSection, evidenceFiles, reflection]);
 
     useEffect(() => {
-        studentApi.getHaTemplate(levelId)
-            .then(data => setHaData(data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
+        const fetchHa = async () => {
+            try {
+                const data = await studentApi.getHaTemplate(levelId);
+                setHaData(data);
+
+                // Restore progress
+                const studentId = parseInt(getStudentId());
+                if (studentId && data) {
+                    const submissions = await studentApi.getHaSubmissions(studentId, data.id);
+                    if (submissions && submissions.length > 0) {
+                        setCurrentSection('completion');
+                        // Optionally set reflection if stored, but for now completion is enough
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchHa();
     }, [levelId]);
 
     const handleNextSection = async () => {
@@ -99,7 +121,6 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                         message: "Revisemos el contexto: el concepto clave y lo que debes lograr.",
                         isVisible: true
                     });
-                    onAddPoints?.(25, "Sección desbloqueada");
                     break;
                 case 'evidence':
                     setAvatarState({
@@ -107,7 +128,6 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                         message: "Ahora es momento de subir tu evidencia. ¡Muestra lo que has creado!",
                         isVisible: true
                     });
-                    onAddPoints?.(50, "Evidencia iniciada");
                     break;
                 case 'reflection':
                     setAvatarState({
@@ -117,12 +137,12 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                     });
                     break;
                 case 'completion':
+                    // Points are now handled by the backend on completion
                     setAvatarState({
                         emotion: 'celebrating',
                         message: "¡Felicitaciones! Has completado el Hito de Aprendizaje.",
                         isVisible: true
                     });
-                    onAddPoints?.(300, "¡Hito HA Completado!");
                     break;
             }
         }
@@ -279,10 +299,15 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                                             <Lightbulb className="w-5 h-5" /> Concepto Clave
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="space-y-4">
                                         <p className="text-slate-700 leading-relaxed whitespace-pre-line">
                                             {haData.conceptoClave || "Sin concepto definido."}
                                         </p>
+                                        {(haData as any).conceptoClaveImagen && (
+                                            <div className="rounded-lg overflow-hidden border shadow-sm">
+                                                <img src={(haData as any).conceptoClaveImagen} className="w-full h-auto object-cover" />
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
@@ -311,11 +336,18 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                                     <CardContent className="p-0">
                                         <div className="divide-y divide-slate-100">
                                             {pasosGuiados.map((item: any, i: number) => (
-                                                <div key={i} className="p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors">
-                                                    <div className="mt-1">
-                                                        <Circle className="w-4 h-4 text-slate-300" />
+                                                <div key={i} className="p-4 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="mt-1">
+                                                            <Circle className="w-4 h-4 text-slate-300" />
+                                                        </div>
+                                                        <p className="text-slate-700 flex-1">{item.paso}</p>
                                                     </div>
-                                                    <p className="text-slate-700">{item.paso}</p>
+                                                    {item.imagenUrl && (
+                                                        <div className="ml-7 w-full max-w-sm rounded-lg overflow-hidden border shadow-sm">
+                                                            <img src={item.imagenUrl} className="w-full h-auto object-cover" />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

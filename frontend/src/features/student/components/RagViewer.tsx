@@ -100,6 +100,29 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
               ? JSON.parse(result.pistas)
               : result.pistas;
           setData(result);
+
+          // Restore progress
+          const studentId = parseInt(getStudentId());
+          if (studentId) {
+            const submissions = await studentApi.getRagSubmissions(studentId, result.id);
+            if (submissions && submissions.length > 0) {
+              const Indices = submissions.map((s: any) => s.pasoIndice);
+              setCompletedSteps(Indices);
+
+              // Check if already fully complete
+              const rawSteps = result.pasosGuiados || [];
+              const isFullyDone = rawSteps.every((p: any, idx: number) =>
+                !p.requiereEntregable || Indices.includes(idx)
+              );
+
+              if (isFullyDone) {
+                setCurrentSection('completion');
+              } else if (Indices.length > 0) {
+                // If some progress, maybe jump to mission or keep at context?
+                // For now, let's at least mark steps.
+              }
+            }
+          }
         }
       } catch (e) {
         console.error("No RAG data found");
@@ -115,9 +138,14 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
 
   // Helper to get user ID
   const getStudentId = () => {
-    const userStr = localStorage.getItem('arg_user');
+    const userStr = localStorage.getItem('edu_user');
     if (userStr) {
-      try { return JSON.parse(userStr).id; } catch { return 1; }
+      try {
+        const user = JSON.parse(userStr);
+        return user.id || user.user?.id || 1;
+      } catch {
+        return 1;
+      }
     }
     return 1;
   };
@@ -154,7 +182,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     // Mark step as complete
     if (!completedSteps.includes(currentStepIndex)) {
       setCompletedSteps(prev => [...prev, currentStepIndex]);
-      onAddPoints?.(50, "Paso completado");
     }
 
     // Check if there are more steps
@@ -170,7 +197,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     } else {
       // All steps completed
       setCurrentSection('completion');
-      onAddPoints?.(200, "Misión completada");
       setAvatarState({
         isVisible: true,
         emotion: 'celebrating',
@@ -187,7 +213,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
         setAvatarState({ emotion: 'thinking', message: 'Subiendo archivo...', isVisible: true });
         const res = await studentApi.uploadEvidence(file);
         setCurrentUploadUrl(res.url);
-        onAddPoints?.(25, "Entregable subido");
         setAvatarState({
           emotion: 'happy',
           message: `✓ Archivo "${file.name}" subido correctamente. Ahora puedes completar este paso.`,
@@ -217,8 +242,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           archivoUrl: res.url,
           tipoArchivo: file.type || 'unknown'
         });
-
-        onAddPoints?.(50, "Evidencia principal subida");
         setAvatarState({
           emotion: 'happy',
           message: `¡Perfecto! Has subido la evidencia principal. Ahora podemos proceder a la misión.`,
@@ -249,7 +272,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
         emotion: 'celebrating',
         message: "¡Misión Cumplida! Has completado todos los pasos de esta guía. ¡Eres increíble!"
       });
-      onAddPoints?.(500, "¡Guía RAG Completada!");
     }
   }, [completedSteps, data]);
 
@@ -269,7 +291,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
             message: "Ahora veamos los objetivos de esta guía. ¿Qué vamos a lograr?",
             isVisible: true
           });
-          onAddPoints?.(25, "Sección desbloqueada");
           break;
         case 'concepts':
           setAvatarState({
@@ -277,7 +298,6 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
             message: "Perfecto. Ahora revisemos los conceptos clave que necesitas dominar.",
             isVisible: true
           });
-          onAddPoints?.(25, "Sección desbloqueada");
           break;
         case 'evidence':
           setAvatarState({
@@ -296,13 +316,13 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
             setCurrentSection('evidence');
             return;
           }
-          const firstStep = ragData?.pasosGuiados?.[0]?.paso || "Comencemos.";
+          // Points are now handled by the backend on completion
+          const firstStep = data?.pasosGuiados?.[0]?.paso || "Comencemos.";
           setAvatarState({
             emotion: 'neutral',
             message: `¡Misión iniciada! Primer paso: ${firstStep}`,
             isVisible: true
           });
-          onAddPoints?.(50, "¡Misión iniciada!");
           break;
       }
     }
@@ -548,9 +568,16 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                     </span>
                     {item.titulo}
                   </h4>
-                  <p className="text-base text-slate-700 pl-10">
-                    {item.descripcion}
-                  </p>
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <p className="flex-1 text-base text-slate-700">
+                      {item.descripcion}
+                    </p>
+                    {item.imagenUrl && (
+                      <div className="w-full md:w-64 aspect-video rounded-xl overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+                        <img src={item.imagenUrl} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -703,9 +730,20 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <p className="text-slate-700 leading-relaxed text-lg">
-                      {guidedSteps[currentStepIndex]?.paso}
-                    </p>
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                      <p className="flex-1 text-slate-700 leading-relaxed text-lg italic">
+                        "{guidedSteps[currentStepIndex]?.paso}"
+                      </p>
+                      {guidedSteps[currentStepIndex]?.imagenUrl && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="w-full md:w-72 aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white ring-8 ring-purple-100/50 flex-shrink-0"
+                        >
+                          <img src={guidedSteps[currentStepIndex].imagenUrl} className="w-full h-full object-cover" />
+                        </motion.div>
+                      )}
+                    </div>
 
                     {/* File upload requirement if configured */}
                     {guidedSteps[currentStepIndex]?.requiereEntregable && (

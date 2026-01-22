@@ -12,9 +12,14 @@ export default function Missions() {
     const [error, setError] = useState<string | null>(null);
 
     const getStudentId = () => {
-        const userStr = localStorage.getItem('arg_user');
+        const userStr = localStorage.getItem('edu_user');
         if (userStr) {
-            try { return JSON.parse(userStr).id; } catch { return 1; }
+            try {
+                const user = JSON.parse(userStr);
+                return user.id || user.user?.id || 1;
+            } catch {
+                return 1;
+            }
         }
         return 1;
     };

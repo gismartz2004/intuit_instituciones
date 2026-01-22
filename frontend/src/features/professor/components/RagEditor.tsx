@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Save, ArrowLeft, CheckCircle, FileText, Target, Brain, Award } from "lucide-react";
 import professorApi from "@/features/professor/services/professor.api";
 import { toast } from "@/hooks/use-toast";
+import { ImagePickerModal } from "./ImagePickerModal";
+import { Image as ImageIcon, Camera } from "lucide-react";
 
 interface RagEditorProps {
     levelId: number;
@@ -61,6 +63,10 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
     const [dynamicSections, setDynamicSections] = useState<any[]>([]); // { id, titulo, tipo, contenido }
 
     const [loading, setLoading] = useState(false);
+
+    // Image Picker State
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'concept' | 'general', index?: number } | null>(null);
 
     // Initial Data Load
     useEffect(() => {
@@ -140,6 +146,27 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
 
     const removeDynamicSection = (id: string) => {
         setDynamicSections(dynamicSections.filter(s => s.id !== id));
+    };
+
+    const handleImageSelect = (url: string) => {
+        if (!pickerTarget) return;
+
+        if (pickerTarget.type === 'concept' && pickerTarget.index !== undefined) {
+            const newConcepts = [...keyConcepts];
+            newConcepts[pickerTarget.index].imagenUrl = url;
+            setKeyConcepts(newConcepts);
+        } else if (pickerTarget.type === 'step' && pickerTarget.index !== undefined) {
+            const newSteps = [...guidedSteps];
+            (newSteps[pickerTarget.index] as any).imagenUrl = url;
+            setGuidedSteps(newSteps);
+        } else if (pickerTarget.type === 'general') {
+            setFormData({ ...formData, ...({ imagenUrl: url } as any) });
+        }
+    };
+
+    const openPicker = (type: 'step' | 'concept' | 'general', index?: number) => {
+        setPickerTarget({ type, index });
+        setIsPickerOpen(true);
     };
 
     return (
@@ -248,16 +275,27 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 space-y-3">
-                                        <Input
-                                            placeholder="Título del Concepto"
-                                            className="font-semibold"
-                                            value={item.titulo}
-                                            onChange={(e) => {
-                                                const newItems = [...keyConcepts];
-                                                newItems[index].titulo = e.target.value;
-                                                setKeyConcepts(newItems);
-                                            }}
-                                        />
+                                        <div className="flex gap-3">
+                                            <Input
+                                                placeholder="Título del Concepto"
+                                                className="font-semibold flex-1"
+                                                value={item.titulo}
+                                                onChange={(e) => {
+                                                    const newItems = [...keyConcepts];
+                                                    newItems[index].titulo = e.target.value;
+                                                    setKeyConcepts(newItems);
+                                                }}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className={item.imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-500"}
+                                                onClick={() => openPicker('concept', index)}
+                                            >
+                                                <Camera className="w-4 h-4 mr-2" />
+                                                {item.imagenUrl ? "Imagen OK" : "Imagen"}
+                                            </Button>
+                                        </div>
                                         <Textarea
                                             placeholder="Descripción breve..."
                                             value={item.descripcion}
@@ -267,6 +305,21 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                                 setKeyConcepts(newItems);
                                             }}
                                         />
+                                        {item.imagenUrl && (
+                                            <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                                <img src={item.imagenUrl} className="w-full h-full object-cover" />
+                                                <button
+                                                    className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-lg"
+                                                    onClick={() => {
+                                                        const n = [...keyConcepts];
+                                                        delete n[index].imagenUrl;
+                                                        setKeyConcepts(n);
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                     <Button
                                         variant="ghost"
@@ -320,17 +373,59 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                             <div className="space-y-3">
                                 <Label>Pasos Guiados (Checklist)</Label>
                                 {guidedSteps.map((item, index) => (
-                                    <div key={index} className="flex gap-2 items-center">
-                                        <CheckCircle className="w-5 h-5 text-slate-300" />
-                                        <Input
-                                            value={item.paso}
-                                            onChange={(e) => {
-                                                const newItems = [...guidedSteps];
-                                                newItems[index].paso = e.target.value;
-                                                setGuidedSteps(newItems);
-                                            }}
-                                            placeholder={`Paso ${index + 1}`}
-                                        />
+                                    <div key={index} className="flex gap-2 items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                        <div className="flex flex-col items-center gap-2 mr-2">
+                                            <CheckCircle className="w-5 h-5 text-slate-300" />
+                                            <input
+                                                type="checkbox"
+                                                title="Requiere Entregable"
+                                                checked={(item as any).requiereEntregable || false}
+                                                onChange={(e) => {
+                                                    const ns = [...guidedSteps];
+                                                    (ns[index] as any).requiereEntregable = e.target.checked;
+                                                    setGuidedSteps(ns);
+                                                }}
+                                                className="w-4 h-4 text-blue-600"
+                                            />
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={item.paso}
+                                                    onChange={(e) => {
+                                                        const newItems = [...guidedSteps];
+                                                        newItems[index].paso = e.target.value;
+                                                        setGuidedSteps(newItems);
+                                                    }}
+                                                    placeholder={`Paso ${index + 1}`}
+                                                    className="flex-1"
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    title="Agregar Imagen"
+                                                    className={(item as any).imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-400"}
+                                                    onClick={() => openPicker('step', index)}
+                                                >
+                                                    <ImageIcon className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            {(item as any).imagenUrl && (
+                                                <div className="relative w-20 h-20 rounded border bg-white overflow-hidden">
+                                                    <img src={(item as any).imagenUrl} className="w-full h-full object-cover" />
+                                                    <button
+                                                        className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl"
+                                                        onClick={() => {
+                                                            const n = [...guidedSteps];
+                                                            delete (n[index] as any).imagenUrl;
+                                                            setGuidedSteps(n);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -610,6 +705,11 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
 
                 </div>
             </ScrollArea>
+            <ImagePickerModal
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                onSelect={handleImageSelect}
+            />
         </div>
     );
 }

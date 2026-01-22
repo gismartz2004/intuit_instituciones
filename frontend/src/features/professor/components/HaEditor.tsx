@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Save, ArrowLeft, CheckCircle, FileText, Target, Milestone, ListTodo, MessageSquare } from "lucide-react";
 import professorApi from "@/features/professor/services/professor.api";
 import { toast } from "@/hooks/use-toast";
+import { ImagePickerModal } from "./ImagePickerModal";
+import { Image as ImageIcon, Camera } from "lucide-react";
 
 interface HaEditorProps {
     levelId: number;
@@ -42,6 +44,10 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
     const [dynamicSections, setDynamicSections] = useState<DynamicSection[]>([]);
 
     const [loading, setLoading] = useState(false);
+
+    // Image Picker State
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'clave' | 'general', index?: number } | null>(null);
 
     // Initial Data Load
     useEffect(() => {
@@ -120,6 +126,23 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
         setDynamicSections(dynamicSections.filter(s => s.id !== id));
     };
 
+    const handleImageSelect = (url: string) => {
+        if (!pickerTarget) return;
+
+        if (pickerTarget.type === 'clave') {
+            setFormData({ ...formData, ...({ conceptoClaveImagen: url } as any) });
+        } else if (pickerTarget.type === 'step' && pickerTarget.index !== undefined) {
+            const newSteps = [...pasosGuiados];
+            (newSteps[pickerTarget.index] as any).imagenUrl = url;
+            setPasosGuiados(newSteps);
+        }
+    };
+
+    const openPicker = (type: 'step' | 'clave' | 'general', index?: number) => {
+        setPickerTarget({ type, index });
+        setIsPickerOpen(true);
+    };
+
     return (
         <div className="fixed inset-0 bg-slate-50 z-50 flex flex-col overflow-hidden animate-in fade-in duration-300">
             {/* Header */}
@@ -177,17 +200,41 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                     {/* 2. Concepto Clave */}
                     <Card className="border-none shadow-md">
                         <CardHeader className="bg-amber-50/50 rounded-t-xl border-b border-amber-100">
-                            <CardTitle className="text-amber-800 flex items-center gap-2">
-                                <FileText className="w-5 h-5" /> 2️⃣ Concepto Clave
-                            </CardTitle>
+                            <div className="flex justify-between items-center">
+                                <CardTitle className="text-amber-800 flex items-center gap-2">
+                                    <FileText className="w-5 h-5" /> 2️⃣ Concepto Clave
+                                </CardTitle>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openPicker('clave')}
+                                    className={(formData as any).conceptoClaveImagen ? "text-blue-600 border-blue-200" : ""}
+                                >
+                                    <ImageIcon className="w-4 h-4 mr-2" />
+                                    {(formData as any).conceptoClaveImagen ? "Cambiar Imagen" : "Agregar Imagen"}
+                                </Button>
+                            </div>
                         </CardHeader>
-                        <CardContent className="pt-6">
+                        <CardContent className="pt-6 space-y-4">
                             <Textarea
                                 value={formData.conceptoClave}
                                 onChange={e => setFormData({ ...formData, conceptoClave: e.target.value })}
                                 className="min-h-[100px]"
                                 placeholder="Explica el concepto clave..."
                             />
+                            {(formData as any).conceptoClaveImagen && (
+                                <div className="relative w-full max-w-sm aspect-video rounded-lg overflow-hidden border">
+                                    <img src={(formData as any).conceptoClaveImagen} className="w-full h-full object-cover" />
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 h-8 w-8"
+                                        onClick={() => setFormData({ ...formData, ...({ conceptoClaveImagen: undefined } as any) })}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -200,20 +247,45 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                         </CardHeader>
                         <CardContent className="pt-6 space-y-3">
                             {pasosGuiados.map((item, index) => (
-                                <div key={index} className="flex gap-2 items-center">
-                                    <input type="checkbox" disabled className="w-4 h-4 rounded text-blue-500" />
-                                    <Input
-                                        value={item.paso}
-                                        onChange={(e) => {
-                                            const newItems = [...pasosGuiados];
-                                            newItems[index].paso = e.target.value;
-                                            setPasosGuiados(newItems);
-                                        }}
-                                        placeholder={`Paso ${index + 1}`}
-                                    />
-                                    <Button variant="ghost" size="icon" onClick={() => setPasosGuiados(pasosGuiados.filter((_, i) => i !== index))}>
-                                        <Trash2 className="w-4 h-4 text-slate-400" />
-                                    </Button>
+                                <div key={index} className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border">
+                                    <div className="flex gap-2 items-center">
+                                        <input type="checkbox" disabled className="w-4 h-4 rounded text-blue-500" />
+                                        <Input
+                                            value={item.paso}
+                                            onChange={(e) => {
+                                                const newItems = [...pasosGuiados];
+                                                newItems[index].paso = e.target.value;
+                                                setPasosGuiados(newItems);
+                                            }}
+                                            placeholder={`Paso ${index + 1}`}
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className={(item as any).imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-400"}
+                                            onClick={() => openPicker('step', index)}
+                                        >
+                                            <ImageIcon className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => setPasosGuiados(pasosGuiados.filter((_, i) => i !== index))}>
+                                            <Trash2 className="w-4 h-4 text-slate-400" />
+                                        </Button>
+                                    </div>
+                                    {(item as any).imagenUrl && (
+                                        <div className="relative w-40 aspect-video rounded border bg-white overflow-hidden ml-6">
+                                            <img src={(item as any).imagenUrl} className="w-full h-full object-cover" />
+                                            <button
+                                                className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl"
+                                                onClick={() => {
+                                                    const n = [...pasosGuiados];
+                                                    delete (n[index] as any).imagenUrl;
+                                                    setPasosGuiados(n);
+                                                }}
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             <Button size="sm" variant="outline" onClick={() => setPasosGuiados([...pasosGuiados, { paso: "" }])}>
@@ -354,6 +426,11 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
 
                 </div>
             </ScrollArea>
+            <ImagePickerModal
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                onSelect={handleImageSelect}
+            />
         </div>
     );
 }

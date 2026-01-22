@@ -139,6 +139,41 @@ export const studentApi = {
    */
   async getGamificationStats(studentId: number): Promise<any> {
     return apiClient.get<any>(`/api/student/${studentId}/gamification`);
+  },
+
+  /**
+   * Obtener todas las misiones con progreso del estudiante
+   */
+  async getAllMissions(studentId: number): Promise<any[]> {
+    return apiClient.get<any[]>(`/api/student/${studentId}/gamification/missions`);
+  },
+
+  /**
+   * Reclamar recompensa de misión completada
+   */
+  async claimMissionReward(studentId: number, missionId: number): Promise<{ success: boolean; xpAwarded: number }> {
+    return apiClient.post<{ success: boolean; xpAwarded: number }>(`/api/student/${studentId}/gamification/missions/${missionId}/claim`, {});
+  },
+
+  /**
+   * Obtener logros desbloqueados del estudiante
+   */
+  async getAchievements(studentId: number): Promise<any[]> {
+    return apiClient.get<any[]>(`/api/student/${studentId}/gamification/achievements`);
+  },
+
+  /**
+   * Obtener entregas previas RAG
+   */
+  async getRagSubmissions(studentId: number, templateId: number): Promise<any[]> {
+    return apiClient.get<any[]>(`/api/student/${studentId}/rag/${templateId}/submissions`);
+  },
+
+  /**
+   * Obtener entregas previas HA
+   */
+  async getHaSubmissions(studentId: number, templateId: number): Promise<any[]> {
+    return apiClient.get<any[]>(`/api/student/${studentId}/ha/${templateId}/submissions`);
   }
 };
 

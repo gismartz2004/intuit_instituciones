@@ -5,12 +5,14 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
 import { eq, asc, desc, and } from 'drizzle-orm';
 import { StorageService } from '../storage/storage.service';
+import { GamificationService } from './services/gamification.service';
 
 @Injectable()
 export class StudentService {
     constructor(
         @Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>,
-        private storageService: StorageService
+        private storageService: StorageService,
+        private gamificationService: GamificationService
     ) { }
 
     async getStudentModules(studentId: number) {
@@ -394,63 +396,30 @@ export class StudentService {
             level: schema.gamificacionEstudiante.nivelActual,
             streak: schema.gamificacionEstudiante.rachaDias
         })
-            .from(schema.gamificacionEstudiante)
-            .innerJoin(schema.usuarios, eq(schema.gamificacionEstudiante.estudianteId, schema.usuarios.id))
+            .from(schema.usuarios)
+            .leftJoin(schema.gamificacionEstudiante, eq(schema.gamificacionEstudiante.estudianteId, schema.usuarios.id))
+            .where(and(
+                eq(schema.usuarios.roleId, 3), // Only students
+                eq(schema.usuarios.planId, 3)   // Only Genio Pro (Liga Oro)
+            ))
             .orderBy(desc(schema.gamificacionEstudiante.xpTotal))
             .limit(limit);
 
-        return leaderboard;
+        // Map nulls for students without gamification records yet
+        const mapped = leaderboard.map(player => ({
+            ...player,
+            xp: player.xp || 0,
+            level: player.level || 1,
+            streak: player.streak || 0
+        }));
+
+        // Re-sort after mapping to ensure 0 XP students are at the bottom
+        return mapped.sort((a, b) => (b.xp || 0) - (a.xp || 0));
     }
 
     async addXP(studentId: number, amount: number, reason: string) {
-        // Update gamification record
-        const current = await this.db.select()
-            .from(schema.gamificacionEstudiante)
-            .where(eq(schema.gamificacionEstudiante.estudianteId, studentId))
-            .limit(1);
-
-        if (current.length === 0) {
-            await this.getGamificationStats(studentId); // Initialize
-        }
-
-        const newXP = (current[0]?.xpTotal || 0) + amount;
-        const newLevel = this.calculateLevelFromXP(newXP);
-
-        await this.db.update(schema.gamificacionEstudiante)
-            .set({
-                xpTotal: newXP,
-                nivelActual: newLevel,
-                puntosDisponibles: (current[0]?.puntosDisponibles || 0) + amount
-            })
-            .where(eq(schema.gamificacionEstudiante.estudianteId, studentId));
-
-        // Log points
-        await this.db.insert(schema.puntosLog).values({
-            estudianteId: studentId,
-            cantidad: amount,
-            motivo: reason
-        });
-
-        return { newXP, newLevel, amount, reason };
-    }
-
-    private calculateLevelFromXP(xp: number): number {
-        const levels = [
-            { level: 1, minXP: 0 },
-            { level: 2, minXP: 500 },
-            { level: 3, minXP: 1500 },
-            { level: 4, minXP: 3000 },
-            { level: 5, minXP: 5000 },
-            { level: 6, minXP: 8000 },
-            { level: 7, minXP: 12000 },
-        ];
-
-        for (let i = levels.length - 1; i >= 0; i--) {
-            if (xp >= levels[i].minXP) {
-                return levels[i].level;
-            }
-        }
-        return 1;
+        // Delegate to gamification service
+        return await this.gamificationService.awardXP(studentId, amount, reason);
     }
 
     // =========== FILE UPLOADS ===========
@@ -458,13 +427,7 @@ export class StudentService {
     async submitHaEvidence(data: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }) {
         const { studentId, plantillaHaId, archivosUrls, comentarioEstudiante } = data;
 
-        // Get levelId for this template
-        const template = await this.db.select({ nivelId: schema.plantillasHa.nivelId })
-            .from(schema.plantillasHa)
-            .where(eq(schema.plantillasHa.id, plantillaHaId))
-            .limit(1);
-
-        // Check if evidence already exists
+        // Check if already submitted
         const existing = await this.db.select()
             .from(schema.entregasHa)
             .where(and(
@@ -473,46 +436,104 @@ export class StudentService {
             ))
             .limit(1);
 
-        let resId: number;
         if (existing.length > 0) {
-            // Update existing
-            await this.db.update(schema.entregasHa)
-                .set({
-                    archivosUrls: JSON.stringify(archivosUrls),
-                    comentarioEstudiante: comentarioEstudiante || existing[0].comentarioEstudiante,
-                    fechaSubida: new Date()
-                })
-                .where(eq(schema.entregasHa.id, existing[0].id));
-            resId = existing[0].id;
-        } else {
-            // Create new
-            const res = await this.db.insert(schema.entregasHa).values({
-                estudianteId: studentId,
-                plantillaHaId: plantillaHaId,
-                archivosUrls: JSON.stringify(archivosUrls),
-                comentarioEstudiante: comentarioEstudiante,
-                validado: false
-            }).returning();
-            resId = res[0].id;
+            console.log(`Student ${studentId} is updating HA evidence for template ${plantillaHaId}`);
+            // Allow update by deleting old one
+            await this.db.delete(schema.entregasHa)
+                .where(and(
+                    eq(schema.entregasHa.estudianteId, studentId),
+                    eq(schema.entregasHa.plantillaHaId, plantillaHaId)
+                ));
         }
 
-        // Trigger progress update
+        // Get levelId for this template
+        const template = await this.db.select({ nivelId: schema.plantillasHa.nivelId })
+            .from(schema.plantillasHa)
+            .where(eq(schema.plantillasHa.id, plantillaHaId))
+            .limit(1);
+
+        const res = await this.db.insert(schema.entregasHa).values({
+            estudianteId: studentId,
+            plantillaHaId: plantillaHaId,
+            archivosUrls: JSON.stringify(archivosUrls),
+            comentarioEstudiante: comentarioEstudiante,
+            validado: false
+        }).returning();
+
+        const resId = res[0].id;
+
+        // Award XP immediately since HA is a single submission activity
+        try {
+            const student = await this.db.select({ planId: schema.usuarios.planId })
+                .from(schema.usuarios)
+                .where(eq(schema.usuarios.id, studentId))
+                .limit(1);
+
+            let baseXP = 100;
+            const isOro = student.length > 0 && student[0].planId === 3;
+            if (isOro) baseXP = Math.floor(baseXP * 1.2);
+
+            if (existing.length === 0) {
+                await this.gamificationService.awardXP(studentId, baseXP, `HA completado${isOro ? ' (Bono Oro)' : ''}`);
+                await this.gamificationService.updateMissionProgress(studentId, 'COMPLETE_ACTIVITY', 1);
+            }
+        } catch (error) {
+            console.error('Error awarding XP for HA:', error.message);
+        }
+
+        // Trigger level progress update
         if (template.length > 0 && template[0].nivelId) {
             await this.updateLevelProgress(studentId, template[0].nivelId);
         }
 
-        return { success: true, action: existing.length > 0 ? 'updated' : 'created', id: resId };
+        return { success: true, action: 'created', id: resId };
     }
 
     async submitRagProgress(data: { studentId: number; plantillaRagId: number; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
         const { studentId, plantillaRagId, pasoIndice, archivoUrl, tipoArchivo } = data;
 
-        // Get levelId for this template
-        const template = await this.db.select({ nivelId: schema.plantillasRag.nivelId })
+        // 1. Check if this specific step was already submitted (Optional: log but allow overwrite)
+        const existingStep = await this.db.select()
+            .from(schema.entregasRag)
+            .where(and(
+                eq(schema.entregasRag.estudianteId, studentId),
+                eq(schema.entregasRag.plantillaRagId, plantillaRagId),
+                eq(schema.entregasRag.pasoIndice, pasoIndice)
+            ))
+            .limit(1);
+
+        if (existingStep.length > 0) {
+            console.log(`Student ${studentId} is updating RAG step ${pasoIndice} for template ${plantillaRagId}`);
+            // We allow overwrite by deleting the previous attempt
+            await this.db.delete(schema.entregasRag)
+                .where(and(
+                    eq(schema.entregasRag.estudianteId, studentId),
+                    eq(schema.entregasRag.plantillaRagId, plantillaRagId),
+                    eq(schema.entregasRag.pasoIndice, pasoIndice)
+                ));
+        }
+
+        // 2. Get RAG template and levelId
+        const rag = await this.db.select()
             .from(schema.plantillasRag)
             .where(eq(schema.plantillasRag.id, plantillaRagId))
             .limit(1);
 
+        if (rag.length === 0) throw new Error('Plantilla RAG no encontrada');
+        const nivelId = rag[0].nivelId;
+
+        // 3. Pre-check: Is it already finished? (To avoid awarding XP twice)
+        const submissionsBefore = await this.db.select().from(schema.entregasRag)
+            .where(and(eq(schema.entregasRag.estudianteId, studentId), eq(schema.entregasRag.plantillaRagId, plantillaRagId)));
+
+        const pasos = (rag[0].pasosGuiados as any[]) || [];
+        const submittedIndicesBefore = new Set(submissionsBefore.map(s => s.pasoIndice));
+        const isAlreadyComplete = pasos.length > 0 && pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesBefore.has(idx));
+
+        // We removed the strict throw to allow updates after completion
+        // but we use isAlreadyComplete in Section 5 below.
+
+        // 4. Perform submission
         await this.db.insert(schema.entregasRag).values({
             estudianteId: studentId,
             plantillaRagId: plantillaRagId,
@@ -522,14 +543,54 @@ export class StudentService {
             feedbackAvatar: '¡Excelente trabajo! Entregable recibido.'
         });
 
-        // Add points for submission
-        await this.addXP(studentId, 50, 'Entrega de avance RAG');
+        // 5. Post-check: Is it NOW complete?
+        const submissionsAfter = await this.db.select().from(schema.entregasRag)
+            .where(and(eq(schema.entregasRag.estudianteId, studentId), eq(schema.entregasRag.plantillaRagId, plantillaRagId)));
+        const submittedIndicesAfter = new Set(submissionsAfter.map(s => s.pasoIndice));
+        const isNowComplete = pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesAfter.has(idx));
 
-        // Trigger progress update
-        if (template.length > 0 && template[0].nivelId) {
-            await this.updateLevelProgress(studentId, template[0].nivelId);
+        if (isNowComplete && !isAlreadyComplete) {
+            // Award XP only if this is the transition to completion
+            try {
+                const student = await this.db.select({ planId: schema.usuarios.planId })
+                    .from(schema.usuarios)
+                    .where(eq(schema.usuarios.id, studentId))
+                    .limit(1);
+
+                let baseXP = 100;
+                const isOro = student.length > 0 && student[0].planId === 3;
+                if (isOro) baseXP = Math.floor(baseXP * 1.2);
+
+                await this.gamificationService.awardXP(studentId, baseXP, `RAG completado${isOro ? ' (Bono Oro)' : ''}`);
+                await this.gamificationService.updateMissionProgress(studentId, 'COMPLETE_ACTIVITY', 1);
+            } catch (error) {
+                console.error('Error awarding XP for RAG:', error.message);
+            }
         }
 
-        return { success: true, pasoIndice };
+        // 6. Trigger level progress update
+        if (nivelId) {
+            await this.updateLevelProgress(studentId, nivelId);
+        }
+
+        return { success: true, pasoIndice, isCompleted: isNowComplete };
+    }
+
+    async getRagSubmissions(studentId: number, plantillaRagId: number) {
+        return this.db.select()
+            .from(schema.entregasRag)
+            .where(and(
+                eq(schema.entregasRag.estudianteId, studentId),
+                eq(schema.entregasRag.plantillaRagId, plantillaRagId)
+            ));
+    }
+
+    async getHaSubmissions(studentId: number, plantillaHaId: number) {
+        return this.db.select()
+            .from(schema.entregasHa)
+            .where(and(
+                eq(schema.entregasHa.estudianteId, studentId),
+                eq(schema.entregasHa.plantillaHaId, plantillaHaId)
+            ));
     }
 }
