@@ -141,7 +141,7 @@ export default function Login({ onLogin }: LoginProps) {
               transition={{ delay: 0.3 }}
               className="text-4xl font-black text-white mb-2 tracking-tight"
             >
-              EDU-CONNECT
+              ARG ACADEMY
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}

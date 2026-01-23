@@ -149,8 +149,19 @@ export default function ArduinoLab() {
                 setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
             }
         };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isDrawingWire) {
+                setIsDrawingWire(null);
+            }
+        };
+
         window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
     }, [isDrawingWire]);
 
     const addComponent = (type: ComponentType) => {
@@ -169,13 +180,16 @@ export default function ArduinoLab() {
         setWires(wires.filter(w => w.startCompId !== id && w.endCompId !== id));
     };
 
-    const handlePinClick = (e: React.MouseEvent, compId: string, pinId: string) => {
+    const handlePinMouseDown = (e: React.MouseEvent, compId: string, pinId: string) => {
+        e.preventDefault();
         e.stopPropagation();
+
         if (isDrawingWire) {
             if (isDrawingWire.compId === compId && isDrawingWire.pinId === pinId) {
-                setIsDrawingWire(null); // Cancel
+                setIsDrawingWire(null); // Cancel if clicking the same pin
                 return;
             }
+
             // Create Wire
             const newWire: Wire = {
                 id: Math.random().toString(36).substr(2, 9),
@@ -183,35 +197,66 @@ export default function ArduinoLab() {
                 startPinId: isDrawingWire.pinId,
                 endCompId: compId,
                 endPinId: pinId,
-                color: ['#ff0000', '#000000', '#00ff00', '#0000ff'][Math.floor(Math.random() * 4)] // Random wire color for MVP
+                color: ['#ff0000', '#000000', '#00ff00', '#2563eb', '#f59e0b'][Math.floor(Math.random() * 5)]
             };
             setWires([...wires, newWire]);
             setIsDrawingWire(null);
         } else {
             setIsDrawingWire({ compId, pinId });
+            // Initial mouse pos for the preview line
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (rect) {
+                setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+            }
         }
     };
 
+    const [simulationActive, setSimulationActive] = useState(false);
+    const [ledGlow, setLedGlow] = useState(false);
+
     const runSimulation = () => {
         setIsRunning(true);
-        setConsoleOutput(prev => [...prev, "> Compilando sketch...", "> Verificando conexiones...", "> Subiendo..."]);
+        setConsoleOutput(prev => [...prev, "> Compilando sketch C++...", "> Verificando integridad del circuito...", "> Cargando binario..."]);
 
-        // Check connections logic (Mock)
+        // Logic to check if an LED is correctly connected to Pin 13 and GND
         const arduino = components.find(c => c.type === 'arduino');
-        if (arduino) {
-            const pin13Connections = wires.filter(w =>
-                (w.startCompId === arduino.id && w.startPinId === 'd13') ||
-                (w.endCompId === arduino.id && w.endPinId === 'd13')
+        const led = components.find(c => c.type === 'led');
+
+        let isCorrectlyWired = false;
+        if (arduino && led) {
+            const hasPin13ToAnode = wires.some(w =>
+                (w.startCompId === arduino.id && w.startPinId === 'd13' && w.endCompId === led.id && w.endPinId === 'anode') ||
+                (w.endCompId === arduino.id && w.endPinId === 'd13' && w.startCompId === led.id && w.startPinId === 'anode')
             );
-            if (pin13Connections.length > 0) {
-                setTimeout(() => setConsoleOutput(prev => [...prev, "> Conexión a Pin 13 detectada."]), 800);
+            const hasGNDToCathode = wires.some(w =>
+                (w.startCompId === arduino.id && w.startPinId.startsWith('gnd') && w.endCompId === led.id && w.endPinId === 'cathode') ||
+                (w.endCompId === arduino.id && w.endPinId.startsWith('gnd') && w.startCompId === led.id && w.startPinId === 'cathode')
+            );
+
+            if (hasPin13ToAnode && hasGNDToCathode) {
+                isCorrectlyWired = true;
             }
         }
 
         setTimeout(() => {
-            setConsoleOutput(prev => [...prev, "[SERIAL] Iniciando Loop..."]);
-            setIsRunning(false);
-        }, 2500);
+            setConsoleOutput(prev => [...prev, "[SERIAL] Loop iniciado."]);
+            setSimulationActive(true);
+
+            // Loop simulator (Simplistic)
+            if (isCorrectlyWired && code.includes("digitalWrite(13, HIGH)")) {
+                setConsoleOutput(prev => [...prev, "[CIRCUIT] Pin 13 HIGH -> LED encendido."]);
+                setLedGlow(true);
+            } else if (!isCorrectlyWired && led) {
+                setConsoleOutput(prev => [...prev, "[CIRCUIT] Error: Circuito de LED incompleto."]);
+            }
+        }, 1500);
+    };
+
+    const stopSimulation = () => {
+        setIsRunning(false);
+        setSimulationActive(false);
+        setLedGlow(false);
+        setConsoleOutput(prev => [...prev, "> Simulación detenida."]);
     };
 
     const [dragId, setDragId] = useState<string | null>(null);
@@ -270,12 +315,21 @@ export default function ArduinoLab() {
                         <Code2 className="w-5 h-5" />
                     </Button>
                     <div className="h-6 w-[1px] bg-[#444] mx-2" />
-                    <Button
-                        onClick={runSimulation}
-                        className={`font-bold h-8 text-xs ${isRunning ? 'bg-amber-600' : 'bg-[#00979d] hover:bg-[#008187]'}`}
-                    >
-                        {isRunning ? '...' : <Play className="w-3 h-3 mr-2" />} {isRunning ? 'Ejecutando' : 'Iniciar'}
-                    </Button>
+                    {isRunning ? (
+                        <Button
+                            onClick={stopSimulation}
+                            className="font-bold h-8 text-xs bg-red-600 hover:bg-red-700"
+                        >
+                            <Minimize2 className="w-3 h-3 mr-2" /> Detener
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={runSimulation}
+                            className="font-bold h-8 text-xs bg-[#00979d] hover:bg-[#008187]"
+                        >
+                            <Play className="w-3 h-3 mr-2" /> Iniciar
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -329,6 +383,9 @@ export default function ArduinoLab() {
                         className="flex-1 relative cursor-crosshair"
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={handleDrop}
+                        onMouseDown={() => {
+                            if (isDrawingWire) setIsDrawingWire(null);
+                        }}
                     >
                         {/* Wires Layer (SVG) */}
                         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
@@ -367,35 +424,58 @@ export default function ArduinoLab() {
                             return (
                                 <div
                                     key={comp.id}
-                                    draggable
+                                    draggable={!isDrawingWire}
                                     onDragStart={(e) => handleDragStart(e, comp.id, comp.x, comp.y)}
                                     style={{
                                         left: comp.x,
                                         top: comp.y,
                                         width: def.w,
-                                        height: def.h
+                                        height: def.h,
+                                        cursor: isDrawingWire ? 'crosshair' : 'move'
                                     }}
                                     className="absolute z-10 group"
                                 >
                                     {/* Component Visual */}
-                                    <div className={`w-full h-full relative transition-transform ${isDrawingWire ? 'pointer-events-none' : ''}`}>
+                                    <div className={`w-full h-full relative transition-transform ${isDrawingWire ? 'cursor-crosshair' : ''}`}>
                                         {comp.type === 'arduino' ? (
-                                            <div className="w-full h-full bg-[#00979d] rounded-sm shadow-xl border-2 border-[#007f85] relative">
-                                                <div className="absolute top-2 left-2 text-white font-bold text-[10px]">ARDUINO</div>
-                                                <div className="absolute bottom-2 right-2 text-white/50 font-bold text-[40px] leading-none">UNO</div>
-                                                <div className="absolute top-[350px] left-[60px] w-20 h-8 bg-black/80 rounded border border-white/20" /> {/* Chip */}
-                                                <div className="absolute top-[10px] right-[10px] w-8 h-8 bg-amber-400 rounded-full border-4 border-[#00979d]" /> {/* Reset Btn */}
+                                            <div className="w-full h-full bg-[#00979d] rounded-xl shadow-2xl border-2 border-[#007f85] relative overflow-hidden group-hover:border-[#00ffff]/50 transition-colors">
+                                                <div className="absolute top-0 left-0 w-full h-1 bg-white/10" />
+                                                <div className="absolute top-2 left-3 text-white font-black text-[12px] italic tracking-tighter opacity-80">ARDUINO</div>
+                                                <div className="absolute bottom-4 right-4 text-white/20 font-black text-[50px] leading-none select-none">UNO</div>
+
+                                                {/* Realistic Chip */}
+                                                <div className="absolute top-[340px] left-[50px] w-24 h-10 bg-[#1a1a1b] rounded-sm border border-white/10 shadow-lg flex items-center justify-around px-1">
+                                                    {[...Array(14)].map((_, i) => <div key={i} className="w-[2px] h-full bg-slate-700/50" />)}
+                                                </div>
+
+                                                {/* USB Port */}
+                                                <div className="absolute top-[30px] -left-2 w-12 h-16 bg-slate-300 rounded-r shadow-inner border border-slate-400" />
+
+                                                {/* DC Jack */}
+                                                <div className="absolute bottom-[40px] -left-2 w-14 h-20 bg-[#111] rounded-r shadow-2xl border border-black" />
+
+                                                {/* Reset Button */}
+                                                <div className="absolute top-[15px] right-[15px] w-8 h-8 bg-red-600 rounded-lg shadow-lg border-2 border-red-800 active:translate-y-0.5 transition-transform cursor-pointer" />
                                             </div>
                                         ) : comp.type === 'breadboard' ? (
-                                            <div className="w-full h-full bg-[#f3f3f3] rounded shadow-lg border-b-4 border-[#ddd] relative overflow-hidden">
-                                                <div className="absolute inset-0 opacity-10" style={{ backgroundSize: '10px 10px', backgroundImage: 'radial-gradient(black 1px, transparent 1px)' }} />
+                                            <div className="w-full h-full bg-[#ffffff] rounded-lg shadow-2xl border-b-8 border-slate-300 relative overflow-hidden flex flex-col p-2">
+                                                <div className="flex-1 border border-slate-100 rounded bg-slate-50/50 grid grid-cols-[repeat(50,1fr)] grid-rows-[repeat(10,1fr)] gap-1 p-1">
+                                                    {[...Array(500)].map((_, i) => (
+                                                        <div key={i} className="w-1.5 h-1.5 bg-slate-200 rounded-full shadow-inner" />
+                                                    ))}
+                                                </div>
+                                                <div className="h-4 flex justify-between px-4 mt-1 opacity-30 font-bold text-[8px] text-blue-600">
+                                                    <span>+ -</span>
+                                                    <span>PROTOTYPE BOARD</span>
+                                                    <span>- +</span>
+                                                </div>
                                             </div>
                                         ) : comp.type === 'led' ? (
                                             <div className="w-full h-full flex flex-col items-center relative">
-                                                <div className={`w-8 h-8 rounded-full border border-red-900 ${code.includes('HIGH') && isRunning ? 'bg-red-500 shadow-[0_0_15px_red]' : 'bg-red-800'}`} />
-                                                <div className="flex gap-2 h-full">
-                                                    <div className="w-1 bg-gray-400 h-full" />
-                                                    <div className="w-1 bg-gray-400 h-[80%]" />
+                                                <div className={`w-8 h-8 rounded-full border border-red-900 ${ledGlow ? 'bg-red-500 shadow-[0_0_20px_#ff0000]' : 'bg-red-900/50'}`} />
+                                                <div className="flex gap-4 h-full">
+                                                    <div className="w-1 bg-slate-400 h-full rounded-full" />
+                                                    <div className="w-1 bg-slate-400 h-[80%] rounded-full" />
                                                 </div>
                                             </div>
                                         ) : (
@@ -427,10 +507,12 @@ export default function ArduinoLab() {
                                             return (
                                                 <div
                                                     key={pin.id}
-                                                    onClick={(e) => handlePinClick(e, comp.id, pin.id)}
-                                                    className={`absolute w-3.5 h-3.5 border rounded-full cursor-crosshair z-20 hover:scale-125 transition-all ${isSelected ? 'bg-yellow-400 border-yellow-200 shadow-[0_0_10px_yellow]' : pinColor}`}
+                                                    onMouseDown={(e) => handlePinMouseDown(e, comp.id, pin.id)}
+                                                    className={`absolute w-3.5 h-3.5 border rounded-full cursor-pointer z-20 hover:scale-[1.75] transition-all ${isSelected ? 'bg-yellow-400 border-yellow-200 shadow-[0_0_15px_#fbbf24]' : pinColor}`}
                                                     style={{ left: pin.x - 7, top: pin.y - 7 }}
                                                 >
+                                                    {/* Invisible larger hit area for easier clicking */}
+                                                    <div className="absolute -inset-3 rounded-full" />
                                                     <TooltipProvider delayDuration={0}>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild><div className="w-full h-full opacity-0 hover:opacity-100 absolute inset-0 bg-transparent" /></TooltipTrigger>

@@ -64,15 +64,19 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
                 icon: iconMap[item.icon] || Book,
                 label: item.label
             }));
+            if (!links.find((l: any) => l.href === '/lab')) {
+                links.push({ href: "/lab", icon: Code, label: "Lab de Código" });
+            }
             if (!links.find((l: any) => l.href === '/arduino-lab')) {
-                links.push({ href: "/arduino-lab", icon: Cpu, label: "Laboratorio" });
+                links.push({ href: "/arduino-lab", icon: Cpu, label: "Lab Arduino" });
             }
             setStudentLinks(links);
         } catch (error) {
             setStudentLinks([
                 { href: "/dashboard", icon: Book, label: "Aprende" },
-                { href: "/profile", icon: User, label: "Perfil" },
-                { href: "/arduino-lab", icon: Cpu, label: "Laboratorio" }
+                { href: "/lab", icon: Code, label: "Lab de Código" },
+                { href: "/arduino-lab", icon: Cpu, label: "Lab Arduino" },
+                { href: "/profile", icon: User, label: "Perfil" }
             ]);
         }
     };
