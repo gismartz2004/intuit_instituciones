@@ -1,0 +1,1 @@
+ALTER TABLE "plantillas_rag" ADD COLUMN "imagen_url" text;

@@ -198,6 +198,8 @@ export const plantillasRag = pgTable('plantillas_rag', {
   // Secciones Dinámicas Globales (Para expandir la plantilla)
   seccionesDinamicas: jsonb('secciones_dinamicas'), // JSON: [{ titulo, tipo: 'texto'|'checklist', contenido: string | [] }]
 
+  imagenUrl: text('imagen_url'), // Main image for the RAG template
+
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 

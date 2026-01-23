@@ -19,7 +19,7 @@ export class ProfessorController {
   constructor(
     private readonly professorService: ProfessorService,
     private readonly storageService: StorageService,
-  ) {}
+  ) { }
 
   // Resource Library Endpoints
   @Post('upload')
@@ -121,8 +121,8 @@ export class ProfessorController {
       const ragTemplate = await this.professorService.getRagTemplate(levelId);
       return ragTemplate;
     } catch (error) {
-      console.log(error);
-      return error;
+      console.error(`Error fetching RAG for level ${levelId}:`, error);
+      throw error; // Let NestJS handle the exception properly
     }
   }
 
@@ -137,6 +137,11 @@ export class ProfessorController {
 
   @Get('levels/:id/ha')
   async getHaTemplate(@Param('id', ParseIntPipe) levelId: number) {
-    return this.professorService.getHaTemplate(levelId);
+    try {
+      return await this.professorService.getHaTemplate(levelId);
+    } catch (error) {
+      console.error(`Error fetching HA for level ${levelId}:`, error);
+      throw error;
+    }
   }
 }

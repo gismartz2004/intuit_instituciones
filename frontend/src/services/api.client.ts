@@ -54,12 +54,23 @@ class ApiClient {
         throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
       }
 
-      // Si no hay contenido, retornar respuesta vacía
+      // Si no hay contenido (status 204), retornar respuesta vacía
       if (response.status === 204) {
         return {} as T;
       }
 
-      return await response.json();
+      // Obtener el texto de la respuesta primero para verificar si está vacío
+      const text = await response.text();
+      if (!text) {
+        return {} as T;
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error("Failed to parse JSON response:", text);
+        throw e;
+      }
     } catch (error) {
       console.error(`API Request Error [${method} ${endpoint}]:`, error);
       throw error;

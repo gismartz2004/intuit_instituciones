@@ -264,8 +264,11 @@ export class ProfessorService {
   }
 
   // RAG Templates
-  async createRagTemplate(nivelId: number, data: schema.InsertPlantillaRag) {
+  async createRagTemplate(nivelId: number, data: any) {
     try {
+      // Remove 'id' if present and reset timestamps to avoid issues
+      const { id, fechaCreacion, ...payload } = data;
+
       // Check if exists update, otherwise insert
       const existing = await this.db
         .select()
@@ -277,7 +280,7 @@ export class ProfessorService {
         // Update
         [result] = await this.db
           .update(schema.plantillasRag)
-          .set(data)
+          .set(payload)
           .where(eq(schema.plantillasRag.id, existing[0].id))
           .returning();
       } else {
@@ -285,14 +288,14 @@ export class ProfessorService {
         [result] = await this.db
           .insert(schema.plantillasRag)
           .values({
-            ...data,
+            ...payload,
             nivelId,
           })
           .returning();
       }
       return result;
     } catch (error) {
-      console.log('Error in createRagTemplate:', error);
+      console.error('Error in createRagTemplate:', error);
       throw new BadRequestException('Error en la creación de la plantilla RAG');
     }
   }
