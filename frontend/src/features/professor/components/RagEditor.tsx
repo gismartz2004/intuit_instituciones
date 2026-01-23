@@ -107,7 +107,7 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
 
     // Image Picker State
     const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'concept' | 'general', index?: number } | null>(null);
+    const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'concept' | 'hint' | 'general', index?: number } | null>(null);
 
     // Initial Data Load
     useEffect(() => {

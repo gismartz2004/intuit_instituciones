@@ -72,8 +72,7 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
             setStudentLinks([
                 { href: "/dashboard", icon: Book, label: "Aprende" },
                 { href: "/profile", icon: User, label: "Perfil" },
-                { href: "/arduino-lab", icon: Cpu, label: "Laboratorio" },
-                { href: "/dashboard-3d", icon: Sparkles, label: "Mapa 3D (Beta)" }
+                { href: "/arduino-lab", icon: Cpu, label: "Laboratorio" }
             ]);
         }
     };

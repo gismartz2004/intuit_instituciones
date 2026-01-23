@@ -69,13 +69,17 @@ function App() {
             onLogout={handleLogout}
             userPlanId={user.plan ? parseInt(user.plan) : 1}
           />
-          <MobileNav currentRole={user.role} />
+          <MobileNav
+            currentRole={user.role}
+            onLogout={handleLogout}
+            userPlanId={user.plan ? parseInt(user.plan) : 1}
+          />
         </>
       )}
 
       <main className={cn(
         "flex-1 min-h-screen bg-slate-50/50",
-        showNav ? "md:ml-[280px] pt-20 md:pt-0 pb-24 md:pb-0" : ""
+        showNav ? "md:ml-[280px] pt-14 md:pt-0 pb-24 md:pb-0" : ""
       )}>
         <Switch>
           <Route path="/login">

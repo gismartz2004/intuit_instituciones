@@ -19,9 +19,11 @@ type Role = "student" | "admin" | "professor";
 
 interface MobileNavProps {
   currentRole: Role;
+  onLogout: () => void;
+  userPlanId?: number;
 }
 
-export function MobileNav({ currentRole }: MobileNavProps) {
+export function MobileNav({ currentRole, onLogout, userPlanId = 1 }: MobileNavProps) {
   const [location] = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -84,10 +86,8 @@ export function MobileNav({ currentRole }: MobileNavProps) {
           <SheetContent side="left" className="p-0 w-[280px] border-none">
             <SidebarContent
               currentRole={currentRole as any}
-              onLogout={() => {
-                localStorage.removeItem('edu_user');
-                window.location.href = '/login';
-              }}
+              onLogout={onLogout}
+              userPlanId={userPlanId}
               onClose={() => setOpen(false)}
             />
           </SheetContent>
