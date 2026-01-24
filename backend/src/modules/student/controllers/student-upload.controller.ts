@@ -60,6 +60,9 @@ export class StudentUploadController {
     async submitRagProgress(
         @Body() body: { studentId: number; plantillaRagId: number; pasoIndice: number; archivoUrl: string; tipoArchivo: string }
     ) {
+        if (!body.plantillaRagId || isNaN(Number(body.plantillaRagId))) {
+            throw new BadRequestException('ID de Plantilla RAG inválido');
+        }
         return this.studentService.submitRagProgress(body);
     }
 
@@ -67,6 +70,9 @@ export class StudentUploadController {
     async submitHaEvidence(
         @Body() body: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }
     ) {
+        if (!body.plantillaHaId || isNaN(Number(body.plantillaHaId))) {
+            throw new BadRequestException('ID de Plantilla HA inválido');
+        }
         return this.studentService.submitHaEvidence(body);
     }
 }

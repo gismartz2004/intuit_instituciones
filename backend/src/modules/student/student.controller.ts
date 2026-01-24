@@ -74,6 +74,7 @@ export class StudentController {
         @Param('id', ParseIntPipe) studentId: number,
         @Param('templateId', ParseIntPipe) templateId: number
     ) {
+        if (!templateId || isNaN(templateId)) return [];
         return this.studentService.getRagSubmissions(studentId, templateId);
     }
 
@@ -82,6 +83,7 @@ export class StudentController {
         @Param('id', ParseIntPipe) studentId: number,
         @Param('templateId', ParseIntPipe) templateId: number
     ) {
+        if (!templateId || isNaN(templateId)) return [];
         return this.studentService.getHaSubmissions(studentId, templateId);
     }
 

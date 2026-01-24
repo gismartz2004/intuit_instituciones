@@ -86,7 +86,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     const fetchRag = async () => {
       try {
         const result = await studentApi.getRagTemplate(levelId);
-        if (result) {
+        if (result && result.id) {
           result.contenidoClave =
             typeof result.contenidoClave === "string"
               ? JSON.parse(result.contenidoClave)
@@ -103,7 +103,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
 
           // Restore progress
           const studentId = parseInt(getStudentId());
-          if (studentId) {
+          if (studentId && result.id) {
             const submissions = await studentApi.getRagSubmissions(studentId, result.id);
             if (submissions && submissions.length > 0) {
               const Indices = submissions.map((s: any) => s.pasoIndice);

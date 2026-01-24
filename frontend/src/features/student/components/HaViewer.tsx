@@ -71,16 +71,22 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
         const fetchHa = async () => {
             try {
                 const data = await studentApi.getHaTemplate(levelId);
-                setHaData(data);
 
-                // Restore progress
-                const studentId = parseInt(getStudentId());
-                if (studentId && data) {
-                    const submissions = await studentApi.getHaSubmissions(studentId, data.id);
-                    if (submissions && submissions.length > 0) {
-                        setCurrentSection('completion');
-                        // Optionally set reflection if stored, but for now completion is enough
+                // Validate if data exists and has ID (to avoid 400 on submissions fetch)
+                if (data && data.id) {
+                    setHaData(data);
+
+                    // Restore progress
+                    const studentId = parseInt(getStudentId());
+                    if (studentId) {
+                        const submissions = await studentApi.getHaSubmissions(studentId, data.id);
+                        if (submissions && submissions.length > 0) {
+                            setCurrentSection('completion');
+                        }
                     }
+                } else {
+                    console.log("No HA template found or invalid data");
+                    setHaData(null);
                 }
             } catch (err) {
                 console.error(err);

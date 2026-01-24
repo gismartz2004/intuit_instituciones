@@ -128,7 +128,15 @@ export class StudentService {
                     eq(schema.entregasRag.plantillaRagId, rag.id)
                 ));
 
-            const pasos = (rag.pasosGuiados as any[]) || [];
+            // Safe parsing of pasosGuiados
+            let pasos: any[] = [];
+            try {
+                const rawPasos = rag.pasosGuiados;
+                pasos = typeof rawPasos === 'string' ? JSON.parse(rawPasos) : (Array.isArray(rawPasos) ? rawPasos : []);
+            } catch (e) {
+                pasos = [];
+            }
+
             if (pasos.length === 0) {
                 completedTasks += 1;
                 continue;
@@ -489,10 +497,14 @@ export class StudentService {
         return { success: true, action: 'created', id: resId };
     }
 
-    async submitRagProgress(data: { studentId: number; plantillaRagId: number; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
-        const { studentId, plantillaRagId, pasoIndice, archivoUrl, tipoArchivo } = data;
+    async submitRagProgress(data: { studentId: any; plantillaRagId: any; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
+        const studentId = parseInt(data.studentId);
+        const plantillaRagId = parseInt(data.plantillaRagId);
+        const { pasoIndice, archivoUrl, tipoArchivo } = data;
 
-        // 1. Check if this specific step was already submitted (Optional: log but allow overwrite)
+        console.log(`[RAG SUBMIT] Student: ${studentId}, Template: ${plantillaRagId}, Step: ${pasoIndice}`);
+
+        // 1. Check if this specific step was already submitted
         const existingStep = await this.db.select()
             .from(schema.entregasRag)
             .where(and(
@@ -503,8 +515,7 @@ export class StudentService {
             .limit(1);
 
         if (existingStep.length > 0) {
-            console.log(`Student ${studentId} is updating RAG step ${pasoIndice} for template ${plantillaRagId}`);
-            // We allow overwrite by deleting the previous attempt
+            console.log(`[RAG SUBMIT] Updating existing step. Deleting old record.`);
             await this.db.delete(schema.entregasRag)
                 .where(and(
                     eq(schema.entregasRag.estudianteId, studentId),
@@ -519,14 +530,26 @@ export class StudentService {
             .where(eq(schema.plantillasRag.id, plantillaRagId))
             .limit(1);
 
-        if (rag.length === 0) throw new Error('Plantilla RAG no encontrada');
+        if (rag.length === 0) {
+            console.error(`[RAG SUBMIT] ERROR: Template ${plantillaRagId} not found in DB`);
+            throw new Error(`Plantilla RAG #${plantillaRagId} no encontrada`);
+        }
         const nivelId = rag[0].nivelId;
 
         // 3. Pre-check: Is it already finished? (To avoid awarding XP twice)
         const submissionsBefore = await this.db.select().from(schema.entregasRag)
             .where(and(eq(schema.entregasRag.estudianteId, studentId), eq(schema.entregasRag.plantillaRagId, plantillaRagId)));
 
-        const pasos = (rag[0].pasosGuiados as any[]) || [];
+        // Safe parsing of pasosGuiados
+        let pasos: any[] = [];
+        try {
+            const rawPasos = rag[0].pasosGuiados;
+            pasos = typeof rawPasos === 'string' ? JSON.parse(rawPasos) : (Array.isArray(rawPasos) ? rawPasos : []);
+        } catch (e) {
+            console.error('Error parsing pasosGuiados:', e);
+            pasos = [];
+        }
+
         const submittedIndicesBefore = new Set(submissionsBefore.map(s => s.pasoIndice));
         const isAlreadyComplete = pasos.length > 0 && pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesBefore.has(idx));
 
@@ -547,7 +570,7 @@ export class StudentService {
         const submissionsAfter = await this.db.select().from(schema.entregasRag)
             .where(and(eq(schema.entregasRag.estudianteId, studentId), eq(schema.entregasRag.plantillaRagId, plantillaRagId)));
         const submittedIndicesAfter = new Set(submissionsAfter.map(s => s.pasoIndice));
-        const isNowComplete = pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesAfter.has(idx));
+        const isNowComplete = pasos.length > 0 && pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesAfter.has(idx));
 
         if (isNowComplete && !isAlreadyComplete) {
             // Award XP only if this is the transition to completion
