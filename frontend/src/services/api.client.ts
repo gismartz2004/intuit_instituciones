@@ -35,6 +35,12 @@ class ApiClient {
 
     const headers: Record<string, string> = { ...fetchOptions.headers as any };
 
+    // Add Authorization header if token exists
+    const token = localStorage.getItem('edu_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     // Si el body no es FormData, ponemos el content-type por defecto
     if (!(body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';

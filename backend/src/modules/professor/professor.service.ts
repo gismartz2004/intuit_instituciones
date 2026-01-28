@@ -238,6 +238,36 @@ export class ProfessorService {
     }
   }
 
+  // PIM Templates
+  async getPimTemplate(nivelId: number) {
+    return await this.db
+      .select()
+      .from(schema.plantillasPim)
+      .where(eq(schema.plantillasPim.nivelId, nivelId))
+      .execute()
+      .then((res) => res[0] || null);
+  }
+
+  async createPimTemplate(nivelId: number, data: any) {
+    const { id, fechaCreacion, ...payload } = data;
+    const existing = await this.getPimTemplate(nivelId);
+
+    if (existing) {
+      const [result] = await this.db
+        .update(schema.plantillasPim)
+        .set(payload)
+        .where(eq(schema.plantillasPim.id, existing.id))
+        .returning();
+      return result;
+    } else {
+      const [result] = await this.db
+        .insert(schema.plantillasPim)
+        .values({ ...payload, nivelId })
+        .returning();
+      return result;
+    }
+  }
+
   async deleteLevel(levelId: number) {
     // Cascade delete RAG
     await this.db
@@ -247,6 +277,16 @@ export class ProfessorService {
     await this.db
       .delete(schema.plantillasHa)
       .where(eq(schema.plantillasHa.nivelId, levelId));
+
+    // Cascade delete PIM (Proyecto Integrador Multidisciplinario)
+    await this.db
+      .delete(schema.plantillasPim)
+      .where(eq(schema.plantillasPim.nivelId, levelId));
+
+    // Cascade delete student progress for this level
+    await this.db
+      .delete(schema.progresoNiveles)
+      .where(eq(schema.progresoNiveles.nivelId, levelId));
 
     // Cascade delete contents
     await this.db
@@ -261,6 +301,23 @@ export class ProfessorService {
     // Delete level
     await this.db.delete(schema.niveles).where(eq(schema.niveles.id, levelId));
     return { success: true };
+  }
+
+  async updateLevel(levelId: number, data: any) {
+    console.log(`[UPDATE LEVEL] ID: ${levelId}, Data:`, data);
+    const { id, moduloId, ...payload } = data;
+    try {
+      const [updated] = await this.db
+        .update(schema.niveles)
+        .set(payload)
+        .where(eq(schema.niveles.id, levelId))
+        .returning();
+      console.log(`[UPDATE LEVEL] Success:`, updated);
+      return updated;
+    } catch (error) {
+      console.error(`[UPDATE LEVEL] Error:`, error);
+      throw error;
+    }
   }
 
   // RAG Templates

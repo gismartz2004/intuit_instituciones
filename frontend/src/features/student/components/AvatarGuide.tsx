@@ -120,7 +120,7 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 } as const}
                 className={cn("relative z-50 max-w-sm pointer-events-auto", className)}
             >
                 {/* Main Card */}

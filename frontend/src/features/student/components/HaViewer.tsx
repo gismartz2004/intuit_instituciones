@@ -85,7 +85,7 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                         }
                     }
                 } else {
-                    console.log("No HA template found or invalid data");
+                    // console.log("No HA template found or invalid data");
                     setHaData(null);
                 }
             } catch (err) {

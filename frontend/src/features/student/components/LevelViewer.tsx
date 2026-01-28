@@ -15,12 +15,14 @@ import {
   CheckCircle,
   BookOpen,
   Trophy,
+  Layers,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { studentApi } from "../services/student.api";
 import RagViewer from "./RagViewer";
 import HaViewer from "./HaViewer";
+import PimViewer from "./PimViewer";
 import EnhancedGamificationHud from "./EnhancedGamificationHud";
 import { GamificationState, pointsToXP, calculateLevel, getXPToNextLevel } from "@/types/gamification";
 
@@ -41,7 +43,7 @@ export default function LevelViewer() {
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [userCode, setUserCode] = useState("");
-  const [viewMode, setViewMode] = useState<"content" | "rag" | "ha">("rag");
+  const [viewMode, setViewMode] = useState<"content" | "rag" | "ha" | "pim">("rag");
 
   // Gamification State with XP
   const [gameState, setGameState] = useState<GamificationState>({
@@ -396,6 +398,18 @@ export default function LevelViewer() {
             >
               <Trophy className="w-4 h-4 mr-2" /> Hito HA
             </Button>
+            <Button
+              variant={viewMode === "pim" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("pim")}
+              className={
+                viewMode === "pim"
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-600 hover:bg-slate-100"
+              }
+            >
+              <Layers className="w-4 h-4 mr-2" /> Proyecto PIM
+            </Button>
           </div>
         </div>
 
@@ -410,6 +424,10 @@ export default function LevelViewer() {
         ) : viewMode === "ha" ? (
           <div className="animate-in fade-in slide-in-from-bottom-5 duration-500">
             <HaViewer levelId={levelId} onAddPoints={handleAddPoints} />
+          </div>
+        ) : viewMode === "pim" ? (
+          <div className="animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <PimViewer levelId={levelId} />
           </div>
         ) : (
           <>

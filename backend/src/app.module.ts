@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -11,6 +13,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProfessorModule } from './modules/professor/professor.module';
 import { StudentModule } from './modules/student/student.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { SuperadminModule } from './modules/superadmin/superadmin.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PremiosModule } from './modules/premios/premios.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -19,6 +25,20 @@ import { PlansModule } from './modules/plans/plans.module';
       serveRoot: '/uploads',
     }),
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.SMTP_HOST || 'smtp.example.com',
+        port: Number(process.env.SMTP_PORT) || 587,
+        auth: {
+          user: process.env.SMTP_USER || 'user',
+          pass: process.env.SMTP_PASS || 'pass',
+        },
+      },
+      defaults: {
+        from: '"ARG Academy" <notifications@arg-academy.com>',
+      },
+    }),
     DatabaseModule,
     UsersModule,
     ModulesModule,
@@ -26,8 +46,12 @@ import { PlansModule } from './modules/plans/plans.module';
     ProfessorModule,
     StudentModule,
     PlansModule,
+    SuperadminModule,
+    NotificationsModule,
+    PremiosModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -29,6 +29,20 @@
       "when": 1769188420010,
       "tag": "0003_add_imagen_url",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769441371323,
+      "tag": "0004_add_plantillas_pim",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769572356328,
+      "tag": "0005_bouncy_human_fly",
+      "breakpoints": true
     }
   ]
 }

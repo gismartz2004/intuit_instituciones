@@ -37,6 +37,7 @@ export const usuarios = pgTable('usuarios', {
   activo: boolean('activo').default(true),
   avatar: varchar('avatar', { length: 255 }).default('avatar_boy'),
   onboardingCompleted: boolean('onboarding_completed').default(false),
+  emailPadre: varchar('email_padre', { length: 100 }),
 });
 
 // 4. Tabla de Módulos
@@ -53,6 +54,7 @@ export const asignaciones = pgTable('asignaciones', {
   estudianteId: integer('estudiante_id').references(() => usuarios.id),
   profesorId: integer('profesor_id').references(() => usuarios.id),
   moduloId: integer('modulo_id').references(() => modulos.id),
+  fechaAsignacion: timestamp('fecha_asignacion').defaultNow(),
 });
 
 // 6. Tabla de Niveles
@@ -61,6 +63,8 @@ export const niveles = pgTable('niveles', {
   moduloId: integer('modulo_id').references(() => modulos.id),
   tituloNivel: varchar('titulo_nivel', { length: 100 }),
   orden: integer('orden'),
+  bloqueadoManual: boolean('bloqueado_manual'), // Nullable by default, no fixed default here
+  diasParaDesbloquear: integer('dias_para_desbloquear').default(7), // Default to 1 week
 });
 
 // 7. Contenidos
@@ -237,6 +241,24 @@ export const plantillasHa = pgTable('plantillas_ha', {
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
+// 16.2 Plantillas PIM (Proyecto Integrador Modular)
+export const plantillasPim = pgTable('plantillas_pim', {
+  id: serial('id').primaryKey(),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+
+  // Información General
+  tituloProyecto: varchar('titulo_proyecto', { length: 255 }),
+  anioNivel: varchar('anio_nivel', { length: 100 }),
+  descripcionGeneral: text('descripcion_general'),
+
+  // Módulos (JSON Array: [{nombreModulo, enfoqueTecnico, problemaTecnico, actividadesInvestigacion, formatoSugerido, actividadesPractica, ejerciciosPracticos, aporteTecnico}])
+  modulos: jsonb('modulos'),
+
+  // Metadata
+  imagenUrl: text('imagen_url'),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
 // 17. Logros (Achievements)
 export const logros = pgTable('logros', {
   id: serial('id').primaryKey(),
@@ -317,6 +339,18 @@ export const progresoMisiones = pgTable('progreso_misiones', {
 });
 
 
+// 24. Premios (Prizes for Raffle)
+export const premios = pgTable('premios', {
+  id: serial('id').primaryKey(),
+  nombre: varchar('nombre', { length: 100 }).notNull(),
+  descripcion: text('descripcion'),
+  costoPuntos: integer('costo_puntos').default(0),
+  imagenUrl: text('imagen_url'),
+  stock: integer('stock'),
+  activo: boolean('activo').default(true),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -387,6 +421,7 @@ export const insertEntregaRagSchema = createInsertSchema(entregasRag);
 export const insertEntregaHaSchema = createInsertSchema(entregasHa);
 export const insertMisionSchema = createInsertSchema(misiones);
 export const insertProgresoMisionSchema = createInsertSchema(progresoMisiones);
+export const insertPremioSchema = createInsertSchema(premios);
 
 
 export type Logro = typeof logros.$inferSelect;
@@ -409,4 +444,7 @@ export type InsertMision = z.infer<typeof insertMisionSchema>;
 
 export type ProgresoMision = typeof progresoMisiones.$inferSelect;
 export type InsertProgresoMision = z.infer<typeof insertProgresoMisionSchema>;
+
+export type Premio = typeof premios.$inferSelect;
+export type InsertPremio = z.infer<typeof insertPremioSchema>;
 

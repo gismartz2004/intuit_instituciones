@@ -106,6 +106,14 @@ export class ProfessorController {
     return this.professorService.deleteLevel(levelId);
   }
 
+  @Post('levels/:id') // Using POST or PUT, professorApi used PUT so I'll add @Put if available or use @Post
+  async updateLevel(
+    @Param('id', ParseIntPipe) levelId: number,
+    @Body() body: any,
+  ) {
+    return this.professorService.updateLevel(levelId, body);
+  }
+
   // RAG Templates
   @Post('levels/:id/rag')
   async createRag(
@@ -143,5 +151,26 @@ export class ProfessorController {
       console.error(`Error fetching HA for level ${levelId}:`, error);
       throw error;
     }
+  }
+
+  @Post('levels/:id/ha')
+  async saveHaTemplate(@Param('id', ParseIntPipe) levelId: number, @Body() data: any) {
+    return this.professorService.createHaTemplate(levelId, data);
+  }
+
+  // PIM Templates
+  @Get('levels/:id/pim')
+  async getPimTemplate(@Param('id', ParseIntPipe) levelId: number) {
+    try {
+      return await this.professorService.getPimTemplate(levelId);
+    } catch (error) {
+      console.error(`Error fetching PIM for level ${levelId}:`, error);
+      throw error;
+    }
+  }
+
+  @Post('levels/:id/pim')
+  async savePimTemplate(@Param('id', ParseIntPipe) levelId: number, @Body() data: any) {
+    return this.professorService.createPimTemplate(levelId, data);
   }
 }

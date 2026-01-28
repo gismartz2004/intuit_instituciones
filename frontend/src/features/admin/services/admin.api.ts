@@ -5,7 +5,9 @@ import type {
   CreateUserPayload,
   CreateModulePayload,
   AssignModulePayload,
-  UpdateUserPayload
+  UpdateUserPayload,
+  Premio,
+  CreatePremioPayload
 } from '../types/admin.types';
 
 /**
@@ -15,7 +17,7 @@ import type {
 
 export const adminApi = {
   // ========== USUARIOS ==========
-  
+
   /**
    * Obtener todos los usuarios del sistema
    */
@@ -45,7 +47,7 @@ export const adminApi = {
   },
 
   // ========== MÓDULOS ==========
-  
+
   /**
    * Obtener todos los módulos del sistema
    */
@@ -68,12 +70,42 @@ export const adminApi = {
   },
 
   // ========== ASIGNACIONES ==========
-  
+
   /**
    * Asignar un módulo a un estudiante o profesor
    */
   async assignModule(payload: AssignModulePayload): Promise<void> {
     return apiClient.post<void>('/api/modulos/asignar', payload);
+  },
+
+  // ========== PREMIOS ==========
+
+  /**
+   * Obtener todos los premios
+   */
+  async getPrizes(): Promise<Premio[]> {
+    return apiClient.get<Premio[]>('/api/premios');
+  },
+
+  /**
+   * Crear un nuevo premio
+   */
+  async createPrize(payload: CreatePremioPayload): Promise<Premio> {
+    return apiClient.post<Premio>('/api/premios', payload);
+  },
+
+  /**
+   * Actualizar un premio
+   */
+  async updatePrize(prizeId: number, payload: Partial<CreatePremioPayload>): Promise<Premio> {
+    return apiClient.patch<Premio>(`/api/premios/${prizeId}`, payload);
+  },
+
+  /**
+   * Eliminar un premio
+   */
+  async deletePrize(prizeId: number): Promise<void> {
+    return apiClient.delete<void>(`/api/premios/${prizeId}`);
   },
 };
 

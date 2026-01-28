@@ -57,26 +57,26 @@
   --tech-gray: 210 20% 96%;    /* F0F4F8 */
   --tech-dark: 215 28% 17%;    /* 1F2937 */
   
-  --background: 0 0% 100%;
+  --background: 210 40% 98%;
   --foreground: 222 47% 11%;
 
-  --card: 0 0% 100%;
+  --card: 0 0% 100% / 0.8;
   --card-foreground: 222 47% 11%;
  
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
  
-  --primary: 215 100% 45%; /* Slightly brighter cobalt for buttons */
+  --primary: 215 100% 45%; 
   --primary-foreground: 0 0% 100%;
  
-  --secondary: 180 100% 40%; /* Darker cyan for contrast on white */
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 215 100% 95%;
+  --secondary-foreground: 215 100% 34%;
  
   --muted: 210 40% 96%;
   --muted-foreground: 215 16% 47%;
  
-  --accent: 180 100% 95%; /* Very light cyan */
-  --accent-foreground: 180 100% 25%;
+  --accent: 180 100% 50%;
+  --accent-foreground: 222 47% 11%;
  
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
@@ -85,16 +85,16 @@
   --input: 214 32% 91%;
   --ring: 215 100% 45%;
  
-  --radius: 0.75rem;
+  --radius: 1rem;
  
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-primary: 215 100% 45%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 180 100% 95%;
-  --sidebar-accent-foreground: 180 100% 25%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217 91% 60%;
+  --sidebar: 215 100% 34%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 0 0% 100%;
+  --sidebar-primary-foreground: 215 100% 34%;
+  --sidebar-accent: 215 100% 45%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 215 100% 40%;
+  --sidebar-ring: 180 100% 50%;
 }
  
 .dark {
@@ -151,4 +151,22 @@
 }
 .btn-gamified-secondary {
   @apply transition-all active:translate-y-[4px] active:shadow-none border-b-4 border-b-gray-300 hover:bg-gray-100 active:border-b-0 rounded-xl font-extrabold uppercase tracking-wide bg-white text-gray-500 border border-gray-200;
+}
+
+/* Premium UI Utilities */
+.glass-effect {
+  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+}
+
+.premium-gradient-bg {
+  background: radial-gradient(circle at top right, rgba(0, 71, 171, 0.05), transparent),
+              radial-gradient(circle at bottom left, rgba(0, 255, 255, 0.03), transparent);
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--cobalt))] to-[hsl(var(--neon-blue))];
 }

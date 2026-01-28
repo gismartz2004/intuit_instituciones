@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { authApi } from '../services/auth.api';
 
 interface LoginProps {
-  onLogin: (role: "student" | "admin" | "professor", name: string, id: string, planId?: number) => void;
+  onLogin: (role: "student" | "admin" | "professor" | "superadmin", name: string, id: string, planId?: number, accessToken?: string) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -30,15 +30,16 @@ export default function Login({ onLogin }: LoginProps) {
     try {
       const data = await authApi.login({ email: username, password });
       const user = data.user;
-      const roleMap: Record<number, "admin" | "professor" | "student"> = {
+      const roleMap: Record<number, "admin" | "professor" | "student" | "superadmin"> = {
         1: "admin",
         2: "professor",
-        3: "student"
+        3: "student",
+        4: "superadmin"
       };
       const role = roleMap[user.roleId] || "student";
 
-      onLogin(role, user.nombre, user.id.toString(), user.planId);
-      const targetPath = role === "admin" ? "/admin" : role === "professor" ? "/teach" : "/dashboard";
+      onLogin(role as any, user.nombre, user.id.toString(), user.planId, data.access_token);
+      const targetPath = role === "superadmin" ? "/superadmin" : role === "admin" ? "/admin" : role === "professor" ? "/teach" : "/dashboard";
       setLocation(targetPath);
       toast({ title: "¡Bienvenido!", description: `Iniciando sesión como ${role}...` });
     } catch (error) {
@@ -121,7 +122,7 @@ export default function Login({ onLogin }: LoginProps) {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 } as const}
               className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
             >
               <Rocket className="w-10 h-10 text-white" />

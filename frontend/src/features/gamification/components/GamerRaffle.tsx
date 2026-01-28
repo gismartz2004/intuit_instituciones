@@ -1,16 +1,37 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Sparkles, Trophy, Gamepad2, Headphones, Monitor } from "lucide-react";
+import { adminApi } from "../../admin/services/admin.api";
+import { type Premio } from "../../admin/types/admin.types";
 
-const prizes = [
-    { icon: Gamepad2, name: "PlayStation 5", value: "$500", color: "text-blue-600" },
-    { icon: Monitor, name: "Monitor Gaming 144Hz", value: "$350", color: "text-purple-600" },
-    { icon: Headphones, name: "Audífonos Gaming", value: "$200", color: "text-pink-600" },
-    { icon: Gamepad2, name: "Xbox Series X", value: "$500", color: "text-green-600" },
+const fallbackPrizes = [
+    { name: "PlayStation 5", costoPuntos: 5000, icon: Gamepad2, color: "text-blue-600" },
+    { name: "Monitor Gaming 144Hz", costoPuntos: 3500, icon: Monitor, color: "text-purple-600" },
+    { name: "Audífonos Gaming", costoPuntos: 2000, icon: Headphones, color: "text-pink-600" },
+    { name: "Xbox Series X", costoPuntos: 5000, icon: Gamepad2, color: "text-green-600" },
 ];
 
 export default function GamerRaffle() {
+    const [prizes, setPrizes] = useState<Premio[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadPrizes() {
+            try {
+                const data = await adminApi.getPrizes();
+                setPrizes(data);
+            } catch (error) {
+                console.error("Failed to load prizes", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadPrizes();
+    }, []);
+
+    const displayPrizes = prizes.length > 0 ? prizes : [];
     return (
         <div className="p-8 max-w-6xl mx-auto space-y-6">
             {/* Header */}
@@ -63,19 +84,37 @@ export default function GamerRaffle() {
                     Premios de Este Mes
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {prizes.map((prize, idx) => (
-                        <Card key={idx} className="border-2 hover:shadow-xl transition-all hover:border-purple-300 hover:scale-105">
-                            <CardHeader className="text-center">
-                                <div className="mx-auto bg-slate-100 p-6 rounded-full w-24 h-24 flex items-center justify-center mb-3">
-                                    <prize.icon className={`w-12 h-12 ${prize.color}`} />
-                                </div>
-                                <CardTitle className="text-lg">{prize.name}</CardTitle>
+                    {displayPrizes.length > 0 ? displayPrizes.map((prize, idx) => (
+                        <Card key={prize.id || idx} className="border-2 hover:shadow-xl transition-all hover:border-purple-300 hover:scale-105 overflow-hidden">
+                            <div className="h-40 bg-slate-50 flex items-center justify-center relative">
+                                {prize.imagenUrl ? (
+                                    <img src={prize.imagenUrl} alt={prize.nombre} className="w-full h-full object-cover" />
+                                ) : (
+                                    <Trophy className="w-16 h-16 text-slate-200" />
+                                )}
+                            </div>
+                            <CardHeader className="text-center pt-4">
+                                <CardTitle className="text-lg truncate">{prize.nombre}</CardTitle>
                                 <CardDescription className="text-lg font-bold text-purple-600">
-                                    {prize.value}
+                                    {prize.costoPuntos} Puntos
                                 </CardDescription>
                             </CardHeader>
                         </Card>
-                    ))}
+                    )) : (
+                        fallbackPrizes.map((prize, idx) => (
+                            <Card key={idx} className="border-2 hover:shadow-xl transition-all hover:border-purple-300 hover:scale-105">
+                                <CardHeader className="text-center">
+                                    <div className="mx-auto bg-slate-100 p-6 rounded-full w-24 h-24 flex items-center justify-center mb-3">
+                                        <prize.icon className={`w-12 h-12 ${prize.color}`} />
+                                    </div>
+                                    <CardTitle className="text-lg">{prize.name}</CardTitle>
+                                    <CardDescription className="text-lg font-bold text-purple-600">
+                                        {prize.costoPuntos} Puntos
+                                    </CardDescription>
+                                </CardHeader>
+                            </Card>
+                        ))
+                    )}
                 </div>
             </div>
 

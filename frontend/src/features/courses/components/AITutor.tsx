@@ -1,4 +1,5 @@
 import { useState } from "react";
+import apiClient from "@/services/api.client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,16 +42,25 @@ export default function AITutor() {
         setInput('');
         setLoading(true);
 
-        // Simulate AI response (replace with actual API call)
-        setTimeout(() => {
+        try {
+            const data = await apiClient.post<{ response: string }>('/api/ai/chat', { prompt: input });
+
             const aiMessage: Message = {
                 role: 'assistant',
-                content: `Entiendo tu pregunta sobre "${input}". Como tu Tutor IA, te ayudaré paso a paso. Esta es una respuesta de demostración. En producción, aquí se integraría con una API de IA real para proporcionar ayuda personalizada con tus tareas.`,
+                content: data.response,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, aiMessage]);
+        } catch (error) {
+            const errorMessage: Message = {
+                role: 'assistant',
+                content: 'Lo siento, hubo un problema al conectar con mi cerebro virtual. Por favor intenta de nuevo en un momento.',
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
             setLoading(false);
-        }, 1500);
+        }
     };
 
     const handleQuickQuestion = (query: string) => {
@@ -116,8 +126,8 @@ export default function AITutor() {
                                 >
                                     <div
                                         className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-slate-100 text-slate-800'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-100 text-slate-800'
                                             }`}
                                     >
                                         <p className="text-sm">{msg.content}</p>

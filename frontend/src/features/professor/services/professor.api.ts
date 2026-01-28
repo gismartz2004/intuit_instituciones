@@ -24,6 +24,8 @@ export interface CreateLevelPayload {
   tituloNivel: string;
   descripcion?: string;
   orden: number;
+  bloqueadoManual?: boolean;
+  diasParaDesbloquear?: number;
 }
 
 export interface CreateContentPayload {
@@ -72,6 +74,13 @@ export const professorApi = {
    */
   async getModuleLevels(moduleId: string): Promise<any[]> {
     return apiClient.get<any[]>(`/api/professor/modules/${moduleId}/levels`);
+  },
+
+  /**
+   * Actualizar un nivel
+   */
+  async updateLevel(levelId: number, payload: Partial<CreateLevelPayload>): Promise<any> {
+    return apiClient.post<any>(`/api/professor/levels/${levelId}`, payload);
   },
 
   /**
@@ -150,6 +159,15 @@ export const professorApi = {
 
   async getHaTemplate(levelId: number): Promise<any> {
     return apiClient.get(`/api/professor/levels/${levelId}/ha`);
+  },
+
+  // PIM Templates
+  async getPimTemplate(levelId: number): Promise<any> {
+    return apiClient.get(`/api/professor/levels/${levelId}/pim`);
+  },
+
+  async savePimTemplate(levelId: number, data: any): Promise<any> {
+    return apiClient.post(`/api/professor/levels/${levelId}/pim`, data);
   },
 
   // Grading

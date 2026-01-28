@@ -41,7 +41,7 @@ export default function LevelCompletionModal({ isOpen, levelTitle, pointsEarned,
                     <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 15 } as const}
                         className="mb-6 flex justify-center"
                     >
                         <div className="bg-white/20 backdrop-blur-sm p-6 rounded-full">

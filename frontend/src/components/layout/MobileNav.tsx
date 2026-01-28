@@ -6,6 +6,7 @@ import {
   User,
   Home,
   Menu,
+  Shield,
 } from "lucide-react";
 import {
   Sheet,
@@ -15,7 +16,7 @@ import {
 import { SidebarContent } from "./SidebarContent";
 import { useState } from "react";
 
-type Role = "student" | "admin" | "professor";
+type Role = "student" | "admin" | "professor" | "superadmin";
 
 interface MobileNavProps {
   currentRole: Role;
@@ -38,14 +39,21 @@ export function MobileNav({ currentRole, onLogout, userPlanId = 1 }: MobileNavPr
     { href: "/admin/users", icon: User, label: "Usuarios" },
   ];
 
+  const superadminLinks = [
+    { href: "/superadmin", icon: Home, label: "Panel" },
+    { href: "/admin", icon: Shield, label: "Admin" },
+    { href: "/admin/users", icon: User, label: "Usuarios" },
+  ];
+
   const professorLinks = [
     { href: "/teach", icon: Home, label: "Inicio" },
     { href: "/profile", icon: User, label: "Perfil" },
   ];
 
   const links = currentRole === "admin" ? adminLinks :
-    currentRole === "professor" ? professorLinks :
-      studentLinks;
+    currentRole === "superadmin" ? superadminLinks :
+      currentRole === "professor" ? professorLinks :
+        studentLinks;
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-100 px-4 pb-6 pt-2 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">

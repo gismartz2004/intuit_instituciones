@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
-import { Star, Zap, Play, Trophy, MapPin, Lock, CheckCircle } from "lucide-react";
+import { Link, useRoute } from "wouter";
+import { Star, Zap, Play, Trophy, MapPin, Lock, CheckCircle, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 // Assets
 import zoneMalecon from "@/assets/gamification/zone_malecon.png";
@@ -41,6 +42,10 @@ const ZONES = [
 ];
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
+  const { toast } = useToast();
+  const [match, params] = useRoute("/dashboard/module/:moduleId");
+  const moduleIdFromRoute = match && params ? parseInt((params as any).moduleId) : null;
+
   const [modules, setModules] = useState<any[]>([]);
   const [progress, setProgress] = useState<any>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -62,9 +67,16 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
 
       fetchModules();
       fetchProgress();
-      fetchLevelProgress();
+      // fetchLevelProgress(); // Removing from here as it depends on modules
     }
   }, [user]);
+
+  // New effect to fetch progress ONLY after modules are loaded
+  useEffect(() => {
+    if (modules.length > 0) {
+      fetchLevelProgress();
+    }
+  }, [modules, moduleIdFromRoute]); // Re-fetch if modules or route changes
 
   const handleOnboardingComplete = (avatarId: string) => {
     setShowOnboarding(false);
@@ -103,9 +115,13 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
 
   const fetchLevelProgress = async () => {
     try {
-      // Fetch progress for all modules
+      // Fetch progress only for relevant modules
       const progressMap: Record<number, any> = {};
-      for (const mod of modules) {
+      const modulesToFetch = moduleIdFromRoute
+        ? modules.filter(m => m.id === moduleIdFromRoute)
+        : modules;
+
+      for (const mod of modulesToFetch) {
         const data = await studentApi.getModuleProgress(user.id, mod.id);
         data.forEach((level: any) => {
           progressMap[level.id] = level;
@@ -117,10 +133,14 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     }
   };
 
-  // Group modules by zone
+  // Group modules by zone, filtered by moduleId if present
+  const filteredModules = moduleIdFromRoute
+    ? modules.filter(m => m.id === moduleIdFromRoute)
+    : modules;
+
   const modulesByZone = ZONES.map((zone, zIdx) => ({
     ...zone,
-    modules: modules.filter(m => m.zoneIndex === zIdx)
+    modules: filteredModules.filter(m => m.zoneIndex === zIdx)
   }));
 
   return (
@@ -149,6 +169,22 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </motion.div>
       )}
 
+      {/* Back to Mundos button */}
+      <Link href="/dashboard">
+        <motion.button
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          whileHover={{ x: 5, scale: 1.05 }}
+          className="fixed top-24 left-4 md:top-6 md:left-6 z-50 bg-white/10 backdrop-blur-xl px-6 py-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/20 flex items-center gap-3 hover:bg-white/20 transition-all cursor-pointer group overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="bg-white/10 p-2 rounded-xl group-hover:bg-blue-500 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-white group-hover:-translate-x-1 transition-transform" />
+          </div>
+          <span className="font-black text-white text-sm tracking-widest uppercase">Mundos</span>
+        </motion.button>
+      </Link>
+
       {/* Main Scrollable Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar scroll-smooth">
         {modulesByZone.map((zoneData, zIdx) => (
@@ -176,23 +212,10 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                 </motion.div>
               </div>
 
-              {/* Modules in this Zone */}
+              {/* Levels Path */}
               <div className="relative z-10 w-full max-w-2xl pt-20 pb-32 flex flex-col items-center gap-32">
                 {zoneData.modules.map((mod: any, mIdx: number) => (
                   <div key={mod.id} className="w-full flex flex-col items-center">
-
-                    {/* Module Signpost */}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl text-center mb-16 border-b-8 border-slate-200 max-w-sm relative group cursor-pointer"
-                    >
-                      <div className={`absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r ${zoneData.color} text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
-                        Módulo {mod.id}
-                      </div>
-                      <h3 className="text-2xl font-black text-slate-800 uppercase leading-none mt-2">{mod.nombreModulo}</h3>
-                    </motion.div>
-
-                    {/* Levels Path */}
                     <div className="flex flex-col gap-12 items-center relative w-full">
                       {mod.levels?.map((lvl: any, lIdx: number) => {
                         // ZigZag Calculation (Global index feel)
@@ -201,7 +224,35 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                         const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                         const baseOffset = isMobile ? 60 : 120;
                         const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
-                        const isActive = zIdx === 0 && mIdx === 0 && lIdx === 0;
+
+                        // Navigation Logic: Find the first incomplete level
+                        const levelsInMod = mod.levels || [];
+                        const firstIncompleteIdx = levelsInMod.findIndex((l: any) => !levelProgress[l.id]?.completado);
+                        const activeIdx = firstIncompleteIdx === -1 ? levelsInMod.length - 1 : firstIncompleteIdx;
+
+                        const currentLevelProgress = levelProgress[lvl.id];
+
+                        if (!currentLevelProgress) {
+                          return (
+                            <div key={lvl.id} className="relative group" style={{ transform: `translateX(${xOffset}px)` }}>
+                              <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-slate-700 bg-slate-800 relative z-20">
+                                <span className="text-[8px] text-red-500 font-bold">NO DATA</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Use backend flags directly to avoid logic mismatch
+                        const isCompleted = !!currentLevelProgress?.completado;
+                        const isUnlockedByTime = !!currentLevelProgress?.isUnlockedByTime;
+                        const isUnlockedByProgress = !!currentLevelProgress?.isUnlockedByProgress;
+                        const isStuck = !!currentLevelProgress?.isStuck;
+                        const isManuallyBlocked = !!currentLevelProgress?.isManuallyBlocked;
+
+                        // Final availability check (trust backend isUnlocked property mostly, but ensure manual block is respected)
+                        const isAvailable = !!currentLevelProgress?.isUnlocked;
+
+                        const isActive = lIdx === activeIdx && isAvailable;
 
                         return (
                           <div key={lvl.id} className="relative group" style={{ transform: `translateX(${xOffset}px)` }}>
@@ -217,32 +268,73 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                             )}
 
                             {isActive && (
-                              <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-30 w-28 h-28 pointer-events-none drop-shadow-2xl animate-bounce-slow">
-                                <img src={currentAvatar} alt="You" className="w-full h-full object-contain" />
+                              <div className="absolute -top-32 left-1/2 -translate-x-1/2 z-30 w-36 h-36 pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-bounce-slow">
+                                <img src={currentAvatar} alt="You" className="w-full h-full object-contain scale-125" />
+                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/30 rounded-[100%] blur-sm scale-150" />
                               </div>
                             )}
 
-                            <Link href={`/level/${lvl.id}`}>
+                            <Link href={isAvailable ? `/level/${lvl.id}` : "#"}>
                               <motion.button
-                                whileHover={{ scale: 1.2, rotate: [0, -5, 5, 0] }}
-                                whileTap={{ scale: 0.9 }}
+                                whileHover={isAvailable ? { scale: 1.2, rotate: 5 } : {}}
+                                whileTap={isAvailable ? { scale: 0.9 } : {}}
                                 className={cn(
                                   "w-20 h-20 rounded-full flex items-center justify-center border-4 shadow-[0_10px_20px_rgba(0,0,0,0.4)] relative z-20 transition-all",
                                   isActive
                                     ? "bg-gradient-to-b from-yellow-300 to-yellow-500 border-white shadow-[0_0_30px_rgba(234,179,8,0.6)]"
-                                    : "bg-slate-100 border-slate-300 hover:border-white"
+                                    : isCompleted
+                                      ? "bg-gradient-to-b from-emerald-400 to-emerald-600 border-white/50"
+                                      : isManuallyBlocked || !isUnlockedByTime
+                                        ? "bg-slate-800 border-slate-700 opacity-60 grayscale cursor-not-allowed"
+                                        : isStuck
+                                          ? "bg-gradient-to-b from-red-500 to-red-700 border-white animate-pulse"
+                                          : "bg-slate-100 border-slate-300 hover:border-white"
                                 )}
+                                onClick={(e) => {
+                                  if (!isAvailable) {
+                                    e.preventDefault();
+                                    if (isManuallyBlocked) toast({ title: "Acceso Restringido", description: "Este nivel ha sido bloqueado por el profesor.", variant: "destructive" });
+                                    else if (isStuck) toast({ title: "Nivel Bloqueado", description: "Debes completar el nivel anterior para avanzar.", variant: "destructive" });
+                                    else if (!isUnlockedByTime) toast({ title: "Nivel No Disponible", description: `Este nivel se desbloqueará el día ${currentLevelProgress?.daysRequired}.`, variant: "default" });
+                                  }
+                                }}
                               >
-                                {lvl.type === 'start' && <Play className={cn("w-8 h-8 fill-current", isActive ? "text-white" : "text-slate-400")} />}
-                                {lvl.type === 'star' && <Star className={cn("w-8 h-8 fill-current", isActive ? "text-white" : "text-slate-400")} />}
-                                {lvl.type === 'trophy' && <Trophy className={cn("w-8 h-8 fill-current", isActive ? "text-white" : "text-slate-400")} />}
+                                {(isManuallyBlocked || !isUnlockedByTime) ? (
+                                  <Lock className="w-8 h-8 text-slate-500" />
+                                ) : (
+                                  <>
+                                    {lvl.type === 'start' && <Play className={cn("w-8 h-8 fill-current", (isActive || isCompleted || isStuck) ? "text-white" : "text-slate-400")} />}
+                                    {lvl.type === 'star' && <Star className={cn("w-8 h-8 fill-current", (isActive || isCompleted || isStuck) ? "text-white" : "text-slate-400")} />}
+                                    {lvl.type === 'trophy' && <Trophy className={cn("w-8 h-8 fill-current", (isActive || isCompleted || isStuck) ? "text-white" : "text-slate-400")} />}
+                                  </>
+                                )}
                               </motion.button>
                             </Link>
 
-                            {/* Level Number */}
-                            <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 bg-white text-slate-900 w-8 h-8 rounded-full flex items-center justify-center font-black border-2 border-slate-200 shadow-md">
-                              {lIdx + 1}
+                            {/* Level Number / Status Badge */}
+                            <div className={cn(
+                              "absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center font-black border-2 shadow-md transition-colors z-30",
+                              isCompleted ? "bg-emerald-500 text-white border-white" :
+                                (isManuallyBlocked || !isUnlockedByTime) ? "bg-slate-700 text-slate-400 border-slate-600" :
+                                  isStuck ? "bg-red-600 text-white border-white animate-bounce-slow" :
+                                    "bg-white text-slate-900 border-slate-200"
+                            )}>
+                              {isCompleted ? <CheckCircle className="w-5 h-5" /> :
+                                (isManuallyBlocked || !isUnlockedByTime) ? <Lock className="w-4 h-4" /> :
+                                  isStuck ? "!" : (lIdx + 1)}
                             </div>
+
+                            {/* Unlock Note */}
+                            {isStuck && !isManuallyBlocked && (
+                              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap z-30 shadow-lg">
+                                COMPLETA EL ANTERIOR
+                              </div>
+                            )}
+                            {(isManuallyBlocked || !isUnlockedByTime) && (
+                              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap z-30 border border-slate-600">
+                                {isManuallyBlocked ? "BLOQUEADO" : `DÍA ${currentLevelProgress?.daysRequired || 0}`}
+                              </div>
+                            )}
                           </div>
                         );
                       })}

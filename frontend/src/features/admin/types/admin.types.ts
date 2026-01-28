@@ -5,6 +5,7 @@ export interface User {
   roleId: number;
   planId: number;
   activo: boolean;
+  emailPadre?: string;
   modules?: Module[];
 }
 
@@ -26,6 +27,7 @@ export interface CreateUserPayload {
   roleId: number;
   planId: number;
   activo: boolean;
+  emailPadre?: string;
 }
 
 export interface CreateModulePayload {
@@ -42,6 +44,26 @@ export interface AssignModulePayload {
 export interface UpdateUserPayload {
   planId?: number;
   activo?: boolean;
+  emailPadre?: string;
+}
+
+export interface Premio {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  costoPuntos: number;
+  imagenUrl?: string;
+  stock?: number;
+  activo: boolean;
+  fechaCreacion: string;
+}
+
+export interface CreatePremioPayload {
+  nombre: string;
+  descripcion: string;
+  costoPuntos: number;
+  imagenUrl?: string;
+  stock?: number;
 }
 
 export const ROLE_MAP: Record<number, string> = {

@@ -20,6 +20,7 @@ export interface LoginResponse {
     avatar?: string;
     onboardingCompleted?: boolean;
   };
+  access_token: string;
 }
 
 export interface UpdateUserPayload {

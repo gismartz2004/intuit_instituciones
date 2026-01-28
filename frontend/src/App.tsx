@@ -8,7 +8,7 @@ import StudentDashboard3D from "@/pages/StudentDashboard3D";
 import Leaderboard from "@/features/leaderboard/components/Leaderboard";
 import Missions from "@/pages/Missions";
 import NotFound from "@/pages/not-found";
-import { StudentDashboard, LevelViewer } from "@/features/student";
+import { StudentDashboard, LevelViewer, WorldSelector } from "@/features/student";
 import { AdminDashboard } from "@/features/admin";
 import { ProfessorDashboard, CourseEditor, FileSystem, GradingDashboard } from "@/features/professor";
 import { CodingLab, ArduinoLab } from "@/features/labs";
@@ -16,16 +16,19 @@ import { Login } from "@/features/auth";
 import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
 import { GamerRaffle, MissionsHub } from "@/features/gamification";
+import { SuperAdminDashboard } from "@/features/superadmin";
 import { Toaster } from "@/components/ui/toaster";
-
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { notificationService } from "@/services/notification.service";
 
 function App() {
-  const [user, setUser] = useState<{ role: "student" | "admin" | "professor"; name: string; id: string; plan?: string } | null>(() => {
+  const [user, setUser] = useState<{ role: "student" | "admin" | "professor" | "superadmin"; name: string; id: string; plan?: string } | null>(() => {
     // Initialize state from local storage
     const savedUser = localStorage.getItem("edu_user");
     return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem("edu_token");
   });
   const [location, setLocation] = useLocation();
 
@@ -35,15 +38,22 @@ function App() {
     }
   }, [user]);
 
-  const handleLogin = (role: "student" | "admin" | "professor", name: string, id: string, planId?: number) => {
+  const handleLogin = (role: "student" | "admin" | "professor" | "superadmin", name: string, id: string, planId?: number, accessToken?: string) => {
     const userData = { role, name, id, plan: planId ? planId.toString() : undefined };
     setUser(userData);
     localStorage.setItem("edu_user", JSON.stringify(userData));
+
+    if (accessToken) {
+      setToken(accessToken);
+      localStorage.setItem("edu_token", accessToken);
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem("edu_user");
+    localStorage.removeItem("edu_token");
     setLocation("/login");
   };
 
@@ -52,7 +62,8 @@ function App() {
     return <Redirect to="/login" />;
   }
 
-  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab";
+  const isManagementRoute = location.startsWith("/admin") || location.startsWith("/superadmin");
+  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute;
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">
@@ -88,19 +99,28 @@ function App() {
 
           <Route path="/">
             {!user ? <Redirect to="/login" /> :
-              user.role === "admin" ? <Redirect to="/admin" /> :
-                user.role === "professor" ? <Redirect to="/teach" /> :
-                  <Redirect to="/dashboard" />}
+              user.role === "superadmin" ? <Redirect to="/superadmin" /> :
+                user.role === "admin" ? <Redirect to="/admin" /> :
+                  user.role === "professor" ? <Redirect to="/teach" /> :
+                    <Redirect to="/dashboard" />}
           </Route>
 
           <Route path="/dashboard">
+            <WorldSelector user={user!} />
+          </Route>
+          <Route path="/dashboard/module/:moduleId">
             <StudentDashboard user={user!} />
           </Route>
           <Route path="/dashboard-3d">
             <StudentDashboard3D user={user!} />
           </Route>
-          <Route path="/admin" component={AdminDashboard} />
-          <Route path="/admin/users" component={AdminDashboard} />
+          <Route path="/admin">
+            <AdminDashboard user={user!} onLogout={handleLogout} />
+          </Route>
+          <Route path="/admin/users">
+            <AdminDashboard user={user!} onLogout={handleLogout} />
+          </Route>
+          <Route path="/superadmin" component={SuperAdminDashboard} />
           <Route path="/teach">
             <ProfessorDashboard user={user!} />
           </Route>

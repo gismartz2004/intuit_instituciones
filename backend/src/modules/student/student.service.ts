@@ -264,26 +264,88 @@ export class StudentService {
     }
 
     async getStudentLevelProgress(studentId: number, moduleId: number) {
-        // Get all levels for module
+        console.log(`[GET MODULE PROGRESS] Student: ${studentId}, Module: ${moduleId}`);
+        // 1. Get Assignment Info (to find fechaAsignacion)
+        const assignment = await this.db.select()
+            .from(schema.asignaciones)
+            .where(and(
+                eq(schema.asignaciones.estudianteId, studentId),
+                eq(schema.asignaciones.moduloId, moduleId)
+            ))
+            .limit(1)
+            .then(res => res[0]);
+
+        const fechaAsignacion = assignment?.fechaAsignacion || new Date();
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - fechaAsignacion.getTime());
+        const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // 2. Get all levels for module
         const levels = await this.db.select()
             .from(schema.niveles)
             .where(eq(schema.niveles.moduloId, moduleId))
             .orderBy(asc(schema.niveles.orden));
 
-        // Get progress for each level
+        // 3. Get progress for each level
         const progress = await this.db.select()
             .from(schema.progresoNiveles)
             .where(eq(schema.progresoNiveles.estudianteId, studentId));
 
+        let previousLevelCompleted = true; // Level 1 is always unlocked by progress
+
         return levels.map((level, index) => {
             const levelProgress = progress.find(p => p.nivelId === level.id);
-            const isUnlocked = index === 0 || levelProgress !== undefined;
+            const isCompleted = !!levelProgress?.completado;
+
+            // 1. Time Check
+            const daysRequired = (level.orden || 1) <= 1 ? 0 : (level.diasParaDesbloquear ?? 7);
+            const hasEnoughTime = daysPassed >= daysRequired;
+
+            // 1. Core Logic: 3-State Override
+            // true = FORCE LOCKED
+            // false = FORCE UNLOCKED (Super Unlock)
+            // null = SCHEDULED (follows days)
+            let isUnlockedByTime = false;
+            let isForceUnlocked = false;
+
+            if (level.bloqueadoManual === true) {
+                isUnlockedByTime = false;
+            } else if (level.bloqueadoManual === false) {
+                isUnlockedByTime = true;
+                isForceUnlocked = true; // Flag to bypass progress
+            } else {
+                // Scheduled (null or undefined)
+                isUnlockedByTime = hasEnoughTime;
+            }
+
+            // 2. Final availability: 
+            // If Force Unlocked -> TRUE
+            // Else -> Time AND Progress
+            const isUnlockedByProgress = previousLevelCompleted;
+
+            const isAvailable = isForceUnlocked || (isUnlockedByTime && isUnlockedByProgress);
+
+            // Helpful derived states for UI
+            const isStuck = isUnlockedByTime && !isUnlockedByProgress && !isForceUnlocked;
+            const isManuallyBlocked = level.bloqueadoManual === true;
+
+            // Debug Log
+            console.log(`[LEVEL CHECK] ID:${level.id} Ord:${level.orden} Man:${level.bloqueadoManual} Time:${hasEnoughTime} Prog:${isUnlockedByProgress} -> Force:${isForceUnlocked} Avail:${isAvailable}`);
+
+            // Update for next iteration
+            previousLevelCompleted = isCompleted;
 
             return {
                 ...level,
                 porcentajeCompletado: levelProgress?.porcentajeCompletado || 0,
-                completado: levelProgress?.completado || false,
-                isUnlocked
+                completado: isCompleted,
+                isUnlocked: isAvailable,
+                isUnlockedByTime, // (Time passed and not manually blocked)
+                isUnlockedByProgress,
+                isStuck,
+                isManuallyBlocked,
+                daysPassed,
+                daysRequired
             };
         });
     }

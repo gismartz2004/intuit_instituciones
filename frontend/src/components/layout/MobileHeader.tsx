@@ -9,7 +9,7 @@ import { SidebarContent } from "./SidebarContent";
 import generatedImage from '@/assets/generated_images/arg_academy_logo.png';
 import { useState } from "react";
 
-type Role = "student" | "admin" | "professor";
+type Role = "student" | "admin" | "professor" | "superadmin";
 
 interface MobileHeaderProps {
     currentRole: Role;
@@ -18,6 +18,8 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ currentRole, onLogout, userPlanId = 1 }: MobileHeaderProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
     return (
         <div className="md:hidden flex items-center justify-between px-6 py-2 bg-white border-b border-slate-100 fixed top-0 left-0 w-full z-40 h-14">
             <div className="flex items-center gap-2">
@@ -27,6 +29,25 @@ export function MobileHeader({ currentRole, onLogout, userPlanId = 1 }: MobileHe
                     <span className="text-[10px] font-bold text-blue-600 tracking-widest uppercase">Academy</span>
                 </div>
             </div>
+
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu className="h-6 w-6" />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-72">
+                    <SidebarContent
+                        currentRole={currentRole}
+                        onLogout={() => {
+                            onLogout();
+                            setIsOpen(false);
+                        }}
+                        userPlanId={userPlanId}
+                        onClose={() => setIsOpen(false)}
+                    />
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }

@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File, Lock, Unlock, Save, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 import RagEditor from "./RagEditor";
 
 import HaEditor from "./HaEditor";
+import PimEditor from "./PimEditor";
 
 interface Content {
     id: number;
@@ -30,6 +32,8 @@ interface Level {
     id: number;
     tituloNivel: string;
     orden: number;
+    bloqueadoManual?: boolean;
+    diasParaDesbloquear?: number;
     contents: Content[];
     ragTemplate?: any; // To check if exists
     haTemplate?: any; // To check if exists
@@ -53,6 +57,10 @@ export default function CourseEditor() {
     const [editingHaLevelId, setEditingHaLevelId] = useState<number | null>(null);
     const [haInitialData, setHaInitialData] = useState<any>(null);
 
+    // PIM Editor State
+    const [editingPimLevelId, setEditingPimLevelId] = useState<number | null>(null);
+    const [pimInitialData, setPimInitialData] = useState<any>(null);
+
     useEffect(() => {
         if (editingRagLevelId) {
             // Fetch existing RAG if any
@@ -71,6 +79,16 @@ export default function CourseEditor() {
             })
         }
     }, [editingHaLevelId]);
+
+    useEffect(() => {
+        if (editingPimLevelId) {
+            // Reusing studentApi.getPimTemplate as it's the same endpoint
+            professorApi.getPimTemplate(editingPimLevelId).then(data => {
+                if (data) setPimInitialData(data);
+                else setPimInitialData(null);
+            });
+        }
+    }, [editingPimLevelId]);
 
     // Content form states
     const [contentType, setContentType] = useState("link");
@@ -117,6 +135,7 @@ export default function CourseEditor() {
             setModuleName(modData.nombreModulo);
 
             const levelsData = await professorApi.getModuleLevels(moduleId);
+            console.log("[COURSE EDITOR] Loaded Levels:", levelsData);
             setLevels(levelsData);
 
             setLoading(false);
@@ -236,6 +255,16 @@ export default function CourseEditor() {
         }
     };
 
+    const updateLevelSettings = async (levelId: number, settings: { bloqueadoManual: boolean, diasParaDesbloquear: number }) => {
+        try {
+            await professorApi.updateLevel(levelId, settings);
+            toast({ title: "Ajustes Guardados", description: "El acceso al nivel ha sido actualizado." });
+            fetchModuleData();
+        } catch (error) {
+            toast({ title: "Error", description: "No se pudieron guardar los ajustes", variant: "destructive" });
+        }
+    };
+
     const getContentIcon = (tipo: string) => {
         switch (tipo) {
             case 'pdf': return <FileText className="w-4 h-4" />;
@@ -265,6 +294,15 @@ export default function CourseEditor() {
             moduleId={Number(moduleId)}
             initialData={haInitialData}
             onClose={() => setEditingHaLevelId(null)}
+        />;
+    }
+
+    if (editingPimLevelId) {
+        return <PimEditor
+            levelId={editingPimLevelId}
+            moduleId={Number(moduleId)}
+            initialData={pimInitialData}
+            onClose={() => setEditingPimLevelId(null)}
         />;
     }
 
@@ -334,27 +372,92 @@ export default function CourseEditor() {
                                         <CardContent className="pt-4">
                                             <div className="flex justify-between items-center mb-2">
                                                 <h3 className="font-bold text-lg">{level.tituloNivel}</h3>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm('¿Estás seguro de eliminar este nivel y todo su contenido?')) {
-                                                            professorApi.deleteLevel(level.id)
-                                                                .then(() => {
-                                                                    toast({ title: "Nivel eliminado" });
-                                                                    fetchModuleData();
-                                                                })
-                                                                .catch(() => {
-                                                                    toast({ title: "Error", description: "No se pudo eliminar el nivel", variant: "destructive" });
-                                                                });
-                                                        }
+                                                <div className="flex items-center gap-2">
+                                                    {level.bloqueadoManual && <Lock className="w-4 h-4 text-red-500" />}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (confirm('¿Estás seguro de eliminar este nivel y todo su contenido?')) {
+                                                                professorApi.deleteLevel(level.id)
+                                                                    .then(() => {
+                                                                        toast({ title: "Nivel eliminado" });
+                                                                        fetchModuleData();
+                                                                    })
+                                                                    .catch(() => {
+                                                                        toast({ title: "Error", description: "No se pudo eliminar the level", variant: "destructive" });
+                                                                    });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            {/* Access Controls - 3-State Logic */}
+                                            <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 mb-3" onClick={(e) => e.stopPropagation()}>
+                                                <Tabs
+                                                    defaultValue={level.bloqueadoManual === true ? "locked" : (level.bloqueadoManual === false ? "unlocked" : "auto")}
+                                                    className="w-full"
+                                                    onValueChange={(val) => {
+                                                        let newMode: boolean | null = null;
+                                                        if (val === "locked") newMode = true;
+                                                        else if (val === "unlocked") newMode = false;
+
+                                                        updateLevelSettings(level.id, {
+                                                            bloqueadoManual: newMode as any,
+                                                            diasParaDesbloquear: level.diasParaDesbloquear ?? 7
+                                                        });
                                                     }}
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
+                                                    <TabsList className="grid w-full grid-cols-3 h-8 p-1">
+                                                        <TabsTrigger value="locked" className="text-[10px] font-bold py-0 h-6">
+                                                            <Lock className="w-3 h-3 mr-1" /> LOCK
+                                                        </TabsTrigger>
+                                                        <TabsTrigger value="auto" className="text-[10px] font-bold py-0 h-6">
+                                                            <Clock className="w-3 h-3 mr-1" /> AUTO
+                                                        </TabsTrigger>
+                                                        <TabsTrigger value="unlocked" className="text-[10px] font-bold py-0 h-6">
+                                                            <Unlock className="w-3 h-3 mr-1" /> OPEN
+                                                        </TabsTrigger>
+                                                    </TabsList>
+
+                                                    <TabsContent value="auto" className="mt-2 pt-0">
+                                                        <div className="flex items-center justify-center gap-2 px-2">
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase">Se abre el día</span>
+                                                            <Input
+                                                                type="number"
+                                                                value={level.diasParaDesbloquear ?? 7}
+                                                                className="w-14 h-6 text-[11px] px-1 text-center font-bold"
+                                                                min={0}
+                                                                onChange={(e) => {
+                                                                    const val = parseInt(e.target.value);
+                                                                    if (!isNaN(val)) {
+                                                                        const newLevels = [...levels];
+                                                                        const l = newLevels.find(nl => nl.id === level.id);
+                                                                        if (l) l.diasParaDesbloquear = val;
+                                                                        setLevels(newLevels);
+                                                                    }
+                                                                }}
+                                                                onBlur={() => updateLevelSettings(level.id, {
+                                                                    bloqueadoManual: level.bloqueadoManual as any,
+                                                                    diasParaDesbloquear: level.diasParaDesbloquear ?? 7
+                                                                })}
+                                                            />
+                                                        </div>
+                                                    </TabsContent>
+                                                    <TabsContent value="locked" className="mt-2 text-center">
+                                                        <p className="text-[9px] font-bold text-red-500 uppercase">Bloqueado para todos</p>
+                                                    </TabsContent>
+                                                    <TabsContent value="unlocked" className="mt-2 text-center">
+                                                        <p className="text-[9px] font-bold text-emerald-600 uppercase">Disponible ahora</p>
+                                                    </TabsContent>
+                                                </Tabs>
                                             </div>
+
                                             <div className="flex justify-between items-center mt-2">
                                                 <p className="text-sm text-slate-500">
                                                     {level.contents?.length || 0} contenido(s)
@@ -381,6 +484,17 @@ export default function CourseEditor() {
                                                         }}
                                                     >
                                                         Hito HA
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs h-7 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingPimLevelId(level.id);
+                                                        }}
+                                                    >
+                                                        Proy PIM
                                                     </Button>
                                                 </div>
                                             </div>

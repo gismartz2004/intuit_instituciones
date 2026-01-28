@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import generatedImage from '@/assets/generated_images/arg_academy_logo.png';
 
-type Role = "student" | "admin" | "professor";
+type Role = "student" | "admin" | "professor" | "superadmin";
 
 interface SidebarContentProps {
     currentRole: Role;
@@ -88,6 +88,12 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
         { href: "/profile", icon: Settings, label: "Configuración" },
     ];
 
+    const superadminLinks = [
+        { href: "/superadmin", icon: Shield, label: "Dashboard" },
+        { href: "/admin", icon: Shield, label: "Panel Admin" },
+        { href: "/admin/users", icon: User, label: "Gestión Usuarios" },
+    ];
+
     const professorLinks = [
         { href: "/teach", icon: GraduationCap, label: "Mis Módulos" },
         { href: "/files", icon: FileText, label: "Archivos" },
@@ -95,8 +101,9 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
     ];
 
     const links = currentRole === "admin" ? adminLinks :
-        currentRole === "professor" ? professorLinks :
-            studentLinks;
+        currentRole === "superadmin" ? superadminLinks :
+            currentRole === "professor" ? professorLinks :
+                studentLinks;
 
     return (
         <div className="flex flex-col h-full bg-white">

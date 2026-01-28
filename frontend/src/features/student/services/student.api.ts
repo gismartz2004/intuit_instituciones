@@ -181,6 +181,20 @@ export const studentApi = {
    */
   async getCurriculum(studentId: number): Promise<any> {
     return apiClient.get<any>(`/api/student/${studentId}/curriculum`);
+  },
+
+  /**
+   * Obtener plantilla PIM de un nivel
+   */
+  async getPimTemplate(levelId: number): Promise<any> {
+    return apiClient.get<any>(`/api/professor/levels/${levelId}/pim`);
+  },
+
+  /**
+   * Guardar plantilla PIM (para profesor)
+   */
+  async savePimTemplate(levelId: number, data: any): Promise<any> {
+    return apiClient.post<any>(`/api/professor/levels/${levelId}/pim`, data);
   }
 };
 
