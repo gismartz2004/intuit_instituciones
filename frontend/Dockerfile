@@ -50,12 +50,14 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create non-root user for better security
+# Create non-root user and prepare temp directories
 RUN addgroup -g 1001 -S nginx-group && \
   adduser -S nginx-user -u 1001 -G nginx-group && \
+  mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
   chown -R nginx-user:nginx-group /usr/share/nginx/html && \
   chown -R nginx-user:nginx-group /var/cache/nginx && \
   chown -R nginx-user:nginx-group /var/log/nginx && \
+  chown -R nginx-user:nginx-group /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
   touch /var/run/nginx.pid && \
   chown -R nginx-user:nginx-group /var/run/nginx.pid
 

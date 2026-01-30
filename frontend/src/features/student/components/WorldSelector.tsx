@@ -24,29 +24,49 @@ import {
     MousePointer2,
     Target
 } from "lucide-react";
-import { BackgroundMusic } from "./BackgroundMusic";
 import { studentApi } from "../services/student.api";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+// Fallback component for when the GLB fails to load
+function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) {
+    return (
+        <mesh>
+            <sphereGeometry args={[7.2, 32, 32]} />
+            <meshStandardMaterial
+                color={color}
+                emissive={color}
+                emissiveIntensity={hovered ? 0.6 : 0.2}
+                metalness={0.8}
+                roughness={0.2}
+            />
+        </mesh>
+    );
+}
+
 /**
  * COMPONENTE PLANETA (USANDO MODELO GLB EXTERNO)
  */
 function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
-    const { scene } = useGLTF("/assets/models/Earth.glb");
-    const clone = useMemo(() => scene.clone(), [scene]);
+    try {
+        const { scene } = useGLTF("/assets/models/Earth.glb");
+        const clone = useMemo(() => scene.clone(), [scene]);
 
-    useEffect(() => {
-        clone.traverse((child: any) => {
-            if (child.isMesh && child.material) {
-                child.material.emissive = new THREE.Color(color);
-                child.material.emissiveIntensity = hovered ? 0.4 : 0.05;
-            }
-        });
-    }, [clone, color, hovered]);
+        useEffect(() => {
+            clone.traverse((child: any) => {
+                if (child.isMesh && child.material) {
+                    child.material.emissive = new THREE.Color(color);
+                    child.material.emissiveIntensity = hovered ? 0.4 : 0.05;
+                }
+            });
+        }, [clone, color, hovered]);
 
-    return <primitive object={clone} scale={7.2} />;
+        return <primitive object={clone} scale={7.2} />;
+    } catch (error) {
+        console.error("Failed to load Earth.glb, using fallback sphere:", error);
+        return <EarthFallback color={color} hovered={hovered} />;
+    }
 }
 
 /**
@@ -447,8 +467,6 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
                     <span className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Seleccionar</span>
                 </div>
             </div>
-
-            <BackgroundMusic />
         </div>
     );
 }
