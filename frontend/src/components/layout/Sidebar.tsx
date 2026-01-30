@@ -11,7 +11,7 @@ interface SidebarProps {
 
 export function Sidebar({ currentRole, onLogout, userPlanId = 1 }: SidebarProps) {
   return (
-    <div className="hidden md:flex flex-col w-[280px] h-screen bg-white fixed left-0 top-0 z-50 shadow-2xl border-r border-slate-100">
+    <div className="hidden md:flex flex-col w-[280px] h-screen bg-[#0f172a] fixed left-0 top-0 z-50 border-r border-white/5 shadow-2xl">
       <SidebarContent
         currentRole={currentRole}
         onLogout={onLogout}

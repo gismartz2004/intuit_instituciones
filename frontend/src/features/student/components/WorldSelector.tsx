@@ -1,6 +1,6 @@
 import { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
     Float,
     OrbitControls,
@@ -18,39 +18,30 @@ import {
     Rocket,
     Zap,
     ChevronRight,
-    Target,
-    Activity,
-    Compass,
+    Trophy,
+    Gamepad2,
+    Music,
     MousePointer2,
-    ChevronLeft
+    Target
 } from "lucide-react";
+import { BackgroundMusic } from "./BackgroundMusic";
 import { studentApi } from "../services/student.api";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-// --- Sub-components 3D ---
-
 /**
  * COMPONENTE PLANETA (USANDO MODELO GLB EXTERNO)
  */
 function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
-    // Cargamos el modelo GLB
     const { scene } = useGLTF("/assets/models/Earth.glb");
-
-    // Clonamos la escena para tener instancias independientes y poder rotarlas/escalarlas individualmente
     const clone = useMemo(() => scene.clone(), [scene]);
 
-    // Aplicamos color/emisión para diferenciar los módulos
     useEffect(() => {
         clone.traverse((child: any) => {
-            if (child.isMesh) {
-                // Si el modelo tiene materiales, podemos aplicarles un color sutil
-                // o usar el color original y solo añadir un tinte/emisión
-                if (child.material) {
-                    child.material.emissive = new THREE.Color(color);
-                    child.material.emissiveIntensity = hovered ? 0.4 : 0.05;
-                }
+            if (child.isMesh && child.material) {
+                child.material.emissive = new THREE.Color(color);
+                child.material.emissiveIntensity = hovered ? 0.4 : 0.05;
             }
         });
     }, [clone, color, hovered]);
@@ -58,7 +49,80 @@ function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
     return <primitive object={clone} scale={7.2} />;
 }
 
-function Planet({ position, color, name, progress, onClick, index: idx }: any) {
+/**
+ * COMPONENTE EXPLORADOR (Avatar/Dron del Estudiante)
+ * Sigue al módulo seleccionado o flota cerca del mouse
+ */
+function ExplorerDrone({ targetPosition, color }: { targetPosition: [number, number, number]; color: string }) {
+    const droneRef = useRef<THREE.Group>(null!);
+
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        if (droneRef.current) {
+            // Suavizado de movimiento hacia el objetivo
+            droneRef.current.position.lerp(new THREE.Vector3(
+                targetPosition[0] + Math.sin(t * 2) * 0.5,
+                targetPosition[1] + 2.5 + Math.cos(t * 1.5) * 0.3,
+                targetPosition[2] + Math.cos(t * 2) * 0.5
+            ), 0.05);
+
+            // Rotación constante
+            droneRef.current.rotation.y += 0.02;
+            droneRef.current.rotation.z = Math.sin(t) * 0.1;
+        }
+    });
+
+    return (
+        <group ref={droneRef}>
+            {/* Cuerpo del Dron */}
+            <mesh castShadow>
+                <octahedronGeometry args={[0.4, 0]} />
+                <meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} emissive="#ffffff" emissiveIntensity={0.2} />
+            </mesh>
+            {/* Ojo/Luz Central */}
+            <mesh position={[0, 0, 0.3]}>
+                <sphereGeometry args={[0.1, 16, 16]} />
+                <meshBasicMaterial color={color} />
+            </mesh>
+            {/* Anillo de Energía */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.5, 0.02, 16, 100]} />
+                <meshBasicMaterial color={color} transparent opacity={0.5} />
+            </mesh>
+            <pointLight distance={3} intensity={2} color={color} />
+        </group>
+    );
+}
+
+/**
+ * MANEJADOR DE CÁMARA CINEMÁTICA
+ * Realiza el efecto de "vuelo" hacia el planeta seleccionado
+ */
+function CameraHandler({ activePosition }: { activePosition: [number, number, number] | null }) {
+    const { camera } = useThree();
+    const targetCamPos = useRef(new THREE.Vector3());
+    const lookAtPos = useRef(new THREE.Vector3());
+
+    useFrame(() => {
+        if (activePosition) {
+            // Solo cuando hay un planeta seleccionado, la cámara lo sigue
+            targetCamPos.current.set(
+                activePosition[0] * 1.2,
+                activePosition[1] + 15,
+                activePosition[2] + 25
+            );
+            lookAtPos.current.lerp(new THREE.Vector3(...activePosition), 0.1);
+            camera.position.lerp(targetCamPos.current, 0.05);
+            camera.lookAt(lookAtPos.current);
+        }
+        // Si no hay posición activa, NO HACEMOS NADA. 
+        // Esto permite que OrbitControls mantenga la cámara donde el usuario la dejó.
+    });
+
+    return null;
+}
+
+function Planet({ id, position, color, name, progress, onClick, index: idx, isActive }: any) {
     const groupRef = useRef<THREE.Group>(null!);
     const [hovered, setHovered] = useState(false);
 
@@ -66,7 +130,7 @@ function Planet({ position, color, name, progress, onClick, index: idx }: any) {
         const t = state.clock.getElapsedTime();
         if (groupRef.current) {
             groupRef.current.rotation.y += 0.005;
-            if (!hovered) {
+            if (!hovered && !isActive) {
                 groupRef.current.position.y = position[1] + Math.sin(t + idx) * 0.2;
             }
         }
@@ -75,19 +139,39 @@ function Planet({ position, color, name, progress, onClick, index: idx }: any) {
     return (
         <group ref={groupRef} position={position}>
             {/* Detector de interacción */}
+            {/* Invisible catch area for easier interaction */}
             <mesh
-                onClick={onClick}
+                visible={false}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClick();
+                }}
                 onPointerOver={() => setHovered(true)}
                 onPointerOut={() => setHovered(false)}
-                visible={false}
             >
-                <sphereGeometry args={[6.5, 16, 16]} />
+                <sphereGeometry args={[9, 32, 32]} />
+            </mesh>
+
+            {/* Mesh base para hover (visual sutil) */}
+            <mesh
+                onPointerOver={() => setHovered(true)}
+                onPointerOut={() => setHovered(false)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClick(id);
+                }}
+            >
+                <sphereGeometry args={[isActive ? 8 : 6.5, 32, 32]} />
+                <meshStandardMaterial
+                    transparent
+                    opacity={0}
+                />
             </mesh>
 
             {/* Modelo Earth GLB */}
-            <group scale={hovered ? 1.15 : 1} transition-all duration-500>
+            <group scale={isActive ? 1.4 : (hovered ? 1.15 : 1)} transition-all duration-500>
                 <Suspense fallback={<mesh><sphereGeometry args={[3, 16, 16]} /><meshStandardMaterial color={color} /></mesh>}>
-                    <EarthModel color={color} hovered={hovered} />
+                    <EarthModel color={color} hovered={hovered || isActive} />
                 </Suspense>
 
                 {/* Aura de atmósfera sutil */}
@@ -96,13 +180,13 @@ function Planet({ position, color, name, progress, onClick, index: idx }: any) {
                     <meshStandardMaterial
                         color={color}
                         transparent
-                        opacity={hovered ? 0.15 : 0.05}
+                        opacity={isActive ? 0.25 : (hovered ? 0.15 : 0.05)}
                         side={THREE.BackSide}
                     />
                 </mesh>
 
-                {hovered && (
-                    <Sparkles count={50} scale={9} size={5} speed={0.5} color={color} />
+                {(hovered || isActive) && (
+                    <Sparkles count={80} scale={10} size={idx === 0 ? 6 : 4} speed={0.5} color={color} />
                 )}
             </group>
 
@@ -112,56 +196,78 @@ function Planet({ position, color, name, progress, onClick, index: idx }: any) {
                 <meshBasicMaterial
                     color={color}
                     transparent
-                    opacity={hovered ? 1 : 0.2}
+                    opacity={isActive ? 1 : (hovered ? 0.8 : 0.2)}
                 />
             </mesh>
 
-            {/* UI de Información (HTML) - Mejorada para mayor claridad antes de hover */}
+            {/* UI de Información (HTML) */}
             <Html
-                position={[0, 9.5, 0]}
+                position={[0, 10, 0]}
                 center
-                distanceFactor={30}
+                distanceFactor={isActive ? 25 : 35}
                 className="pointer-events-none select-none"
             >
                 <div className={cn(
-                    "flex flex-col items-center gap-2 transition-all duration-500 transform w-[220px]",
-                    hovered ? "scale-100 opacity-100" : "scale-85 opacity-70 blur-[0.2px]"
+                    "flex flex-col items-center gap-4 transition-all duration-700 transform w-[280px]",
+                    (hovered || isActive) ? "scale-100 opacity-100" : "scale-80 opacity-50 blur-[0.5px]"
                 )}>
-                    <div className="bg-slate-900/98 backdrop-blur-3xl border-2 border-white/20 p-5 rounded-[2rem] shadow-2xl relative overflow-hidden">
+                    <div className={cn(
+                        "bg-slate-900/98 backdrop-blur-3xl border-2 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-colors",
+                        isActive ? "border-cyan-400/50 ring-4 ring-cyan-400/20" : "border-white/20"
+                    )}>
+                        {/* Status dot */}
                         <div className={cn(
-                            "absolute top-4 right-5 w-2 h-2 rounded-full",
-                            hovered ? "bg-green-400 animate-pulse" : "bg-white/10"
+                            "absolute top-5 right-6 w-3 h-3 rounded-full",
+                            (hovered || isActive) ? "bg-green-400 animate-pulse" : "bg-white/10"
                         )} />
 
-                        <div className="mb-1">
-                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">Módulo {idx + 1}</span>
+                        <div className="mb-2">
+                            <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Sector {idx + 1}</span>
                         </div>
 
-                        <h3 className="text-sm font-black text-white uppercase tracking-tight mb-3 leading-tight">
+                        <h3 className="text-lg font-black text-white uppercase tracking-tight mb-4 leading-tight">
                             {name}
                         </h3>
 
-                        <div className="w-full space-y-2">
-                            <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-[2px] border border-white/5">
+                        <div className="w-full space-y-3">
+                            <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden p-[2px] border border-white/5">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
-                                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full"
+                                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.5)]"
                                 />
                             </div>
-                            <div className="flex justify-between items-center text-[7px] font-black text-cyan-400/60 uppercase">
+                            <div className="flex justify-between items-center text-[8px] font-black text-cyan-400 uppercase tracking-widest">
                                 <span>Progreso</span>
                                 <span>{progress}%</span>
                             </div>
                         </div>
 
-                        {hovered && (
+                        {(hovered || isActive) && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="mt-4 flex items-center justify-center gap-2 text-[10px] font-extrabold text-white bg-blue-600 py-2.5 rounded-xl uppercase tracking-widest"
+                                className="mt-8 flex flex-col gap-3"
                             >
-                                <Rocket className="w-3.5 h-3.5" /> JUGAR
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onClick();
+                                    }}
+                                    className={cn(
+                                        "w-full py-4 rounded-3xl font-black text-[10px] tracking-[0.3em] uppercase transition-all duration-500 flex items-center justify-center gap-3 active:scale-95 group/btn pointer-events-auto",
+                                        isActive
+                                            ? "bg-blue-600 text-white shadow-[0_20px_40px_rgba(37,99,235,0.3)] border border-blue-400/50"
+                                            : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                                    )}
+                                >
+                                    <span>{isActive ? "EXPLORANDO..." : "INGRESAR AL SECTOR"}</span>
+                                    {!isActive && <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />}
+                                </button>
+
+                                <p className="text-[7px] font-bold text-white/20 text-center tracking-[0.2em] uppercase">
+                                    {isActive ? "Ya estás aquí" : "Haz clic para viajar"}
+                                </p>
                             </motion.div>
                         )}
                     </div>
@@ -172,6 +278,8 @@ function Planet({ position, color, name, progress, onClick, index: idx }: any) {
 }
 
 function Scene({ modules, onSelect }: any) {
+    const [activeId, setActiveId] = useState<string | null>(null);
+
     const planetPositions = useMemo(() => {
         const radius = 28;
         return modules.map((_: any, i: number) => {
@@ -186,43 +294,52 @@ function Scene({ modules, onSelect }: any) {
 
     const colors = ["#ff3e3e", "#0ea5e9", "#10b981", "#f59e0b", "#a855f7", "#ec4899"];
 
+    const activeModulePos = useMemo(() => {
+        const idx = modules.findIndex((m: any) => m.id === activeId);
+        return idx !== -1 ? planetPositions[idx] : null;
+    }, [activeId, modules, planetPositions]);
+
     return (
         <>
             <OrbitControls
-                enablePan={false}
+                enablePan={true}
                 enableZoom={true}
-                minDistance={30}
-                maxDistance={80}
+                minDistance={10}
+                maxDistance={200}
                 enableDamping={true}
-                dampingFactor={0.05}
-                autoRotate
-                autoRotateSpeed={0.3}
+                dampingFactor={0.08}
+                autoRotate={false}
+                makeDefault
             />
 
-            <ambientLight intensity={1} />
-            <directionalLight position={[10, 20, 10]} intensity={2} castShadow />
-            <pointLight position={[-15, -10, -15]} intensity={1.5} color="#3b82f6" />
+            <CameraHandler activePosition={activeModulePos} />
 
-            <Stars
-                radius={100}
-                depth={50}
-                count={3000}
-                factor={4}
-                saturation={0}
-                fade
-                speed={1}
+            <ExplorerDrone
+                targetPosition={activeModulePos || [0, 0, 0]}
+                color={activeId ? colors[modules.findIndex((m: any) => m.id === activeId) % colors.length] : "#00f3ff"}
             />
+
+            <ambientLight intensity={0.8} />
+            <directionalLight position={[10, 40, 10]} intensity={2.5} castShadow />
+            <pointLight position={[-30, -20, -30]} intensity={1.5} color="#3b82f6" />
+
+            <Stars radius={150} depth={60} count={5000} factor={6} fade speed={1.5} />
 
             <group>
                 {modules.map((mod: any, i: number) => (
                     <Planet
                         key={mod.id}
+                        id={mod.id}
                         index={i}
                         position={planetPositions[i]}
                         color={colors[i % colors.length]}
                         name={mod.nombreModulo}
                         progress={Math.floor(Math.random() * 60) + 20}
-                        onClick={() => onSelect(mod.id)}
+                        isActive={activeId === mod.id}
+                        onClick={() => {
+                            if (activeId === mod.id) onSelect(mod.id);
+                            else setActiveId(mod.id);
+                        }}
                     />
                 ))}
             </group>
@@ -231,8 +348,6 @@ function Scene({ modules, onSelect }: any) {
         </>
     );
 }
-
-// --- Main Component ---
 
 export default function WorldSelector({ user }: WorldSelectorProps) {
     const [, setLocation] = useLocation();
@@ -332,6 +447,8 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
                     <span className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Seleccionar</span>
                 </div>
             </div>
+
+            <BackgroundMusic />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import apiClient from "@/services/api.client";
 import {
@@ -106,53 +107,54 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
                 studentLinks;
 
     return (
-        <div className="flex flex-col h-full bg-white">
+        <div className="flex flex-col h-full bg-[#0a0f1d] border-r border-white/5">
             {/* Brand Header */}
-            <div className="relative h-24 flex items-center px-6 overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -translate-y-10 translate-x-10 pointer-events-none" />
-                <div className="flex items-center gap-3 z-10">
-                    <div className="relative group cursor-pointer">
-                        <div className="absolute inset-0 bg-blue-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
-                        <img src={generatedImage} alt="Logo" className="h-12 w-12 object-contain relative rounded-xl shadow-sm bg-white p-1" />
+            <div className="relative h-28 flex items-center px-8 shrink-0 overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+                <div className="flex items-center gap-4 z-10">
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-blue-500 rounded-2xl blur-lg opacity-10 group-hover:opacity-20 transition-opacity" />
+                        <img src={generatedImage} alt="Logo" className="h-11 w-11 object-contain relative rounded-xl bg-[#1e293b] p-2 border border-white/10 shadow-xl" />
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-800 leading-none tracking-tight">ARG</h1>
-                        <span className="text-xs font-bold text-blue-600 tracking-widest uppercase">Academy</span>
+                    <div className="flex flex-col">
+                        <h1 className="text-xl font-black text-white leading-none tracking-tight">ARG</h1>
+                        <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-1">Plataforma Académica</span>
                     </div>
                 </div>
             </div>
 
             {/* Navigation Links */}
-            <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            <nav className="flex-1 px-4 py-8 space-y-1 overflow-y-auto custom-scrollbar">
                 {links.map((link) => {
                     const isActive = location === link.href;
                     return (
                         <Link key={link.href} href={link.href} onClick={onClose}>
                             <div
                                 className={cn(
-                                    "m-1 group relative flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden",
+                                    "group relative flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-300 cursor-pointer",
                                     isActive
-                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 translate-x-1"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-blue-600/10 text-white border border-blue-500/20 shadow-[0_4px_20px_rgba(37,99,235,0.05)]"
+                                        : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
                                 )}
                             >
-                                {isActive && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl -z-10" />
-                                )}
-
                                 <div className={cn(
-                                    "p-2 rounded-xl transition-colors",
-                                    isActive ? "bg-white/20" : "bg-slate-100 group-hover:bg-white border border-slate-100 group-hover:border-slate-200 group-hover:shadow-sm"
+                                    "p-2 rounded-lg transition-all duration-300",
+                                    isActive
+                                        ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                                        : "bg-slate-800 group-hover:bg-slate-700 text-slate-400 group-hover:text-white border border-white/5"
                                 )}>
-                                    <link.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-500 group-hover:text-blue-600")} />
+                                    <link.icon className="h-4 w-4" />
                                 </div>
 
-                                <span className={cn("font-bold text-sm tracking-wide", isActive ? "text-white" : "")}>
+                                <span className={cn(
+                                    "font-bold text-xs tracking-wide transition-colors duration-300",
+                                    isActive ? "text-white" : "group-hover:text-white"
+                                )}>
                                     {link.label}
                                 </span>
 
                                 {isActive && (
-                                    <ChevronRight className="ml-auto w-4 h-4 text-white/70 animate-pulse" />
+                                    <div className="ml-auto w-1 h-1 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
                                 )}
                             </div>
                         </Link>
@@ -161,15 +163,17 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
             </nav>
 
             {/* Bottom Action Area */}
-            <div className="p-4 mt-auto border-t border-slate-100 shrink-0">
+            <div className="p-6 mt-auto border-t border-white/5 bg-[#0f172a]/50">
                 <button
                     onClick={() => {
                         onLogout();
                         onClose?.();
                     }}
-                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all font-bold text-sm group"
+                    className="flex items-center gap-4 w-full px-5 py-4 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 border border-white/5 hover:border-red-500/20 transition-all duration-300 font-bold text-[10px] tracking-widest uppercase group"
                 >
-                    <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                    <div className="p-2 bg-slate-800 rounded-lg group-hover:bg-red-500/20 transition-colors border border-white/5">
+                        <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                    </div>
                     <span>Cerrar Sesión</span>
                 </button>
             </div>

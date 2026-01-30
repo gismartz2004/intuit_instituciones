@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useRoute } from "wouter";
 import { Star, Zap, Play, Trophy, MapPin, Lock, CheckCircle, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 // Assets
@@ -11,6 +11,7 @@ import zonePenas from "@/assets/gamification/zone_penas.png";
 import zoneSantaAna from "@/assets/gamification/zone_santa_ana.png";
 import { OnboardingWizard } from "@/features/auth/components/OnboardingWizard";
 import { studentApi } from '../services/student.api';
+import { BackgroundMusic } from "./BackgroundMusic";
 
 // Avatar Assets
 import avatarBoy from "@/assets/avatars/avatar_boy.png";
@@ -24,6 +25,98 @@ const AVATAR_MAP: Record<string, string> = {
   'avatar_robot': avatarRobot,
   'avatar_pet': avatarPet,
 };
+
+/**
+ * PATH SVG DINÁMICO CON EFECTO DE ENERGÍA
+ */
+function CurvyPath({ points, isActive }: { points: { x: number, y: number }[], isActive: boolean }) {
+  if (points.length < 2) return null;
+
+  // Generar el path d-string usando curvas de Bezier suaves
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const midX = (p0.x + p1.x) / 2;
+    d += ` C ${midX} ${p0.y}, ${midX} ${p1.y}, ${p1.x} ${p1.y}`;
+  }
+
+  return (
+    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
+      {/* Sombra del camino */}
+      <path
+        d={d}
+        fill="none"
+        stroke="black"
+        strokeWidth="12"
+        strokeLinecap="round"
+        strokeOpacity="0.2"
+        className="blur-md"
+      />
+      {/* Camino base */}
+      <path
+        d={d}
+        fill="none"
+        stroke={isActive ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.1)"}
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray="12 12"
+      />
+      {/* Línea de energía fluyendo (solo si está activo) */}
+      {isActive && (
+        <motion.path
+          d={d}
+          fill="none"
+          stroke="url(#energyGradient)"
+          strokeWidth="6"
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+      <defs>
+        <linearGradient id="energyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+          <stop offset="50%" stopColor="#22d3ee" stopOpacity="1" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/**
+ * COMPONENTE DE DECORACIÓN DE FONDO
+ */
+function BackgroundDecor() {
+  return (
+    <div className="absolute inset-0 pointer-events-none opacity-30 select-none">
+      <motion.div
+        animate={{
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[10%] left-[5%] w-32 h-32 bg-cyan-500/10 blur-3xl rounded-full"
+      />
+      <motion.div
+        animate={{
+          y: [0, 30, 0],
+          rotate: [0, -10, 0]
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-[20%] right-[10%] w-64 h-64 bg-blue-500/10 blur-3xl rounded-full"
+      />
+      {/* Satélite simulado */}
+      <motion.div
+        animate={{ x: [-100, window.innerWidth + 100], y: [100, 300] }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className="absolute top-20 w-12 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent blur-[1px]"
+      />
+    </div>
+  );
+}
 
 interface StudentDashboardProps {
   user: {
@@ -196,151 +289,166 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                 className="absolute inset-0 bg-cover bg-center pointer-events-none z-0"
                 style={{ backgroundImage: `url(${zoneData.bg})` }}
               >
-                <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#1a1b26]/80" />
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#1a1b26]/50 via-transparent to-[#1a1b26]/80" />
               </div>
+
+              <BackgroundDecor />
 
               {/* Zone Marker */}
               <div className="sticky top-0 z-40 w-full flex justify-center py-6 pointer-events-none">
                 <motion.div
                   initial={{ y: -50, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
-                  className={`bg-gradient-to-r ${zoneData.color} text-white px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-4 border-white/20 backdrop-blur-md flex items-center gap-2 uppercase tracking-wide`}
+                  className={`bg-slate-900/40 backdrop-blur-xl text-white px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/10 flex items-center gap-2 uppercase tracking-wide`}
                 >
-                  <MapPin className="w-5 h-5" />
+                  <MapPin className="w-5 h-5 text-cyan-400" />
                   {zoneData.name}
                 </motion.div>
               </div>
 
               {/* Levels Path */}
-              <div className="relative z-10 w-full max-w-2xl pt-20 pb-32 flex flex-col items-center gap-32">
-                {zoneData.modules.map((mod: any, mIdx: number) => (
-                  <div key={mod.id} className="w-full flex flex-col items-center">
-                    <div className="flex flex-col gap-12 items-center relative w-full">
-                      {mod.levels?.map((lvl: any, lIdx: number) => {
-                        // ZigZag Calculation (Global index feel)
-                        const globalIdx = mIdx * 10 + lIdx;
-                        // Reduced offset for mobile
-                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                        const baseOffset = isMobile ? 60 : 120;
-                        const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
+              <div className="relative z-10 w-full max-w-4xl pt-20 pb-32 flex flex-col items-center">
+                {zoneData.modules.map((mod: any, mIdx: number) => {
+                  // Calcular posiciones de los nodos para el SVG
+                  const modLevels = mod.levels || [];
+                  const pathPoints = modLevels.map((_: any, lIdx: number) => {
+                    const globalIdx = mIdx * 10 + lIdx;
+                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                    const baseOffset = isMobile ? 60 : 160;
+                    const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
+                    // Aproximación del centro del contenedor (ancho_max_4xl = 896px / 2 = 448px)
+                    return { x: 448 + xOffset, y: 100 + (lIdx * 180) };
+                  });
 
-                        // Navigation Logic: Find the first incomplete level
-                        const levelsInMod = mod.levels || [];
-                        const firstIncompleteIdx = levelsInMod.findIndex((l: any) => !levelProgress[l.id]?.completado);
-                        const activeIdx = firstIncompleteIdx === -1 ? levelsInMod.length - 1 : firstIncompleteIdx;
+                  return (
+                    <div key={mod.id} className="w-full flex flex-col items-center relative min-h-[800px]">
+                      {/* SVG Path Dinámico */}
+                      <CurvyPath points={pathPoints} isActive={true} />
 
-                        const currentLevelProgress = levelProgress[lvl.id];
+                      <div className="flex flex-col gap-32 items-center relative w-full pt-16">
+                        {modLevels.map((lvl: any, lIdx: number) => {
+                          const globalIdx = mIdx * 10 + lIdx;
+                          const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                          const baseOffset = isMobile ? 60 : 160;
+                          const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
 
-                        if (!currentLevelProgress) {
+                          const levelsInMod = mod.levels || [];
+                          const firstIncompleteIdx = levelsInMod.findIndex((l: any) => !levelProgress[l.id]?.completado);
+                          const activeIdx = firstIncompleteIdx === -1 ? levelsInMod.length - 1 : firstIncompleteIdx;
+
+                          const currentLevelProgress = levelProgress[lvl.id];
+
+                          if (!currentLevelProgress) {
+                            return <div key={lvl.id} className="h-20 w-20" />;
+                          }
+
+                          // Extract flags from progress
+                          const isCompleted = !!currentLevelProgress?.completado;
+                          const isUnlockedByTime = !!currentLevelProgress?.isUnlockedByTime;
+                          const isManuallyBlocked = !!currentLevelProgress?.isManuallyBlocked;
+
+                          // Final availability check: 
+                          // 1. Must NOT be manually blocked
+                          // 2. Must be unlocked by time
+                          // 3. Must be the first level OR the previous level must be completed
+                          const isPreviousCompleted = lIdx === 0 || !!levelProgress[mod.levels[lIdx - 1].id]?.completado;
+                          const isSequenceLocked = !isPreviousCompleted;
+
+                          const isAvailable = !!currentLevelProgress?.isUnlocked && !isManuallyBlocked && isUnlockedByTime && !isSequenceLocked;
+
+                          const isActive = lIdx === activeIdx && isAvailable;
+
                           return (
                             <div key={lvl.id} className="relative group" style={{ transform: `translateX(${xOffset}px)` }}>
-                              <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-slate-700 bg-slate-800 relative z-20">
-                                <span className="text-[8px] text-red-500 font-bold">NO DATA</span>
+
+                              {isActive && (
+                                <motion.div
+                                  layoutId="avatar-glow"
+                                  className="absolute -top-32 left-1/2 -translate-x-1/2 z-30 w-36 h-36 pointer-events-none"
+                                >
+                                  <motion.div
+                                    animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                    className="absolute inset-0 bg-cyan-400 rounded-full blur-3xl"
+                                  />
+                                  <img src={currentAvatar} alt="You" className="w-full h-full object-contain relative z-10" />
+                                </motion.div>
+                              )}
+
+                              <Link href={isAvailable ? `/level/${lvl.id}` : "#"}>
+                                <motion.button
+                                  whileHover={isAvailable ? { scale: 1.15, rotate: 5 } : {}}
+                                  whileTap={isAvailable ? { scale: 0.95 } : {}}
+                                  className={cn(
+                                    "w-24 h-24 rounded-[2rem] flex items-center justify-center border-4 shadow-2xl relative z-20 transition-all",
+                                    isActive
+                                      ? "bg-slate-900 border-cyan-400 shadow-[0_0_40px_rgba(34,211,238,0.4)]"
+                                      : isCompleted
+                                        ? "bg-slate-900 border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                                        : isManuallyBlocked || !isUnlockedByTime || isSequenceLocked
+                                          ? "bg-slate-800 border-slate-700 opacity-60 grayscale cursor-not-allowed"
+                                          : "bg-slate-900 border-slate-700 hover:border-slate-500"
+                                  )}
+                                  onClick={(e) => {
+                                    if (!isAvailable) {
+                                      e.preventDefault();
+                                      if (isManuallyBlocked) {
+                                        toast({ title: "Acceso Restringido", description: "Este nivel ha sido bloqueado por el profesor.", variant: "destructive" });
+                                      } else if (!isUnlockedByTime) {
+                                        toast({ title: "Nivel No Disponible", description: `Este nivel se desbloqueará el día ${currentLevelProgress?.daysRequired}.`, variant: "default" });
+                                      } else if (isSequenceLocked) {
+                                        toast({ title: "Secuencia Bloqueada", description: "Debes completar el nivel anterior para poder avanzar.", variant: "destructive" });
+                                      }
+                                    }
+                                  }}
+                                >
+                                  {(isManuallyBlocked || !isUnlockedByTime || isSequenceLocked) ? (
+                                    <Lock className="w-8 h-8 text-slate-500" />
+                                  ) : (
+                                    <div className="flex flex-col items-center gap-1">
+                                      {lvl.type === 'start' && <Play className={cn("w-10 h-10 fill-current", (isActive || isCompleted) ? "text-white" : "text-slate-600")} />}
+                                      {lvl.type === 'star' && <Star className={cn("w-10 h-10 fill-current", (isActive || isCompleted) ? "text-white" : "text-slate-600")} />}
+                                      {lvl.type === 'trophy' && <Trophy className={cn("w-10 h-10 fill-current", (isActive || isCompleted) ? "text-white" : "text-slate-600")} />}
+                                    </div>
+                                  )}
+                                </motion.button>
+                              </Link>
+
+                              {/* Level Number / Status Badge */}
+                              <div className={cn(
+                                "absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-10 h-10 rounded-2xl flex items-center justify-center font-black border-2 shadow-xl transition-all z-30",
+                                isCompleted ? "bg-emerald-500 text-white border-white/20" :
+                                  (isManuallyBlocked || !isUnlockedByTime || isSequenceLocked) ? "bg-slate-700 text-slate-400 border-slate-600" :
+                                    "bg-white text-slate-900 border-slate-200"
+                              )}>
+                                {isCompleted ? <CheckCircle className="w-6 h-6" /> :
+                                  (isManuallyBlocked || !isUnlockedByTime || isSequenceLocked) ? <Lock className="w-5 h-5" /> :
+                                    (lIdx + 1)}
                               </div>
+
+                              {/* Unlock Note Tooltip */}
+                              <AnimatePresence>
+                                {(isSequenceLocked || isManuallyBlocked || !isUnlockedByTime) && !isCompleted && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute -bottom-14 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-[9px] font-black px-3 py-1.5 rounded-lg whitespace-nowrap z-30 border border-white/10 uppercase tracking-widest shadow-xl"
+                                  >
+                                    <span className={isManuallyBlocked || isSequenceLocked ? "text-red-400" : "text-cyan-400"}>
+                                      {isManuallyBlocked ? "Restringido" : (isSequenceLocked ? "Bloqueado" : `Día ${currentLevelProgress?.daysRequired}`)}
+                                    </span>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
                           );
-                        }
-
-                        // Use backend flags directly to avoid logic mismatch
-                        const isCompleted = !!currentLevelProgress?.completado;
-                        const isUnlockedByTime = !!currentLevelProgress?.isUnlockedByTime;
-                        const isUnlockedByProgress = !!currentLevelProgress?.isUnlockedByProgress;
-                        const isStuck = !!currentLevelProgress?.isStuck;
-                        const isManuallyBlocked = !!currentLevelProgress?.isManuallyBlocked;
-
-                        // Final availability check (trust backend isUnlocked property mostly, but ensure manual block is respected)
-                        const isAvailable = !!currentLevelProgress?.isUnlocked;
-
-                        const isActive = lIdx === activeIdx && isAvailable;
-
-                        return (
-                          <div key={lvl.id} className="relative group" style={{ transform: `translateX(${xOffset}px)` }}>
-                            {/* Path Connector Line (Dotted) */}
-                            {lIdx < mod.levels.length - 1 && (
-                              <div
-                                className="absolute top-1/2 left-1/2 w-1 h-32 border-l-4 border-dashed border-white/80 -z-10 origin-top"
-                                style={{
-                                  height: '140px',
-                                  transform: `rotate(${globalIdx % 2 === 0 ? '-25deg' : '25deg'}) translateX(-50%)`
-                                }}
-                              />
-                            )}
-
-                            {isActive && (
-                              <div className="absolute -top-32 left-1/2 -translate-x-1/2 z-30 w-36 h-36 pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-bounce-slow">
-                                <img src={currentAvatar} alt="You" className="w-full h-full object-contain scale-125" />
-                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/30 rounded-[100%] blur-sm scale-150" />
-                              </div>
-                            )}
-
-                            <Link href={isAvailable ? `/level/${lvl.id}` : "#"}>
-                              <motion.button
-                                whileHover={isAvailable ? { scale: 1.2, rotate: 5 } : {}}
-                                whileTap={isAvailable ? { scale: 0.9 } : {}}
-                                className={cn(
-                                  "w-20 h-20 rounded-full flex items-center justify-center border-4 shadow-[0_10px_20px_rgba(0,0,0,0.4)] relative z-20 transition-all",
-                                  isActive
-                                    ? "bg-gradient-to-b from-yellow-300 to-yellow-500 border-white shadow-[0_0_30px_rgba(234,179,8,0.6)]"
-                                    : isCompleted
-                                      ? "bg-gradient-to-b from-emerald-400 to-emerald-600 border-white/50"
-                                      : isManuallyBlocked || !isUnlockedByTime
-                                        ? "bg-slate-800 border-slate-700 opacity-60 grayscale cursor-not-allowed"
-                                        : isStuck
-                                          ? "bg-gradient-to-b from-red-500 to-red-700 border-white animate-pulse"
-                                          : "bg-slate-100 border-slate-300 hover:border-white"
-                                )}
-                                onClick={(e) => {
-                                  if (!isAvailable) {
-                                    e.preventDefault();
-                                    if (isManuallyBlocked) toast({ title: "Acceso Restringido", description: "Este nivel ha sido bloqueado por el profesor.", variant: "destructive" });
-                                    else if (isStuck) toast({ title: "Nivel Bloqueado", description: "Debes completar el nivel anterior para avanzar.", variant: "destructive" });
-                                    else if (!isUnlockedByTime) toast({ title: "Nivel No Disponible", description: `Este nivel se desbloqueará el día ${currentLevelProgress?.daysRequired}.`, variant: "default" });
-                                  }
-                                }}
-                              >
-                                {(isManuallyBlocked || !isUnlockedByTime) ? (
-                                  <Lock className="w-8 h-8 text-slate-500" />
-                                ) : (
-                                  <>
-                                    {lvl.type === 'start' && <Play className={cn("w-8 h-8 fill-current", (isActive || isCompleted || isStuck) ? "text-white" : "text-slate-400")} />}
-                                    {lvl.type === 'star' && <Star className={cn("w-8 h-8 fill-current", (isActive || isCompleted || isStuck) ? "text-white" : "text-slate-400")} />}
-                                    {lvl.type === 'trophy' && <Trophy className={cn("w-8 h-8 fill-current", (isActive || isCompleted || isStuck) ? "text-white" : "text-slate-400")} />}
-                                  </>
-                                )}
-                              </motion.button>
-                            </Link>
-
-                            {/* Level Number / Status Badge */}
-                            <div className={cn(
-                              "absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center font-black border-2 shadow-md transition-colors z-30",
-                              isCompleted ? "bg-emerald-500 text-white border-white" :
-                                (isManuallyBlocked || !isUnlockedByTime) ? "bg-slate-700 text-slate-400 border-slate-600" :
-                                  isStuck ? "bg-red-600 text-white border-white animate-bounce-slow" :
-                                    "bg-white text-slate-900 border-slate-200"
-                            )}>
-                              {isCompleted ? <CheckCircle className="w-5 h-5" /> :
-                                (isManuallyBlocked || !isUnlockedByTime) ? <Lock className="w-4 h-4" /> :
-                                  isStuck ? "!" : (lIdx + 1)}
-                            </div>
-
-                            {/* Unlock Note */}
-                            {isStuck && !isManuallyBlocked && (
-                              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap z-30 shadow-lg">
-                                COMPLETA EL ANTERIOR
-                              </div>
-                            )}
-                            {(isManuallyBlocked || !isUnlockedByTime) && (
-                              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap z-30 border border-slate-600">
-                                {isManuallyBlocked ? "BLOQUEADO" : `DÍA ${currentLevelProgress?.daysRequired || 0}`}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )
@@ -353,6 +461,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </div>
       </div>
 
+      <BackgroundMusic />
 
       <OnboardingWizard
         isOpen={showOnboarding}
