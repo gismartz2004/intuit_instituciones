@@ -8,8 +8,8 @@ export function BackgroundMusic() {
     const [isMuted, setIsMuted] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // URL de una canción suave tipo Minecraft (Ambient Piano)
-    const MUSIC_URL = "https://www.chosic.com/wp-content/uploads/2021/07/Rainy-Day-Games.mp3";
+    // URL de una canción suave (se recomienda descargarla a public/assets/audio/ para evitar problemas de CORS/COEP)
+    const MUSIC_URL = "/assets/audio/BackgroundMusic.mp3";
 
     useEffect(() => {
         // Inicializar el audio
