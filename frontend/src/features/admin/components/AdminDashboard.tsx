@@ -631,13 +631,25 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className={cn(
-                                "w-2 h-2 rounded-full",
-                                user.planId === 1 ? "bg-slate-400" : user.planId === 2 ? "bg-amber-400" : "bg-cyan-400 animate-pulse"
-                              )} />
-                              <span className="text-xs font-bold text-slate-600">{PLAN_MAP[user.planId]}</span>
-                            </div>
+                            <Select
+                              value={user.planId?.toString()}
+                              onValueChange={(v) => handleUpdatePlan(user.id, parseInt(v))}
+                            >
+                              <SelectTrigger className="h-9 w-[130px] bg-slate-50/50 border-none rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-500/20">
+                                <div className="flex items-center gap-2">
+                                  <div className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    user.planId === 1 ? "bg-slate-400" : user.planId === 2 ? "bg-amber-400" : "bg-cyan-400 animate-pulse"
+                                  )} />
+                                  <SelectValue />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl border-none shadow-2xl bg-white/90 backdrop-blur-xl">
+                                <SelectItem value="1" className="font-bold text-xs focus:bg-slate-50">Básico</SelectItem>
+                                <SelectItem value="2" className="font-bold text-xs focus:bg-amber-50">Digital</SelectItem>
+                                <SelectItem value="3" className="font-bold text-xs focus:bg-cyan-50">Pro (Liga Oro)</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1.5 flex-wrap max-w-[200px]">

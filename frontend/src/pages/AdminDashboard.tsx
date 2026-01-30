@@ -15,14 +15,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, UserPlus, Shield, Activity, Monitor, Layout, Box, Users, BookOpen, GraduationCap, TrendingUp, BarChart3, Clock, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Search, Plus, UserPlus, Shield, Activity, Monitor, Layout, Box, Users, BookOpen, GraduationCap, TrendingUp, BarChart3, Clock, Trash2, Ban, CheckCircle, Sparkles } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 
 const ROLE_MAP: Record<number, string> = { 1: "Admin", 2: "Profesor", 3: "Estudiante" };
-const PLAN_MAP: Record<number, string> = { 1: "Básico", 2: "Digital", 3: "Pro" };
+
+// Plan Configuration
+const PLANS = {
+  1: { name: "Básico", label: "Genio Digital", color: "bg-slate-100 text-slate-700", icon: "💡" },
+  2: { name: "Digital", label: "Genio Plata", color: "bg-blue-100 text-blue-700", icon: "⚡" },
+  3: { name: "Pro", label: "Genio Pro", color: "bg-gradient-to-r from-yellow-400 to-orange-500 text-white", icon: "👑" },
+} as const;
+
+type PlanId = keyof typeof PLANS;
 
 const PERFORMANCE_DATA = [
   { name: 'Lun', active: 400, usage: 240 },
@@ -200,7 +208,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdatePlan = async (userId: number, newPlanId: number) => {
+  const handleUpdatePlan = async (userId: number, newPlanId: number, userName: string, oldPlanId: number) => {
+    // Confirmation for plan changes
+    const oldPlan = PLANS[oldPlanId as PlanId];
+    const newPlan = PLANS[newPlanId as PlanId];
+
     try {
       const res = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
         method: 'PATCH',
@@ -209,12 +221,27 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         fetchUsers(); // Refresh users list
-        toast({ title: "Plan actualizado", description: "El plan del usuario ha sido modificado." });
+        toast({
+          title: "✅ Plan actualizado exitosamente",
+          description: `${userName} cambió de ${oldPlan?.label || 'plan anterior'} a ${newPlan?.label}`
+        });
       } else {
-        toast({ title: "Error", description: "No se pudo actualizar el plan", variant: "destructive" });
+        const errorData = await res.json().catch(() => ({}));
+        toast({
+          title: "❌ Error al actualizar",
+          description: errorData.message || "No se pudo actualizar el plan",
+          variant: "destructive"
+        });
+        fetchUsers(); // Revert UI by refetching
       }
     } catch (e) {
-      toast({ title: "Error", description: "No se pudo actualizar el plan", variant: "destructive" });
+      console.error('Plan update error:', e);
+      toast({
+        title: "❌ Error de conexión",
+        description: "No se pudo conectar con el servidor",
+        variant: "destructive"
+      });
+      fetchUsers(); // Revert UI by refetching
     }
   };
 
@@ -325,15 +352,20 @@ export default function AdminDashboard() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Plan</Label>
+                    <Label>Plan de Suscripción</Label>
                     <Select onValueChange={(v) => setNewUser({ ...newUser, planId: parseInt(v) })} defaultValue="2">
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
+                        <SelectValue placeholder="Seleccionar plan" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">Básico</SelectItem>
-                        <SelectItem value="2">Digital</SelectItem>
-                        <SelectItem value="3">Pro</SelectItem>
+                        {Object.entries(PLANS).map(([id, plan]) => (
+                          <SelectItem key={id} value={id}>
+                            <div className="flex items-center gap-2">
+                              <span>{plan.icon}</span>
+                              <span>{plan.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -482,16 +514,29 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell>
                         <Select
-                          defaultValue={user.planId?.toString() || "1"}
-                          onValueChange={(value) => handleUpdatePlan(user.id, parseInt(value))}
+                          value={user.planId?.toString() || "1"}
+                          onValueChange={(value) => handleUpdatePlan(user.id, parseInt(value), user.nombre, user.planId || 1)}
                         >
-                          <SelectTrigger className="w-[130px] h-8 font-bold text-xs border-slate-100 bg-slate-50">
-                            <SelectValue />
+                          <SelectTrigger className="w-[150px] h-9 font-bold text-xs border-slate-200 hover:border-slate-300 transition-colors">
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <span>{PLANS[(user.planId || 1) as PlanId]?.icon}</span>
+                                <span>{PLANS[(user.planId || 1) as PlanId]?.label}</span>
+                              </div>
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">Genio Digital</SelectItem>
-                            <SelectItem value="2">Genio Plata</SelectItem>
-                            <SelectItem value="3">Genio Pro</SelectItem>
+                            {Object.entries(PLANS).map(([id, plan]) => (
+                              <SelectItem key={id} value={id} className="cursor-pointer">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-base">{plan.icon}</span>
+                                  <div>
+                                    <p className="font-bold">{plan.label}</p>
+                                    <p className="text-[10px] text-slate-500">{plan.name}</p>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </TableCell>
