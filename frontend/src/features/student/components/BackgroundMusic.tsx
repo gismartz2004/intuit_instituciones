@@ -8,17 +8,27 @@ export function BackgroundMusic() {
     const [isMuted, setIsMuted] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // URL de una canción suave (se recomienda descargarla a public/assets/audio/ para evitar problemas de CORS/COEP)
-    const MUSIC_URL = "/assets/audio/BackgroundMusic.mp3";
+    // URLs de música: local como primera opción, externa como fallback
+    const LOCAL_MUSIC_URL = "/assets/audio/BackgroundMusic.mp3";
+    const EXTERNAL_MUSIC_URL = "https://www.chosic.com/wp-content/uploads/2021/07/Rainy-Day-Games.mp3";
 
     useEffect(() => {
-        // Inicializar el audio
-        const audio = new Audio(MUSIC_URL);
+        // Inicializar el audio (intentar local primero)
+        const audio = new Audio(LOCAL_MUSIC_URL);
         audio.loop = true;
-        audio.volume = 0.3; // Volumen suave por defecto
+        audio.volume = 0.3;
+
+        // Manejo de errores: Si falla el local (404), intentar el externo
+        audio.onerror = () => {
+            if (audio.src.includes(LOCAL_MUSIC_URL)) {
+                console.warn("Local music not found, falling back to external...");
+                audio.src = EXTERNAL_MUSIC_URL;
+                audio.load();
+            }
+        };
+
         audioRef.current = audio;
 
-        // Limpiar al desmontar
         return () => {
             audio.pause();
             audioRef.current = null;
