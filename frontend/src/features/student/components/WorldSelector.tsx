@@ -1,6 +1,7 @@
 import { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import Earth from "@/assets/models/Earth.glb";
 import {
     Float,
     OrbitControls,
@@ -50,7 +51,7 @@ function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) 
  */
 function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
     try {
-        const { scene } = useGLTF("/assets/models/Earth.glb");
+        const { scene } = useGLTF("src/assets/models/Earth.glb");
         const clone = useMemo(() => scene.clone(), [scene]);
 
         useEffect(() => {
