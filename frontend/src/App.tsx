@@ -63,7 +63,8 @@ function App() {
   }
 
   const isManagementRoute = location.startsWith("/admin") || location.startsWith("/superadmin");
-  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute;
+  const isLevelRoute = location.startsWith("/level");
+  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute && !isLevelRoute;
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">
