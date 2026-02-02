@@ -28,6 +28,9 @@ interface PimFormData {
     tituloProyecto: string;
     anioNivel: string;
     descripcionGeneral: string;
+    problematicaGeneral: string;
+    contextoProblema: string;
+    objetivoProyecto: string;
     imagenUrl?: string;
     modulos: PimModule[];
 }
@@ -44,6 +47,9 @@ export default function PimEditor({ levelId, initialData, onClose }: PimEditorPr
         tituloProyecto: "",
         anioNivel: "Primer Año",
         descripcionGeneral: "",
+        problematicaGeneral: "",
+        contextoProblema: "",
+        objetivoProyecto: "",
         imagenUrl: "",
         modulos: []
     });
@@ -181,6 +187,34 @@ export default function PimEditor({ levelId, initialData, onClose }: PimEditorPr
                                     value={formData.descripcionGeneral}
                                     onChange={e => setFormData({ ...formData, descripcionGeneral: e.target.value })}
                                     placeholder="De qué trata el proyecto integrador..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label>Problemática General</Label>
+                                    <Textarea
+                                        value={formData.problematicaGeneral}
+                                        onChange={e => setFormData({ ...formData, problematicaGeneral: e.target.value })}
+                                        placeholder="¿Cuál es el problema principal que se resuelve?"
+                                        className="min-h-[100px]"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Contexto del Problema</Label>
+                                    <Textarea
+                                        value={formData.contextoProblema}
+                                        onChange={e => setFormData({ ...formData, contextoProblema: e.target.value })}
+                                        placeholder="Contexto o escenario donde ocurre el problema..."
+                                        className="min-h-[100px]"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Objetivo del Proyecto</Label>
+                                <Textarea
+                                    value={formData.objetivoProyecto}
+                                    onChange={e => setFormData({ ...formData, objetivoProyecto: e.target.value })}
+                                    placeholder="¿Qué se espera lograr con este proyecto?"
                                 />
                             </div>
                             <div className="space-y-2">

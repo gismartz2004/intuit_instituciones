@@ -60,7 +60,7 @@ export default function PimViewer({ levelId }: PimViewerProps) {
             }
         };
         fetchPim();
-    }, [levelId]);
+    }, [levelId, activeModuleIdx, data]);
 
     if (loading) return <div className="p-12 text-center text-slate-500">Cargando Proyecto Integrador...</div>;
     if (!data) return (
@@ -117,6 +117,56 @@ export default function PimViewer({ levelId }: PimViewerProps) {
                     </div>
                 )}
             </div>
+
+            {/* General Project Context Section */}
+            {(data.problematicaGeneral || data.contextoProblema || data.objetivoProyecto) && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+                    {data.problematicaGeneral && (
+                        <Card className="bg-red-50 border-red-100 shadow-sm hover:shadow-md transition-shadow">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm font-black text-red-600 uppercase tracking-widest flex items-center gap-2">
+                                    <Info className="w-4 h-4" /> La Problemática
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                    {data.problematicaGeneral}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {data.contextoProblema && (
+                        <Card className="bg-amber-50 border-amber-100 shadow-sm hover:shadow-md transition-shadow">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm font-black text-amber-600 uppercase tracking-widest flex items-center gap-2">
+                                    <BookOpen className="w-4 h-4" /> Contexto
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                    {data.contextoProblema}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {data.objetivoProyecto && (
+                        <Card className="bg-emerald-50 border-emerald-100 shadow-sm hover:shadow-md transition-shadow md:col-span-1">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                                    <Target className="w-4 h-4" /> Objetivo Final
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                    {data.objetivoProyecto}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 

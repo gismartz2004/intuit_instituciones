@@ -330,7 +330,7 @@ export default function LevelViewer() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -30 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
-                className="w-full h-full"
+                className="w-full h-full will-change-transform"
               >
                 {viewMode === 'rag' && <RagViewer levelId={levelId} onAddPoints={handleAddPoints} />}
                 {viewMode === 'ha' && <HaViewer levelId={levelId} onAddPoints={handleAddPoints} />}

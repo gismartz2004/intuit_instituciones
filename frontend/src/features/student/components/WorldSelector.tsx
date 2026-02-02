@@ -1,7 +1,7 @@
 import { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import Earth from "@/assets/models/Earth.glb";
+const Earth = "/assets/models/Earth.glb";
 import {
     Float,
     OrbitControls,

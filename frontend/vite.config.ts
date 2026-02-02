@@ -9,6 +9,7 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    assetsInclude: ["**/*.glb"],
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),

@@ -245,7 +245,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
   if (!data) return <div className="p-20 text-center text-slate-400">Guía no disponible.</div>;
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-slate-50 pb-20 scroll-smooth">
+    <div className="w-full h-full overflow-y-auto bg-slate-50 pb-20">
 
 
       <div className="max-w-6xl mx-auto p-6 md:p-10 min-h-screen">
