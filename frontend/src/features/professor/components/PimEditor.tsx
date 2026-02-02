@@ -181,14 +181,7 @@ export default function PimEditor({ levelId, initialData, onClose }: PimEditorPr
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Descripción General</Label>
-                                <Textarea
-                                    value={formData.descripcionGeneral}
-                                    onChange={e => setFormData({ ...formData, descripcionGeneral: e.target.value })}
-                                    placeholder="De qué trata el proyecto integrador..."
-                                />
-                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label>Problemática General</Label>
