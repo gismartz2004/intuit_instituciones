@@ -250,6 +250,9 @@ export const plantillasPim = pgTable('plantillas_pim', {
   tituloProyecto: varchar('titulo_proyecto', { length: 255 }),
   anioNivel: varchar('anio_nivel', { length: 100 }),
   descripcionGeneral: text('descripcion_general'),
+  problematicaGeneral: text('problematica_general'),
+  contextoProblema: text('contexto_problema'),
+  objetivoProyecto: text('objetivo_proyecto'),
 
   // Módulos (JSON Array: [{nombreModulo, enfoqueTecnico, problemaTecnico, actividadesInvestigacion, formatoSugerido, actividadesPractica, ejerciciosPracticos, aporteTecnico}])
   modulos: jsonb('modulos'),

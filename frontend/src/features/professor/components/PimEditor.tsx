@@ -72,8 +72,7 @@ export default function PimEditor({ levelId, initialData, onClose }: PimEditorPr
         setLoading(true);
         try {
             const payload = {
-                ...formData,
-                modulos: JSON.stringify(formData.modulos)
+                ...formData
             };
             await professorApi.savePimTemplate(levelId, payload);
             toast({ title: "Plantilla PIM guardada exitosamente" });
