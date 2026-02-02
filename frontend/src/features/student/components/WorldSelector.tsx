@@ -51,7 +51,7 @@ function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) 
  */
 function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
     try {
-        const { scene } = useGLTF("src/assets/models/Earth.glb");
+        const { scene } = useGLTF(Earth);
         const clone = useMemo(() => scene.clone(), [scene]);
 
         useEffect(() => {
@@ -473,7 +473,7 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
 }
 
 // Pre-loading the model for optimization
-useGLTF.preload("/assets/models/Earth.glb");
+useGLTF.preload(Earth);
 
 interface WorldSelectorProps {
     user: {
