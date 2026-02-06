@@ -29,6 +29,7 @@ import { studentApi } from "../services/student.api";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import EarthModelAsset from "@/assets/models/Earth.glb";
 
 // Fallback component for when the GLB fails to load
 function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) {
@@ -49,8 +50,8 @@ function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) 
 /**
  * COMPONENTE PLANETA (USANDO MODELO GLB EXTERNO)
  */
-// Using a public optimized Earth model to ensure reliable loading and avoid 500 errors with large local assets
-const Earth = "https://raw.githubusercontent.com/pmndrs/drei-assets/master/earth.gltf";
+// Using the local Earth model asset
+const Earth = EarthModelAsset;
 // Preload standard GLB
 useGLTF.preload(Earth);
 

@@ -52,27 +52,32 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
     // Initial Data Load
     useEffect(() => {
         if (initialData) {
-            setFormData({
-                ...initialData,
-                evidenciaTipos: typeof initialData.evidenciaTipos === 'string'
+            try {
+                const evidenciaTipos = typeof initialData.evidenciaTipos === 'string'
                     ? JSON.parse(initialData.evidenciaTipos)
-                    : initialData.evidenciaTipos || []
-            });
+                    : initialData.evidenciaTipos || [];
 
-            if (initialData.pasosGuiados) {
-                try {
-                    setPasosGuiados(typeof initialData.pasosGuiados === 'string'
-                        ? JSON.parse(initialData.pasosGuiados)
-                        : initialData.pasosGuiados);
-                } catch (e) { console.error(e); }
-            }
+                const pasosGuiadosRaw = initialData.pasosGuiados
+                    ? (typeof initialData.pasosGuiados === 'string' ? JSON.parse(initialData.pasosGuiados) : initialData.pasosGuiados)
+                    : [{ paso: "" }];
 
-            if (initialData.seccionesDinamicas) {
-                try {
-                    setDynamicSections(typeof initialData.seccionesDinamicas === 'string'
-                        ? JSON.parse(initialData.seccionesDinamicas)
-                        : initialData.seccionesDinamicas);
-                } catch (e) { console.error(e); }
+                const seccionesDinamicasRaw = initialData.seccionesDinamicas
+                    ? (typeof initialData.seccionesDinamicas === 'string' ? JSON.parse(initialData.seccionesDinamicas) : initialData.seccionesDinamicas)
+                    : [];
+
+                setFormData({
+                    ...initialData,
+                    evidenciaTipos
+                });
+                setPasosGuiados(pasosGuiadosRaw);
+                setDynamicSections(seccionesDinamicasRaw);
+            } catch (e) {
+                console.error("Error parsing initialData in HaEditor:", e);
+                // Fallback to initialData if parse fails
+                setFormData({
+                    ...initialData,
+                    evidenciaTipos: []
+                });
             }
         }
     }, [initialData]);

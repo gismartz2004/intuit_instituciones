@@ -30,12 +30,15 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
         if (userStr) {
             try {
                 const user = JSON.parse(userStr);
-                return user.id || user.user?.id || 1;
-            } catch {
-                return 1;
+                // Check for different user object structures
+                const id = user.id || user.user?.id || (user.userData && user.userData.id);
+                return id ? id.toString() : "1";
+            } catch (e) {
+                console.warn("Failed to parse edu_user for HA:", e);
+                return "1";
             }
         }
-        return 1;
+        return "1";
     };
 
     const [avatarState, setAvatarState] = useState<AvatarState>({
@@ -69,6 +72,7 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
 
     useEffect(() => {
         const fetchHa = async () => {
+            if (!levelId) return;
             try {
                 const data = await studentApi.getHaTemplate(levelId);
 
@@ -78,32 +82,32 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
 
                     // Restore progress
                     const studentId = parseInt(getStudentId());
-                    if (studentId) {
-                        const submissions = await studentApi.getHaSubmissions(studentId, data.id);
-                        if (submissions && submissions.length > 0) {
-                            setCurrentSection('completion');
+                    if (studentId && !isNaN(studentId)) {
+                        try {
+                            const submissions = await studentApi.getHaSubmissions(studentId, data.id);
+                            if (submissions && submissions.length > 0) {
+                                setCurrentSection('completion');
 
-                            // Hydrate evidence for "Review" mode if they go back
-                            const files = submissions.flatMap((s: any) =>
-                                (s.archivosUrls || []).map((url: string) => ({
-                                    type: 'Archivo Previo',
-                                    file: new File(["previo"], "evidencia_guardada", { type: "application/octet-stream" }),
-                                    url: url
-                                }))
-                            );
-                            setEvidenceFiles(files);
-                        } else {
-                            // If no SUBMISSION but maybe files uploaded previously?
-                            // Currently API doesn't separate files from submission, but if we did:
-                            // setEvidenceFiles(...)
+                                // Hydrate evidence for "Review" mode if they go back
+                                const files = submissions.flatMap((s: any) =>
+                                    (s.archivosUrls || []).map((url: string) => ({
+                                        type: 'Archivo Previo',
+                                        file: new File(["previo"], "evidencia_guardada", { type: "application/octet-stream" }),
+                                        url: url
+                                    }))
+                                );
+                                setEvidenceFiles(files);
+                            }
+                        } catch (subErr) {
+                            console.warn("Failed to fetch HA submissions:", subErr);
                         }
                     }
                 } else {
-                    // console.log("No HA template found or invalid data");
                     setHaData(null);
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Error in fetchHa:", err);
+                setHaData(null);
             } finally {
                 setLoading(false);
             }
@@ -198,6 +202,16 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
     }));
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            if (viewport) {
+                viewport.scrollTop = 0;
+            }
+        }
+    }, [currentSection]);
 
     const handleEvidenceUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -270,17 +284,6 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
     } catch (e) {
         console.error("Error parsing seccionesDinamicas", e);
     }
-
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (scrollAreaRef.current) {
-            const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-            if (viewport) {
-                viewport.scrollTop = 0;
-            }
-        }
-    }, [currentSection]);
 
     return (
         <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative px-4 overflow-hidden">
