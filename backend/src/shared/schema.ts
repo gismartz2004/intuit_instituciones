@@ -138,6 +138,7 @@ export const recursos = pgTable('recursos', {
   tipo: varchar('tipo', { length: 50 }), // mime type
   url: text('url').notNull(),
   peso: integer('peso'),
+  carpeta: varchar('carpeta', { length: 255 }), // Path for folder organization
   fechaSubida: timestamp('fecha_subida').defaultNow(),
 });
 

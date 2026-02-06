@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Rocket,
     Zap,
+    ChevronLeft,
     ChevronRight,
     Trophy,
     Gamepad2,
@@ -128,9 +129,9 @@ function CameraHandler({ activePosition }: { activePosition: [number, number, nu
         if (activePosition) {
             // Solo cuando hay un planeta seleccionado, la cámara lo sigue
             targetCamPos.current.set(
-                activePosition[0] * 1.2,
-                activePosition[1] + 15,
-                activePosition[2] + 25
+                activePosition[0] * 1.3,
+                activePosition[1] + 18,
+                activePosition[2] + 45
             );
             lookAtPos.current.lerp(new THREE.Vector3(...activePosition), 0.1);
             camera.position.lerp(targetCamPos.current, 0.05);
@@ -223,7 +224,7 @@ function Planet({ id, position, color, name, progress, onClick, index: idx, isAc
 
             {/* UI de Información (HTML) */}
             <Html
-                position={[0, 10, 0]}
+                position={[0, 11, 0]}
                 center
                 distanceFactor={isActive ? 25 : 35}
                 className="pointer-events-none select-none"
@@ -268,27 +269,13 @@ function Planet({ id, position, color, name, progress, onClick, index: idx, isAc
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="mt-8 flex flex-col gap-3"
+                                className="mt-8 flex flex-col items-center"
                             >
-                                <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        onClick();
-                                    }}
-                                    className={cn(
-                                        "w-full py-4 rounded-3xl font-black text-[10px] tracking-[0.3em] uppercase transition-all duration-500 flex items-center justify-center gap-3 active:scale-95 group/btn pointer-events-auto",
-                                        isActive
-                                            ? "bg-blue-600 text-white shadow-[0_20px_40px_rgba(37,99,235,0.3)] border border-blue-400/50"
-                                            : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
-                                    )}
-                                >
-                                    <span>{isActive ? "EXPLORANDO..." : "INGRESAR AL SECTOR"}</span>
-                                    {!isActive && <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />}
-                                </button>
-
-                                <p className="text-[7px] font-bold text-white/20 text-center tracking-[0.2em] uppercase">
-                                    {isActive ? "Ya estás aquí" : "Haz clic para viajar"}
-                                </p>
+                                <div className="px-4 py-2 border border-cyan-400/30 bg-cyan-400/10 rounded-xl">
+                                    <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">
+                                        SELECCIONADO
+                                    </span>
+                                </div>
                             </motion.div>
                         )}
                     </div>
@@ -298,9 +285,7 @@ function Planet({ id, position, color, name, progress, onClick, index: idx, isAc
     );
 }
 
-function Scene({ modules, onSelect }: any) {
-    const [activeId, setActiveId] = useState<string | null>(null);
-
+function Scene({ modules, activeId, setActiveId, onSelect, generalProgress }: any) {
     const planetPositions = useMemo(() => {
         const radius = 28;
         return modules.map((_: any, i: number) => {
@@ -323,13 +308,14 @@ function Scene({ modules, onSelect }: any) {
     return (
         <>
             <OrbitControls
-                enablePan={true}
+                enablePan={false}
                 enableZoom={true}
-                minDistance={10}
-                maxDistance={200}
+                minDistance={30}
+                maxDistance={120}
                 enableDamping={true}
                 dampingFactor={0.08}
-                autoRotate={false}
+                autoRotate={!activeId}
+                autoRotateSpeed={0.5}
                 makeDefault
             />
 
@@ -341,8 +327,7 @@ function Scene({ modules, onSelect }: any) {
             />
 
             <ambientLight intensity={0.8} />
-            <directionalLight position={[10, 40, 10]} intensity={2.5} castShadow />
-            <pointLight position={[-30, -20, -30]} intensity={1.5} color="#3b82f6" />
+            <directionalLight position={[10, 40, 10]} intensity={2.5} />
 
             <Stars radius={150} depth={60} count={5000} factor={6} fade speed={1.5} />
 
@@ -355,7 +340,7 @@ function Scene({ modules, onSelect }: any) {
                         position={planetPositions[i]}
                         color={colors[i % colors.length]}
                         name={mod.nombreModulo}
-                        progress={Math.floor(Math.random() * 60) + 20}
+                        progress={generalProgress?.moduleProgress?.find((p: any) => p.moduloId === mod.id)?.progressPercentage || 0}
                         isActive={activeId === mod.id}
                         onClick={() => {
                             if (activeId === mod.id) onSelect(mod.id);
@@ -373,21 +358,49 @@ function Scene({ modules, onSelect }: any) {
 export default function WorldSelector({ user }: WorldSelectorProps) {
     const [, setLocation] = useLocation();
     const [modules, setModules] = useState<any[]>([]);
+    const [gamification, setGamification] = useState<any>(null);
+    const [generalProgress, setGeneralProgress] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [activeId, setActiveId] = useState<number | null>(null);
 
     useEffect(() => {
-        const fetchModules = async () => {
+        const fetchData = async () => {
             try {
-                const data = await studentApi.getModules(user.id);
-                setModules(data);
+                const [mods, stats, progress] = await Promise.all([
+                    studentApi.getModules(user.id),
+                    studentApi.getGamificationStats(parseInt(user.id)),
+                    studentApi.getProgress(user.id)
+                ]);
+
+                setModules(mods);
+                setGamification(stats);
+                setGeneralProgress(progress);
+
+                if (mods.length > 0) {
+                    setActiveId(mods[0].id); // Auto-select first module
+                }
             } catch (error) {
-                console.error("Error loading modules:", error);
+                console.error("Error loading student data:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchModules();
+        fetchData();
     }, [user.id]);
+
+    const activeIndex = useMemo(() =>
+        modules.findIndex(m => m.id === activeId),
+        [modules, activeId]);
+
+    const handleNext = () => {
+        const nextIdx = (activeIndex + 1) % modules.length;
+        setActiveId(modules[nextIdx].id);
+    };
+
+    const handlePrev = () => {
+        const prevIdx = (activeIndex - 1 + modules.length) % modules.length;
+        setActiveId(modules[prevIdx].id);
+    };
 
     if (loading) {
         return (
@@ -407,41 +420,72 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
             </div>
 
             {/* HUD Central ESCALADO (Diseño Gaming Elegante) */}
-            <div className="absolute inset-0 pointer-events-none z-20 flex flex-col items-center justify-start pt-16">
+            <div className="absolute inset-0 pointer-events-none z-20 flex flex-col items-start justify-start pt-12 pl-10">
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/5 border border-white/10 px-6 py-2 rounded-full backdrop-blur-3xl mb-4 inline-flex items-center gap-3"
+                    className="bg-white/5 border border-white/10 px-6 py-2 rounded-full backdrop-blur-3xl mb-2 inline-flex items-center gap-3"
                 >
-                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,1)]" />
-                    <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.4em]">ACADEMIA ARG • MÓDULOS DE APRENDIZAJE</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,1)]" />
+                    <span className="text-[8px] font-black text-white/50 uppercase tracking-[0.4em]">ACADEMIA ARG • SELECCIÓN DE MISIÓN</span>
                 </motion.div>
 
                 <motion.h1
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
-                    className="text-6xl md:text-8xl font-black text-white leading-none tracking-tighter uppercase italic drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+                    className="text-2xl md:text-3xl font-black text-white leading-none tracking-tighter uppercase italic drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
                 >
                     ELIGE TU CURSO
                 </motion.h1>
             </div>
 
-            {/* HUD XP LATERAL */}
-            <div className="absolute bottom-10 right-10 z-20 pointer-events-auto">
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center gap-4 bg-slate-900/90 border border-white/10 p-4 px-6 rounded-[2rem] backdrop-blur-3xl shadow-xl group"
+            {/* Navigation Arrows (Carousel Style) */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-30 px-10 flex justify-between pointer-events-none">
+                <button
+                    onClick={handlePrev}
+                    className="w-16 h-16 rounded-full bg-slate-900/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-cyan-500/20 hover:border-cyan-400/50 transition-all active:scale-90 pointer-events-auto group"
                 >
-                    <div className="flex flex-col items-end">
-                        <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] mb-0.5">Energía</span>
-                        <span className="text-xl font-black text-white leading-none">1.240 <span className="text-blue-500 text-xs">XP</span></span>
-                    </div>
-                    <div className="p-2.5 bg-orange-500/20 rounded-xl">
-                        <Zap className="w-5 h-5 text-orange-400" />
-                    </div>
-                </motion.div>
+                    <ChevronLeft className="w-8 h-8 group-hover:-translate-x-1 transition-transform" />
+                </button>
+                <button
+                    onClick={handleNext}
+                    className="w-16 h-16 rounded-full bg-slate-900/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-cyan-500/20 hover:border-cyan-400/50 transition-all active:scale-90 pointer-events-auto group"
+                >
+                    <ChevronRight className="w-8 h-8 group-hover:translate-x-1 transition-transform" />
+                </button>
+            </div>
+
+            {/* Bottom HUD - Action Button */}
+            <div className="absolute bottom-16 inset-x-0 z-30 flex justify-center pointer-events-none">
+                <AnimatePresence mode="wait">
+                    {activeId && (
+                        <motion.div
+                            key={activeId}
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 20, opacity: 0 }}
+                            className="pointer-events-auto"
+                        >
+                            <button
+                                onClick={() => setLocation(`/dashboard/module/${activeId}`)}
+                                className="group relative px-16 py-6 bg-cyan-500 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(6,182,212,0.4)] hover:shadow-[0_25px_60px_rgba(6,182,212,0.6)] transition-all active:scale-95"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 group-hover:scale-105 transition-transform" />
+                                <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity bg-[radial-gradient(circle_at_center,_white_0%,_transparent_70%)]" />
+                                <div className="relative flex items-center gap-4">
+                                    <span className="text-2xl font-black text-white italic tracking-tighter uppercase whitespace-nowrap">
+                                        ¡A JUGAR AHORA!
+                                    </span>
+                                    <Rocket className="w-6 h-6 text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                </div>
+                            </button>
+                            <p className="text-center mt-4 text-[9px] font-black text-cyan-400 uppercase tracking-[0.5em] animate-pulse">
+                                Presiona para ingresar al sector
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Escena 3D */}
@@ -451,30 +495,38 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
                     <Suspense fallback={null}>
                         <Scene
                             modules={modules}
+                            activeId={activeId}
+                            setActiveId={setActiveId}
+                            generalProgress={generalProgress}
                             onSelect={(id: any) => setLocation(`/dashboard/module/${id}`)}
                         />
                     </Suspense>
                 </Canvas>
             </div>
 
-            {/* Guía Controles */}
-            <div className="absolute bottom-10 left-10 z-20 flex gap-4">
-                <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-2xl border border-white/5 px-5 py-2.5 rounded-full">
-                    <MousePointer2 className="w-4 h-4 text-cyan-400" />
-                    <span className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Orbitar Cámara</span>
-                </div>
-                <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-2xl border border-white/5 px-5 py-2.5 rounded-full">
-                    <Target className="w-4 h-4 text-blue-500" />
-                    <span className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Seleccionar</span>
-                </div>
+            {/* Floating XP HUD */}
+            <div className="absolute top-10 right-10 z-20 pointer-events-auto">
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-4 bg-slate-900/90 border border-white/10 p-3 px-6 rounded-[1.5rem] backdrop-blur-3xl shadow-xl group"
+                >
+                    <div className="flex flex-col items-end">
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] mb-0.5">Puntos actuales</span>
+                        <span className="text-lg font-black text-white leading-none">
+                            {gamification?.totalPoints || 0}
+                        </span>
+                    </div>
+                    <div className="p-2 bg-cyan-500/20 rounded-xl">
+                        <Trophy className="w-4 h-4 text-cyan-400 fill-current" />
+                    </div>
+                </motion.div>
             </div>
         </div>
     );
 }
 
-// Pre-loading the model for optimization
-useGLTF.preload(Earth);
-
+// Helper props for Scene
 interface WorldSelectorProps {
     user: {
         name: string;

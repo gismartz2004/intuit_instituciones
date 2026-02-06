@@ -55,30 +55,49 @@ export class StudentService {
         // Get module progress (days elapsed for each assigned module)
         const assignments = await this.db.select({
             moduloId: schema.asignaciones.moduloId,
-            duracionDias: schema.modulos.duracionDias
+            duracionDias: schema.modulos.duracionDias,
+            fechaAsignacion: schema.asignaciones.fechaAsignacion
         })
             .from(schema.asignaciones)
             .innerJoin(schema.modulos, eq(schema.asignaciones.moduloId, schema.modulos.id))
             .where(eq(schema.asignaciones.estudianteId, studentId));
 
-        const moduleProgress = assignments.map(assignment => {
-            // Since fechaAsignacion doesn't exist in schema, we'll use a default start date
-            // In production, you should add this field to the schema
-            const startDate = new Date(); // Default to today for now
-            startDate.setDate(startDate.getDate() - 5); // Simulate 5 days elapsed
-
+        const moduleProgress = await Promise.all(assignments.map(async (assignment) => {
+            const startDate = assignment.fechaAsignacion || new Date();
             const today = new Date();
             const daysElapsed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
             const totalDays = assignment.duracionDias || 30;
-            const progressPercentage = Math.min(100, Math.round((daysElapsed / totalDays) * 100));
+
+            // Calculate actual completion percentage based on finished levels
+            const levels = await this.db.select({ id: schema.niveles.id })
+                .from(schema.niveles)
+                .where(eq(schema.niveles.moduloId, assignment.moduloId!));
+
+            const levelIds = levels.map(l => l.id);
+            let finishedLevels = 0;
+
+            if (levelIds.length > 0) {
+                const completions = await this.db.select()
+                    .from(schema.progresoNiveles)
+                    .where(and(
+                        eq(schema.progresoNiveles.estudianteId, studentId),
+                        sql`${schema.progresoNiveles.nivelId} IN (${sql.join(levelIds, sql`, `)})`,
+                        eq(schema.progresoNiveles.completado, true)
+                    ));
+                finishedLevels = completions.length;
+            }
+
+            const progressPercentage = levels.length > 0
+                ? Math.round((finishedLevels / levels.length) * 100)
+                : 0;
 
             return {
                 moduloId: assignment.moduloId,
-                daysElapsed,
+                daysElapsed: Math.max(0, daysElapsed),
                 totalDays,
                 progressPercentage
             };
-        });
+        }));
 
         return {
             totalPoints,

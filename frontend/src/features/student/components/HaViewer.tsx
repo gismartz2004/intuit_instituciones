@@ -46,7 +46,7 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
 
     // Proactive hints on idle
     useEffect(() => {
-        if (currentSection === 'intro') return;
+        if (currentSection === 'intro' || currentSection === 'completion') return;
 
         const idleTimer = setTimeout(() => {
             if (currentSection === 'evidence' && evidenceFiles.length === 0) {
@@ -82,6 +82,20 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                         const submissions = await studentApi.getHaSubmissions(studentId, data.id);
                         if (submissions && submissions.length > 0) {
                             setCurrentSection('completion');
+
+                            // Hydrate evidence for "Review" mode if they go back
+                            const files = submissions.flatMap((s: any) =>
+                                (s.archivosUrls || []).map((url: string) => ({
+                                    type: 'Archivo Previo',
+                                    file: new File(["previo"], "evidencia_guardada", { type: "application/octet-stream" }),
+                                    url: url
+                                }))
+                            );
+                            setEvidenceFiles(files);
+                        } else {
+                            // If no SUBMISSION but maybe files uploaded previously?
+                            // Currently API doesn't separate files from submission, but if we did:
+                            // setEvidenceFiles(...)
                         }
                     }
                 } else {
@@ -96,6 +110,14 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
         };
         fetchHa();
     }, [levelId]);
+
+    const handlePrevSection = () => {
+        const sections: HaSection[] = ['intro', 'context', 'evidence', 'reflection', 'completion'];
+        const currentIndex = sections.indexOf(currentSection);
+        if (currentIndex > 0) {
+            setCurrentSection(sections[currentIndex - 1]);
+        }
+    };
 
     const handleNextSection = async () => {
         const sections: HaSection[] = ['intro', 'context', 'evidence', 'reflection', 'completion'];
@@ -219,42 +241,48 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
     let evidenciaTipos = [];
     try { evidenciaTipos = JSON.parse(haData.evidenciaTipos || "[]"); } catch { }
 
-    let seccionesDinamicas = [];
-    try { seccionesDinamicas = JSON.parse(haData.seccionesDinamicas || "[]"); } catch { }
+    let seccionesDinamicas: any[] = [];
+    try {
+        seccionesDinamicas = typeof haData.seccionesDinamicas === 'string'
+            ? JSON.parse(haData.seccionesDinamicas || "[]")
+            : (haData.seccionesDinamicas || []);
+    } catch (e) {
+        console.error("Error parsing seccionesDinamicas", e);
+    }
 
     return (
-        <ScrollArea className="h-full">
-            <div className="max-w-4xl mx-auto p-6 space-y-8 pb-32">
+        <div className="w-full space-y-8 pb-10">
 
-                {/* Section Progress Indicator */}
-                <div className="flex items-center justify-center gap-2 mb-6">
-                    {['intro', 'context', 'evidence', 'reflection', 'completion'].map((section, idx) => (
-                        <div key={section} className="flex items-center">
-                            <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
-                                currentSection === section
-                                    ? "bg-purple-600 text-white scale-110"
-                                    : ['intro', 'context', 'evidence', 'reflection', 'completion'].indexOf(currentSection) > idx
-                                        ? "bg-green-500 text-white"
-                                        : "bg-slate-200 text-slate-400"
-                            )}>
-                                {idx + 1}
-                            </div>
-                            {idx < 4 && <div className="w-8 h-1 bg-slate-200 mx-1" />}
+            {/* Section Progress Indicator */}
+            <div className="flex items-center justify-center gap-1 mb-2">
+                {['intro', 'context', 'evidence', 'reflection', 'completion'].map((section, idx) => (
+                    <div key={section} className="flex items-center">
+                        <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
+                            currentSection === section
+                                ? "bg-purple-600 text-white scale-110"
+                                : ['intro', 'context', 'evidence', 'reflection', 'completion'].indexOf(currentSection) > idx
+                                    ? "bg-green-500 text-white"
+                                    : "bg-slate-200 text-slate-400"
+                        )}>
+                            {idx + 1}
                         </div>
-                    ))}
-                </div>
+                        {idx < 4 && <div className="w-4 h-0.5 bg-slate-200 mx-0.5" />}
+                    </div>
+                ))}
+            </div>
 
-                {/* Avatar Guide Fixed Position */}
-                <div className="fixed bottom-6 right-6 z-50 max-w-sm">
-                    <AvatarGuide
-                        emotion={avatarState.emotion}
-                        message={avatarState.message}
-                        responseOptions={avatarState.responseOptions}
-                        className="max-w-md"
-                    />
-                </div>
+            {/* Avatar Guide Fixed Position */}
+            <div className="fixed bottom-6 right-6 z-50 max-w-sm">
+                <AvatarGuide
+                    emotion={avatarState.emotion}
+                    message={avatarState.message}
+                    responseOptions={avatarState.responseOptions}
+                    className="max-w-md transition-opacity duration-300"
+                />
+            </div>
 
+            <div className="flex-1 min-h-0 relative">
                 <AnimatePresence mode="wait">
                     {/* INTRO SECTION */}
                     {currentSection === 'intro' && (
@@ -265,17 +293,17 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-6"
                         >
-                            <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                            <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
                                 <div className="relative z-10 text-center">
-                                    <Trophy className="w-16 h-16 mx-auto mb-4 text-yellow-300" />
-                                    <Badge variant="outline" className="mb-4 border-white/50 text-white bg-white/20">
+                                    <Trophy className="w-12 h-12 mx-auto mb-2 text-yellow-300" />
+                                    <Badge variant="outline" className="mb-2 border-white/50 text-white bg-white/20 text-[10px]">
                                         Hito de Aprendizaje
                                     </Badge>
-                                    <h1 className="text-4xl font-black mb-4">
+                                    <h1 className="text-2xl font-black mb-2">
                                         {haData.fase || "Fase de Aprendizaje"}
                                     </h1>
-                                    <p className="text-lg text-cyan-100 max-w-2xl mx-auto">
+                                    <p className="text-md text-cyan-100 max-w-2xl mx-auto line-clamp-2">
                                         {haData.objetivoSemana}
                                     </p>
                                 </div>
@@ -302,63 +330,49 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-6"
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Concepto Clave */}
-                                <Card className="border-none shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-amber-600 flex items-center gap-2">
-                                            <Lightbulb className="w-5 h-5" /> Concepto Clave
+                                <Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-orange-50">
+                                    <CardHeader className="p-4 pb-1">
+                                        <CardTitle className="text-amber-600 flex items-center gap-2 text-sm">
+                                            <Lightbulb className="w-4 h-4" /> Concepto Clave
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                                    <CardContent className="p-4 pt-1 space-y-2">
+                                        <p className="text-slate-700 text-sm leading-snug whitespace-pre-line line-clamp-4">
                                             {haData.conceptoClave || "Sin concepto definido."}
                                         </p>
-                                        {(haData as any).conceptoClaveImagen && (
-                                            <div className="rounded-lg overflow-hidden border shadow-sm">
-                                                <img src={(haData as any).conceptoClaveImagen} className="w-full h-auto object-cover" />
-                                            </div>
-                                        )}
                                     </CardContent>
                                 </Card>
 
                                 {/* Resultado Esperado */}
-                                <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-green-600 flex items-center gap-2">
-                                            <Target className="w-5 h-5" /> Resultado Esperado
+                                <Card className="border-none shadow-md bg-gradient-to-br from-green-50 to-emerald-50">
+                                    <CardHeader className="p-4 pb-1">
+                                        <CardTitle className="text-green-600 flex items-center gap-2 text-sm">
+                                            <Target className="w-4 h-4" /> Resultado Esperado
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
-                                        <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                                    <CardContent className="p-4 pt-1">
+                                        <p className="text-slate-700 text-sm leading-snug whitespace-pre-line line-clamp-4">
                                             {haData.resultadoEsperado || "Sin resultado definido."}
                                         </p>
                                     </CardContent>
                                 </Card>
                             </div>
 
-                            {/* Pasos Guiados */}
+                            {/* Pasos Guiados compactos */}
                             {pasosGuiados.length > 0 && (
-                                <Card className="border-none shadow-md overflow-hidden">
-                                    <div className="bg-blue-50/50 p-4 border-b border-blue-100 flex items-center gap-2">
-                                        <ListTodo className="w-5 h-5 text-blue-600" />
-                                        <h3 className="font-bold text-blue-800">Pasos Guiados</h3>
+                                <Card className="border-none shadow-sm overflow-hidden">
+                                    <div className="bg-blue-50/50 p-2 px-4 border-b border-blue-100 flex items-center gap-2">
+                                        <ListTodo className="w-4 h-4 text-blue-600" />
+                                        <h3 className="font-bold text-blue-800 text-xs text-center">Pasos</h3>
                                     </div>
-                                    <CardContent className="p-0">
-                                        <div className="divide-y divide-slate-100">
+                                    <CardContent className="p-2 max-h-[120px] overflow-y-auto">
+                                        <div className="space-y-1">
                                             {pasosGuiados.map((item: any, i: number) => (
-                                                <div key={i} className="p-4 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="mt-1">
-                                                            <Circle className="w-4 h-4 text-slate-300" />
-                                                        </div>
-                                                        <p className="text-slate-700 flex-1">{item.paso}</p>
-                                                    </div>
-                                                    {item.imagenUrl && (
-                                                        <div className="ml-7 w-full max-w-sm rounded-lg overflow-hidden border shadow-sm">
-                                                            <img src={item.imagenUrl} className="w-full h-auto object-cover" />
-                                                        </div>
-                                                    )}
+                                                <div key={i} className="flex items-center gap-2 text-xs">
+                                                    <Circle className="w-2 h-2 text-slate-300 shrink-0" />
+                                                    <p className="text-slate-700 truncate">{item.paso}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -366,13 +380,20 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                                 </Card>
                             )}
 
-                            <div className="flex justify-center">
+                            <div className="flex justify-center gap-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={handlePrevSection}
+                                    size="sm"
+                                >
+                                    Regresar
+                                </Button>
                                 <Button
                                     onClick={handleNextSection}
-                                    size="lg"
-                                    className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white"
                                 >
-                                    Subir Evidencia <ArrowRight className="w-5 h-5 ml-2" />
+                                    Subir Evidencia <ArrowRight className="w-4 h-4 ml-1" />
                                 </Button>
                             </div>
                         </motion.div>
@@ -454,18 +475,44 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                                 </CardContent>
                             </Card>
 
-                            {/* Only show button when evidence is uploaded */}
-                            {evidenceFiles.length > 0 && (
-                                <div className="flex justify-center">
-                                    <Button
-                                        onClick={handleNextSection}
-                                        size="lg"
-                                        className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-                                    >
-                                        Reflexionar <ArrowRight className="w-5 h-5 ml-2" />
-                                    </Button>
+                            {/* Dynamic Sections if any */}
+                            {seccionesDinamicas.length > 0 && (
+                                <div className="space-y-4">
+                                    {seccionesDinamicas.map((sec: any, idx: number) => (
+                                        <Card key={idx} className="border-none shadow-md bg-white">
+                                            <CardHeader className="p-4 pb-2">
+                                                <CardTitle className="text-indigo-600 text-sm font-bold flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4" /> {sec.titulo || "Información Adicional"}
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-4 pt-0">
+                                                <p className="text-slate-600 text-sm leading-relaxed">
+                                                    {sec.contenido}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
                                 </div>
                             )}
+
+                            {/* Section Navigation */}
+                            <div className="flex justify-center gap-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={handlePrevSection}
+                                    size="sm"
+                                >
+                                    Regresar
+                                </Button>
+                                <Button
+                                    onClick={handleNextSection}
+                                    disabled={evidenceFiles.length === 0}
+                                    size="sm"
+                                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                                >
+                                    {evidenceFiles.length === 0 ? "Sube evidencia para continuar" : "Reflexionar"} <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            </div>
                         </motion.div>
                     )}
 
@@ -516,31 +563,31 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            className="space-y-6"
+                            className="space-y-4 py-4 h-full flex flex-col items-center justify-center max-w-2xl mx-auto"
                         >
-                            <Card className="border-4 border-cyan-400 bg-gradient-to-br from-cyan-50 to-blue-50 shadow-2xl">
-                                <CardContent className="p-12 text-center">
-                                    <Trophy className="w-24 h-24 text-yellow-500 mx-auto mb-6 animate-bounce" />
-                                    <h2 className="text-4xl font-black text-slate-800 mb-4">
+                            <Card className="border-4 border-cyan-400 bg-gradient-to-br from-cyan-50 to-blue-50 shadow-2xl w-full">
+                                <CardContent className="p-8 text-center">
+                                    <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-bounce" />
+                                    <h2 className="text-3xl font-black text-slate-800 mb-2">
                                         ¡Hito Completado!
                                     </h2>
-                                    <p className="text-xl text-slate-600 mb-6">
+                                    <p className="text-lg text-slate-600 mb-4">
                                         Has demostrado tu dominio en: <strong>{haData.fase}</strong>
                                     </p>
                                     <div className="flex gap-4 justify-center">
-                                        <Badge className="bg-green-500 text-white text-lg px-4 py-2">
+                                        <Badge className="bg-green-500 text-white text-md px-3 py-1">
                                             +300 Puntos
                                         </Badge>
-                                        <Badge className="bg-cyan-500 text-white text-lg px-4 py-2">
+                                        <Badge className="bg-cyan-500 text-white text-md px-3 py-1">
                                             Evidencia Aprobada
                                         </Badge>
                                     </div>
                                 </CardContent>
-                                <div className="p-6 bg-slate-50 border-t flex justify-center">
-                                    <Button onClick={() => window.location.href = '/missions'} variant="outline" className="mr-2">
+                                <div className="p-4 bg-slate-50 border-t flex justify-center gap-4">
+                                    <Button onClick={() => window.location.href = '/missions'} variant="outline" size="sm">
                                         Ver Misiones
                                     </Button>
-                                    <Button onClick={() => window.location.href = '/dashboard'} className="bg-cyan-600 text-white">
+                                    <Button onClick={() => window.location.href = '/dashboard'} className="bg-cyan-600 text-white" size="sm">
                                         Volver al Inicio
                                     </Button>
                                 </div>
@@ -548,8 +595,16 @@ export default function HaViewer({ levelId, onAddPoints }: HaViewerProps) {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
             </div>
-        </ScrollArea>
+
+            <div className={cn("fixed bottom-6 right-6 z-50 pointer-events-none transition-opacity duration-500", !avatarState.isVisible && "opacity-0")}>
+                <div className="pointer-events-auto">
+                    <AvatarGuide
+                        emotion={avatarState.emotion}
+                        message={avatarState.message}
+                    />
+                </div>
+            </div>
+        </div>
     );
 }

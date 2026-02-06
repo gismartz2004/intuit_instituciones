@@ -121,6 +121,18 @@ export const superadminApi = {
         return apiClient.post('/api/superadmin/students/import', formData);
     },
 
+    // Get students assigned to a specific module
+    getModuleAssignments: (moduleId: number): Promise<Student[]> => {
+        return apiClient.get(`/api/superadmin/modules/${moduleId}/assignments`);
+    },
+
+    // Unassign module
+    unassignModule: (moduleId: number, studentId: number): Promise<{ success: boolean }> => {
+        return apiClient.post(`/api/superadmin/modules/${moduleId}/assignments/unassign`, {
+            studentId,
+        });
+    },
+
     // Get system statistics
     getSystemStats: (): Promise<SystemStats> => {
         return apiClient.get('/api/superadmin/stats');

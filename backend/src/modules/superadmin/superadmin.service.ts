@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { ExcelProcessorService } from '../../shared/services/excel-processor.service';
 import * as bcrypt from 'bcrypt';
 
@@ -162,13 +162,60 @@ export class SuperadminService {
     }
 
     /**
+     * Get students assigned to a specific module
+     */
+    async getAssignmentsByModule(moduleId: number) {
+        return this.db
+            .select({
+                id: schema.usuarios.id,
+                nombre: schema.usuarios.nombre,
+                email: schema.usuarios.email,
+                fechaAsignacion: schema.asignaciones.fechaAsignacion,
+            })
+            .from(schema.asignaciones)
+            .innerJoin(
+                schema.usuarios,
+                eq(schema.asignaciones.estudianteId, schema.usuarios.id),
+            )
+            .where(eq(schema.asignaciones.moduloId, moduleId));
+    }
+
+    /**
+     * Unassign a module from a student
+     */
+    async unassignModule(moduleId: number, studentId: number) {
+        await this.db
+            .delete(schema.asignaciones)
+            .where(
+                and(
+                    eq(schema.asignaciones.moduloId, moduleId),
+                    eq(schema.asignaciones.estudianteId, studentId),
+                ),
+            );
+        return { success: true };
+    }
+
+    /**
      * Bulk assign module to multiple students
      */
     async bulkAssignModules(moduleId: number, studentIds: number[]) {
-        const assignments = studentIds.map((studentId) => ({
+        // Get existing assignments to avoid duplicates
+        const existing = await this.db
+            .select({ studentId: schema.asignaciones.estudianteId })
+            .from(schema.asignaciones)
+            .where(eq(schema.asignaciones.moduloId, moduleId));
+
+        const existingIds = new Set(existing.map((e) => e.studentId));
+        const newStudentIds = studentIds.filter((id) => !existingIds.has(id));
+
+        if (newStudentIds.length === 0) {
+            return { success: true, count: 0, message: 'Todos los estudiantes ya estaban asignados' };
+        }
+
+        const assignments = newStudentIds.map((studentId) => ({
             moduloId: moduleId,
             estudianteId: studentId,
-            profesorId: null, // Or get from context
+            profesorId: null,
             fechaAsignacion: new Date(),
         }));
 

@@ -15,13 +15,15 @@ import {
     Search,
     Trophy,
     Plus,
-    Trash2
+    Trash2,
+    Library
 } from 'lucide-react';
 import {
     ModuleContentViewer,
     AssignmentsTable,
     ExcelImportWizard,
     ModuleAssignmentWizard,
+    AssignmentManagerView,
     ModuleWithStats,
     SystemStats,
     superadminApi,
@@ -39,6 +41,7 @@ export function SuperAdminDashboard() {
     const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
     const [showImportWizard, setShowImportWizard] = useState(false);
     const [showAssignWizard, setShowAssignWizard] = useState(false);
+    const [showAdvancedAssign, setShowAdvancedAssign] = useState(false);
     const [moduleSearch, setModuleSearch] = useState('');
     const [prizes, setPrizes] = useState<Premio[]>([]);
     const [prizeSearch, setPrizeSearch] = useState('');
@@ -247,12 +250,19 @@ export function SuperAdminDashboard() {
                     </Card>
                 </TabsContent>
 
-                {/* Assignments Tab */}
                 <TabsContent value="assignments" className="space-y-4">
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            onClick={() => setShowAdvancedAssign(true)}
+                            variant="outline"
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl px-6"
+                        >
+                            <Library className="w-4 h-4 mr-2" />
+                            Gestión Avanzada
+                        </Button>
                         <Button onClick={() => setShowAssignWizard(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 shadow-md shadow-blue-500/20">
                             <BookOpen className="w-4 h-4 mr-2" />
-                            Nueva Asignación
+                            Asignación Rápida
                         </Button>
                     </div>
                     <AssignmentsTable />
@@ -377,6 +387,16 @@ export function SuperAdminDashboard() {
                     onSuccess={() => {
                         setShowAssignWizard(false);
                         loadData(); // Reload stats
+                    }}
+                />
+            )}
+
+            {/* Advanced Assignment Manager (Full Screen) */}
+            {showAdvancedAssign && (
+                <AssignmentManagerView
+                    onClose={() => {
+                        setShowAdvancedAssign(false);
+                        loadData();
                     }}
                 />
             )}

@@ -52,11 +52,6 @@ export class SuperadminController {
         return this.superadminService.getAllAssignments();
     }
 
-    /**
-     * Bulk assign module to multiple students
-     * POST /api/superadmin/assignments/bulk
-     * Body: { moduleId: number, studentIds: number[] }
-     */
     @Post('assignments/bulk')
     async bulkAssignModules(
         @Body() body: { moduleId: number; studentIds: number[] },
@@ -65,6 +60,25 @@ export class SuperadminController {
             body.moduleId,
             body.studentIds,
         );
+    }
+
+    /**
+     * Get students assigned to a specific module
+     */
+    @Get('modules/:id/assignments')
+    async getModuleAssignments(@Param('id', ParseIntPipe) moduleId: number) {
+        return this.superadminService.getAssignmentsByModule(moduleId);
+    }
+
+    /**
+     * Remove assignment
+     */
+    @Post('modules/:id/assignments/unassign')
+    async unassignModule(
+        @Param('id', ParseIntPipe) moduleId: number,
+        @Body('studentId', ParseIntPipe) studentId: number,
+    ) {
+        return this.superadminService.unassignModule(moduleId, studentId);
     }
 
     /**

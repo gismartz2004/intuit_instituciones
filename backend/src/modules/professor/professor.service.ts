@@ -110,7 +110,7 @@ export class ProfessorService {
   }
 
   async getLevelsByModule(moduleId: number) {
-    const levels = await this.db
+    const levels: schema.Nivel[] = await this.db
       .select()
       .from(schema.niveles)
       .where(eq(schema.niveles.moduloId, moduleId))
@@ -118,14 +118,14 @@ export class ProfessorService {
 
     // For each level, get its contents
     const levelsWithContents = await Promise.all(
-      levels.map(async (level) => {
+      levels.map(async (lvl: any) => {
         const contents = await this.db
           .select()
           .from(schema.contenidos)
-          .where(eq(schema.contenidos.nivelId, level.id));
+          .where(eq(schema.contenidos.nivelId, lvl.id));
 
         return {
-          ...level,
+          ...lvl,
           contents,
         };
       }),
@@ -179,6 +179,7 @@ export class ProfessorService {
     tipo: string;
     url: string;
     peso: number;
+    carpeta?: string;
   }) {
     const [resource] = await this.db
       .insert(schema.recursos)
@@ -188,6 +189,7 @@ export class ProfessorService {
         tipo: data.tipo,
         url: data.url,
         peso: data.peso,
+        carpeta: data.carpeta,
       })
       .returning();
     return resource;

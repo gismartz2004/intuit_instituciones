@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import {
   Card,
   CardContent,
@@ -31,7 +31,7 @@ interface RagViewerProps {
 
 type RagSection = 'intro' | 'objectives' | 'concepts' | 'evidence' | 'mission' | 'completion';
 
-export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
+export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewerProps, ref) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -40,13 +40,50 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepDeliverable, setStepDeliverable] = useState<File | null>(null);
   const [missionEvidence, setMissionEvidence] = useState<File | null>(null);
+  const [conceptIndex, setConceptIndex] = useState(0);
   const evidenceInputRef = useRef<HTMLInputElement>(null);
+  const [missionEvidenceUrl, setMissionEvidenceUrl] = useState<string | null>(null);
 
-  const [avatarState, setAvatarState] = useState<AvatarState>({
+  const [avatarState, setAvatarState] = useState<any>({
     isVisible: true,
     emotion: 'neutral',
     message: "¡Hola! Bienvenido a tu Guía RAG. Vamos a recorrer esto juntos paso a paso."
   });
+
+  useImperativeHandle(ref, () => ({
+    goNext: () => {
+      if (currentSection === 'concepts') {
+        const total = data?.contenidoClave?.length || 0;
+        if (conceptIndex < total - 1) setConceptIndex(p => p + 1);
+        else handleNextSection();
+      } else if (currentSection === 'evidence') {
+        if (!missionEvidence || isUploading || !missionEvidenceUrl) {
+          setAvatarState({
+            isVisible: true,
+            emotion: 'confused',
+            message: isUploading ? "Espera a que termine la subida..." : "¡Espera! Necesitas subir y confirmar la evidencia antes de continuar."
+          });
+          return;
+        }
+        handleNextSection();
+      } else if (currentSection === 'mission') {
+        handleStepComplete();
+      } else {
+        handleNextSection();
+      }
+    },
+    goPrev: () => {
+      if (currentSection === 'concepts') {
+        if (conceptIndex > 0) setConceptIndex(p => p - 1);
+        else handlePrevSection();
+      } else if (currentSection === 'mission') {
+        if (currentStepIndex > 0) handlePrevStep();
+        else handlePrevSection();
+      } else {
+        handlePrevSection();
+      }
+    }
+  }));
 
   // Load data
   useEffect(() => {
@@ -102,7 +139,16 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
   }, [levelId]);
 
   const [currentUploadUrl, setCurrentUploadUrl] = useState<string | null>(null);
-  const [missionEvidenceUrl, setMissionEvidenceUrl] = useState<string | null>(null);
+
+  // Effect to sync mission evidence if data arrives with a submission
+  useEffect(() => {
+    if (data?.submissions) {
+      const initialEvidence = data.submissions.find((s: any) => s.pasoIndice === -1);
+      if (initialEvidence) {
+        setMissionEvidenceUrl(initialEvidence.archivoUrl);
+      }
+    }
+  }, [data]);
 
   const getStudentId = () => {
     const userStr = localStorage.getItem('edu_user');
@@ -117,10 +163,10 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     const currentStep = rawSteps[currentStepIndex];
     const requiresDeliverable = currentStep?.requiereEntregable || false;
 
-    if (requiresDeliverable && !stepDeliverable) {
+    if (requiresDeliverable && (!stepDeliverable || isUploading || !currentUploadUrl)) {
       setAvatarState({
         emotion: 'waiting',
-        message: '⚠️ Este paso requiere que subas un entregable antes de continuar.',
+        message: isUploading ? 'Espera a que termine la subida...' : '⚠️ Este paso requiere que subas un entregable antes de continuar.',
         isVisible: true
       });
       return;
@@ -136,14 +182,16 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           tipoArchivo: stepDeliverable?.type || 'unknown'
         });
       } else {
-        // Submit even if no file (for completeness tracking)
-        await studentApi.submitRagProgress({
-          studentId: getStudentId(),
-          plantillaRagId: data.id,
-          pasoIndice: currentStepIndex,
-          archivoUrl: 'skipped',
-          tipoArchivo: 'none'
-        });
+        // If already completed and just reviewing/clicking next, don't resubmit "skipped" unless truly new
+        if (!completedSteps.includes(currentStepIndex)) {
+          await studentApi.submitRagProgress({
+            studentId: getStudentId(),
+            plantillaRagId: data.id,
+            pasoIndice: currentStepIndex,
+            archivoUrl: 'skipped',
+            tipoArchivo: 'none'
+          });
+        }
       }
     } catch (error) {
       console.error("Error submitting progress", error);
@@ -174,6 +222,14 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
         emotion: 'happy',
         message: `¡Genial! Siguiente paso: ${rawSteps[currentStepIndex + 1]?.paso}`,
       });
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
+      setStepDeliverable(null);
+      setCurrentUploadUrl(null);
     }
   };
 
@@ -241,14 +297,22 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
     }
   };
 
+  const handlePrevSection = () => {
+    const sections: RagSection[] = ['intro', 'objectives', 'concepts', 'evidence', 'mission', 'completion'];
+    const currentIndex = sections.indexOf(currentSection);
+    if (currentIndex > 0) {
+      setCurrentSection(sections[currentIndex - 1]);
+    }
+  };
+
   if (loading) return <div className="p-20 text-center animate-pulse text-indigo-500">Cargando experiencia...</div>;
   if (!data) return <div className="p-20 text-center text-slate-400">Guía no disponible.</div>;
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-slate-50 pb-20">
+    <div className="w-full h-full flex flex-col overflow-hidden">
 
 
-      <div className="max-w-6xl mx-auto p-6 md:p-10 min-h-screen">
+      <div className="w-full flex-1 min-h-0">
         <AnimatePresence mode="wait">
 
           {/* INTRO */}
@@ -270,14 +334,14 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, x: -100 }}
-              className="max-w-4xl mx-auto space-y-8 py-10"
+              className="max-w-4xl mx-auto space-y-4 py-4"
             >
-              <div className="text-center mb-10">
-                <h2 className="text-4xl font-black text-slate-800 mb-4">Tu Objetivo</h2>
-                <p className="text-xl text-slate-600 max-w-2xl mx-auto">{data.objetivoAprendizaje}</p>
+              <div className="text-center mb-4">
+                <h2 className="text-3xl font-black text-slate-800 mb-2">Tu Objetivo</h2>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto">{data.objetivoAprendizaje}</p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-4">
                 <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-lg hover:shadow-xl transition-all">
                   <CardHeader>
                     <CardTitle className="text-indigo-800 flex items-center gap-2">
@@ -308,7 +372,15 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                 </Card>
               </div>
 
-              <div className="flex justify-center pt-8">
+              <div className="flex justify-center gap-4 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevSection}
+                  size="lg"
+                  className="rounded-full px-10 py-6 text-lg"
+                >
+                  Regresar
+                </Button>
                 <Button
                   onClick={handleNextSection}
                   size="lg"
@@ -330,6 +402,8 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
             >
               <ConceptDeck
                 concepts={data.contenidoClave || []}
+                currentIndex={conceptIndex}
+                setCurrentIndex={setConceptIndex}
                 onComplete={handleNextSection}
               />
             </motion.div>
@@ -342,13 +416,13 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto py-10"
+              className="max-w-2xl mx-auto py-4"
             >
-              <Card className="shadow-2xl border-0 overflow-hidden">
-                <div className="bg-slate-900 p-8 text-white text-center">
-                  <FileText className="w-16 h-16 mx-auto mb-4 text-indigo-400" />
-                  <h2 className="text-3xl font-bold mb-2">Evidencia Previa</h2>
-                  <p className="text-slate-300">Antes de iniciar la misión, necesitamos validar tu trabajo previo.</p>
+              <Card className="shadow-xl border-0 overflow-hidden">
+                <div className="bg-slate-900 p-4 text-white text-center">
+                  <FileText className="w-12 h-12 mx-auto mb-2 text-indigo-400" />
+                  <h2 className="text-2xl font-bold mb-1">Evidencia Previa</h2>
+                  <p className="text-slate-400 text-sm">Antes de iniciar la misión, necesitamos validar tu trabajo previo.</p>
                 </div>
                 <CardContent className="p-8 space-y-6">
                   <input
@@ -360,7 +434,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                   <div
                     onClick={() => !isUploading && evidenceInputRef.current?.click()}
                     className={cn(
-                      "border-3 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all hover:bg-slate-50",
+                      "border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:bg-slate-50",
                       missionEvidence ? "border-green-400 bg-green-50/50" : "border-slate-300"
                     )}
                   >
@@ -373,18 +447,27 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                     ) : (
                       <>
                         <p className="text-lg font-medium text-slate-700">Arrastra tu archivo aquí o haz clic</p>
-                        <p className="text-sm text-slate-500 mt-2">Formatos aceptados: PDF, JPG, PNG</p>
+                        <p className="text-sm text-slate-500 mt-2 italic">Si ya subiste uno, se mostrará como completado abajo.</p>
                       </>
                     )}
                   </div>
 
-                  <Button
-                    onClick={handleNextSection}
-                    disabled={!missionEvidence || isUploading || !missionEvidenceUrl}
-                    className="w-full h-14 text-lg bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    {isUploading ? "Subiendo..." : "Confirmar y Empezar Misión"}
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={handlePrevSection}
+                      className="flex-1 h-12 text-lg"
+                    >
+                      Regresar
+                    </Button>
+                    <Button
+                      onClick={handleNextSection}
+                      disabled={!missionEvidence || isUploading || !missionEvidenceUrl}
+                      className="flex-[2] h-12 text-lg bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {isUploading ? "Subiendo..." : "Confirmar y Empezar Misión"}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -397,6 +480,7 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
+              className="h-full flex flex-col"
             >
               <MissionTimeline
                 steps={data.pasosGuiados || []}
@@ -407,38 +491,38 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
                 stepDeliverable={stepDeliverable}
                 isUploading={isUploading}
                 onFileUpload={handleFileUpload}
+                onPrevStep={handlePrevStep}
               />
             </motion.div>
           )}
 
-          {/* COMPLETION */}
           {/* COMPLETION */}
           {currentSection === 'completion' && (
             <motion.div
               key="completion"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center min-h-[70vh] text-center max-w-4xl mx-auto"
+              className="flex flex-col items-center justify-start py-2 text-center max-w-4xl mx-auto h-full overflow-y-auto custom-scrollbar"
             >
-              <div className="relative">
+              <div className="relative pt-4">
                 <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 animate-pulse" />
-                <div className="w-40 h-40 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-full flex items-center justify-center mb-8 shadow-2xl ring-8 ring-white relative z-10 animate-bounce">
-                  <Trophy className="w-20 h-20 text-yellow-600 drop-shadow-sm" />
+                <div className="w-32 h-32 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-full flex items-center justify-center mb-4 shadow-2xl ring-8 ring-white relative z-10 animate-bounce">
+                  <Trophy className="w-16 h-16 text-yellow-600 drop-shadow-sm" />
                 </div>
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-black text-slate-800 mb-6 tracking-tight">
+              <h1 className="text-4xl font-black text-slate-800 mb-4 tracking-tight">
                 ¡Misión Completada!
               </h1>
 
-              <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
-                <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-lg px-6 py-2 rounded-full shadow-lg border-2 border-yellow-400">
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  +500 XP Ganados
+              <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-md px-4 py-1.5 rounded-full shadow-lg border-2 border-yellow-400">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  +500 XP
                 </Badge>
-                <Badge className="bg-green-500 hover:bg-green-600 text-white text-lg px-6 py-2 rounded-full shadow-lg border-2 border-green-400">
-                  <CheckCircle2 className="w-5 h-5 mr-2" />
-                  Guía Finalizada
+                <Badge className="bg-green-500 hover:bg-green-600 text-white text-md px-4 py-1.5 rounded-full shadow-lg border-2 border-green-400">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Finalizada
                 </Badge>
               </div>
 
@@ -510,9 +594,10 @@ export default function RagViewer({ levelId, onAddPoints }: RagViewerProps) {
           <AvatarGuide
             emotion={avatarState.emotion}
             message={avatarState.message}
+            className="transition-opacity duration-300"
           />
         </div>
       </div>
     </div>
   );
-}
+});

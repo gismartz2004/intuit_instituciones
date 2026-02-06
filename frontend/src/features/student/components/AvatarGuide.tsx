@@ -15,7 +15,7 @@ interface AvatarGuideProps {
 }
 
 export default function AvatarGuide({ emotion, message, className, actionLabel, onAction, responseOptions }: AvatarGuideProps) {
-    const [isMinimized, setIsMinimized] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(true);
 
     const getIcon = () => {
         switch (emotion) {
@@ -93,7 +93,7 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
                 className="relative z-50 pointer-events-auto"
             >
                 <motion.button
-                    onClick={() => setIsMinimized(false)}
+                    onMouseEnter={() => setIsMinimized(false)}
                     className={cn(
                         "w-14 h-14 rounded-full flex items-center justify-center cursor-pointer border-2 backdrop-blur-md",
                         theme.bg, theme.border, theme.glow
@@ -120,6 +120,7 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                onMouseLeave={() => setIsMinimized(true)}
                 transition={{ type: "spring", stiffness: 300, damping: 25 } as const}
                 className={cn("relative z-50 max-w-sm pointer-events-auto", className)}
             >
@@ -134,17 +135,6 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
                         theme.bg, theme.border
                     )}>
 
-                        {/* Minimize Button */}
-                        <div className="absolute top-3 right-3 flex gap-2">
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10 rounded-full"
-                                onClick={() => setIsMinimized(true)}
-                            >
-                                <Minimize2 className="w-3 h-3" />
-                            </Button>
-                        </div>
 
                         <div className="flex gap-4">
                             {/* Avatar Visual */}

@@ -45,13 +45,13 @@ export interface StudentLevel {
 }
 
 export const STUDENT_LEVELS: StudentLevel[] = [
-    { level: 1, title: "Novato", minXP: 0, color: "slate" },
-    { level: 2, title: "Aprendiz", minXP: 500, color: "blue" },
-    { level: 3, title: "Estudiante", minXP: 1500, color: "green" },
-    { level: 4, title: "Avanzado", minXP: 3000, color: "purple" },
+    { level: 1, title: "Inicial", minXP: 0, color: "sky" },
+    { level: 2, title: "Aprendiz", minXP: 500, color: "indigo" },
+    { level: 3, title: "Estudiante", minXP: 1500, color: "emerald" },
+    { level: 4, title: "Avanzado", minXP: 3000, color: "violet" },
     { level: 5, title: "Experto", minXP: 5000, color: "orange" },
-    { level: 6, title: "Maestro", minXP: 8000, color: "red" },
-    { level: 7, title: "Leyenda", minXP: 12000, color: "yellow" },
+    { level: 6, title: "Maestro", minXP: 8000, color: "rose" },
+    { level: 7, title: "Leyenda", minXP: 12000, color: "amber" },
 ];
 
 export function calculateLevel(xp: number): StudentLevel {

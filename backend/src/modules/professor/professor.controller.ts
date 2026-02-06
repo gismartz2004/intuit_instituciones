@@ -31,6 +31,7 @@ export class ProfessorController {
   async uploadFile(
     @UploadedFile() file: any,
     @Body('profesorId') profesorId: string,
+    @Body('carpeta') carpeta?: string,
   ) {
     // Upload via StorageService (Local or SFTP)
     const url = await this.storageService.uploadFile(file);
@@ -41,6 +42,7 @@ export class ProfessorController {
       tipo: file.mimetype,
       url: url,
       peso: file.size,
+      carpeta: carpeta,
     });
   }
 

@@ -40,7 +40,7 @@ export const IntroSplash = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, y: -20 }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white min-h-[500px] flex flex-col items-center justify-center p-8 text-center shadow-2xl"
+            className="relative w-full h-full overflow-y-auto rounded-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white flex flex-col items-center justify-start p-8 md:p-12 text-center shadow-2xl custom-scrollbar"
         >
             {/* Background decoration */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
@@ -58,7 +58,7 @@ export const IntroSplash = ({
                         <Sparkles className="w-4 h-4 text-yellow-300" />
                         <span className="text-sm font-medium tracking-wide text-blue-100">GUÍA DE APRENDIZAJE INTERACTIVA</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200">
+                    <h1 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight mb-4 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200 leading-tight">
                         {title}
                     </h1>
                     <p className="text-xl text-blue-100/90 leading-relaxed font-light">
@@ -105,12 +105,15 @@ export const IntroSplash = ({
 // --- Concept Deck Component ---
 export const ConceptDeck = ({
     concepts,
-    onComplete
+    onComplete,
+    currentIndex,
+    setCurrentIndex
 }: {
     concepts: any[];
     onComplete: () => void;
+    currentIndex: number;
+    setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
 }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0);
 
     const nextCard = () => {
@@ -124,7 +127,7 @@ export const ConceptDeck = ({
         }
     };
 
-    const preventCard = () => {
+    const previousCard = () => {
         if (currentIndex > 0) {
             setDirection(-1);
             setCurrentIndex(prev => prev - 1);
@@ -140,7 +143,7 @@ export const ConceptDeck = ({
     };
 
     return (
-        <div className="max-w-3xl mx-auto py-8">
+        <div className="max-w-3xl mx-auto py-4">
             <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-bold flex items-center gap-2">
                     <BookOpen className="w-6 h-6 text-indigo-600" />
@@ -150,7 +153,7 @@ export const ConceptDeck = ({
                 </h3>
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
                     <span>{currentIndex + 1} de {concepts.length}</span>
-                    <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                             initial={{ width: 0 }}
@@ -160,7 +163,7 @@ export const ConceptDeck = ({
                 </div>
             </div>
 
-            <div className="relative h-[450px] w-full perspective-1000">
+            <div className="relative h-[400px] w-full perspective-1000">
                 <AnimatePresence initial={false} mode="wait" custom={direction}>
                     <motion.div
                         key={currentIndex}
@@ -215,21 +218,21 @@ export const ConceptDeck = ({
                                 </div>
                             </div>
 
-                            <div className="flex-1 p-8 flex flex-col justify-center bg-white relative">
+                            <div className="flex-1 p-6 flex flex-col justify-center bg-white relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-3 opacity-5">
                                     <BookOpen className="w-40 h-40" />
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-800 mb-6 leading-tight">
+                                <h2 className="text-2xl font-black text-slate-800 mb-4 leading-tight">
                                     {concepts[currentIndex].titulo}
                                 </h2>
-                                <div className="prose prose-slate text-slate-600 leading-relaxed text-lg mb-8">
+                                <div className="prose prose-slate text-slate-600 leading-relaxed text-md mb-6 overflow-y-auto max-h-[150px] custom-scrollbar">
                                     {concepts[currentIndex].descripcion}
                                 </div>
 
                                 <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-100">
                                     <Button
                                         variant="ghost"
-                                        onClick={preventCard}
+                                        onClick={previousCard}
                                         disabled={currentIndex === 0}
                                         className="text-slate-400 hover:text-indigo-600"
                                     >
@@ -261,7 +264,8 @@ export const MissionTimeline = ({
     onStepComplete,
     stepDeliverable,
     isUploading,
-    onFileUpload
+    onFileUpload,
+    onPrevStep
 }: {
     steps: any[];
     currentStepIndex: number;
@@ -271,15 +275,16 @@ export const MissionTimeline = ({
     stepDeliverable: File | null;
     isUploading: boolean;
     onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onPrevStep: () => void;
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="flex gap-8 max-w-5xl mx-auto py-6 h-[700px]">
+        <div className="flex gap-4 max-w-7xl mx-auto py-2 h-full min-h-0">
             {/* Sidebar Timeline */}
-            <div className="w-1/3 shrink-0 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col">
-                <div className="p-6 bg-slate-50 border-b border-slate-100">
-                    <h3 className="font-bold text-slate-800 text-lg">Tu Camino</h3>
+            <div className="w-1/4 shrink-0 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col">
+                <div className="p-4 bg-slate-50 border-b border-slate-100">
+                    <h3 className="font-bold text-slate-800 text-md">Tu Camino</h3>
                     <div className="mt-2 text-sm text-slate-500">
                         {completedSteps.length} de {steps.length} completados
                     </div>
@@ -346,7 +351,7 @@ export const MissionTimeline = ({
             </div>
 
             {/* Main Stage */}
-            <div className="flex-1 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden relative flex flex-col">
+            <div className="flex-1 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative flex flex-col">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentStepIndex}
@@ -357,22 +362,22 @@ export const MissionTimeline = ({
                         className="flex flex-col h-full bg-slate-50/50"
                     >
                         {/* Header */}
-                        <div className="p-8 pb-4">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-4">
+                        <div className="p-6 pb-2">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-wider mb-2">
                                 Paso {currentStepIndex + 1}
                             </div>
-                            <h2 className="text-3xl font-black text-slate-800 leading-tight">
+                            <h2 className="text-2xl font-black text-slate-800 leading-tight">
                                 {steps[currentStepIndex]?.paso}
                             </h2>
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 overflow-y-auto px-8 pb-20 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
                             {steps[currentStepIndex]?.imagenUrl && (
-                                <div className="w-full h-64 bg-slate-200 rounded-2xl overflow-hidden mb-8 shadow-inner relative group cursor-zoom-in">
+                                <div className="w-full h-32 bg-slate-200 rounded-2xl overflow-hidden mb-3 shadow-inner relative group cursor-zoom-in">
                                     <img
                                         src={steps[currentStepIndex].imagenUrl}
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                        className="w-full h-full object-contain bg-slate-100 transition-transform group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
                                 </div>
@@ -382,9 +387,9 @@ export const MissionTimeline = ({
 
                             {/* Action Area */}
                             {steps[currentStepIndex]?.requiereEntregable ? (
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                                    <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                                        <FileText className="w-5 h-5 text-indigo-500" />
+                                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                    <h4 className="font-bold text-slate-700 text-sm flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-indigo-500" />
                                         Evidencia Requerida
                                     </h4>
                                     <input
@@ -396,7 +401,7 @@ export const MissionTimeline = ({
                                     <div
                                         onClick={() => fileInputRef.current?.click()}
                                         className={cn(
-                                            "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]",
+                                            "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]",
                                             stepDeliverable
                                                 ? "bg-green-50 border-green-400"
                                                 : "bg-slate-50 border-slate-300 hover:border-indigo-400 hover:bg-slate-100"
@@ -421,21 +426,41 @@ export const MissionTimeline = ({
                                         )}
                                     </div>
 
-                                    <Button
-                                        onClick={onStepComplete}
-                                        disabled={!stepDeliverable || isUploading}
-                                        className="w-full h-12 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
-                                    >
-                                        {isUploading ? "Subiendo..." : "Completar y Continuar"}
-                                    </Button>
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant="outline"
+                                            onClick={onPrevStep}
+                                            disabled={currentStepIndex === 0}
+                                            className="flex-1 h-10 text-sm"
+                                        >
+                                            Anterior
+                                        </Button>
+                                        <Button
+                                            onClick={onStepComplete}
+                                            disabled={!stepDeliverable || isUploading}
+                                            className="flex-[2] h-10 text-sm bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
+                                        >
+                                            {isUploading ? "Subiendo..." : "Completar y Continuar"}
+                                        </Button>
+                                    </div>
                                 </div>
                             ) : (
-                                <Button
-                                    onClick={onStepComplete}
-                                    className="w-full h-14 text-xl font-bold bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-500/20 transform hover:-translate-y-1 transition-all"
-                                >
-                                    ✅ ¡Listo! Siguiente Paso
-                                </Button>
+                                <div className="flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={onPrevStep}
+                                        disabled={currentStepIndex === 0}
+                                        className="flex-1 h-12 text-md rounded-xl"
+                                    >
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        onClick={onStepComplete}
+                                        className="flex-[2] h-12 text-md font-bold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-lg shadow-green-500/20 transform hover:-translate-y-0.5 transition-all"
+                                    >
+                                        ✅ Siguiente Paso
+                                    </Button>
+                                </div>
                             )}
                         </div>
                     </motion.div>
