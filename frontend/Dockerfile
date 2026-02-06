@@ -55,6 +55,7 @@ RUN addgroup -g 1001 -S nginx-group && \
   adduser -S nginx-user -u 1001 -G nginx-group && \
   mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
   chown -R nginx-user:nginx-group /usr/share/nginx/html && \
+  chmod -R 755 /usr/share/nginx/html && \
   chown -R nginx-user:nginx-group /var/cache/nginx && \
   chown -R nginx-user:nginx-group /var/log/nginx && \
   chown -R nginx-user:nginx-group /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
