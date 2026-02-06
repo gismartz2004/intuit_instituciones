@@ -162,7 +162,7 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
                             <Library className="w-5 h-5 text-blue-600" />
                             Gestión Avanzada de Asignaciones
                         </h1>
-                        <p className="text-sm text-slate-500">Módulos > Asignaciones de Estudiantes</p>
+                        <p className="text-sm text-slate-500">Módulos &gt; Asignaciones de Estudiantes</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -192,8 +192,8 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
                                 key={mod.id}
                                 onClick={() => setSelectedModule(mod)}
                                 className={`w-full text-left p-4 rounded-xl transition-all border-2 ${selectedModule?.id === mod.id
-                                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
-                                        : 'bg-white text-slate-600 border-transparent hover:border-slate-100 hover:bg-slate-50'
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+                                    : 'bg-white text-slate-600 border-transparent hover:border-slate-100 hover:bg-slate-50'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
