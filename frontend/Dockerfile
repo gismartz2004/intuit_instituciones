@@ -51,19 +51,19 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create non-root user and prepare temp directories
-RUN addgroup -g 1001 -S nginx-group && \
-  adduser -S nginx-user -u 1001 -G nginx-group && \
-  mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
-  chown -R nginx-user:nginx-group /usr/share/nginx/html && \
-  chmod -R 755 /usr/share/nginx/html && \
-  chown -R nginx-user:nginx-group /var/cache/nginx && \
-  chown -R nginx-user:nginx-group /var/log/nginx && \
-  chown -R nginx-user:nginx-group /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
-  touch /var/run/nginx.pid && \
-  chown -R nginx-user:nginx-group /var/run/nginx.pid
+# RUN addgroup -g 1001 -S nginx-group && \
+#   adduser -S nginx-user -u 1001 -G nginx-group && \
+#   mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
+#   chown -R nginx-user:nginx-group /usr/share/nginx/html && \
+#   chmod -R 755 /usr/share/nginx/html && \
+#   chown -R nginx-user:nginx-group /var/cache/nginx && \
+#   chown -R nginx-user:nginx-group /var/log/nginx && \
+#   chown -R nginx-user:nginx-group /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
+#   touch /var/run/nginx.pid && \
+#   chown -R nginx-user:nginx-group /var/run/nginx.pid
 
 # Switch to non-root user
-USER nginx-user
+# USER nginx-user
 
 # Expose port 8080 (Cloud Run requirement)
 EXPOSE 8080
