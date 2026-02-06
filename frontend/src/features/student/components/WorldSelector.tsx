@@ -1,7 +1,6 @@
 import { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-const Earth = "/assets/models/Earth.glb";
 import {
     Float,
     OrbitControls,
@@ -50,7 +49,6 @@ function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) 
 /**
  * COMPONENTE PLANETA (USANDO MODELO GLB EXTERNO)
  */
-const Earth = "/assets/models/Earth.glb";
 // Preload with Draco
 useGLTF.preload(Earth, true);
 
