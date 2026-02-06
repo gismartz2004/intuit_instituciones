@@ -50,9 +50,13 @@ function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) 
 /**
  * COMPONENTE PLANETA (USANDO MODELO GLB EXTERNO)
  */
+const Earth = "/assets/models/Earth.glb";
+// Preload with Draco
+useGLTF.preload(Earth, true);
+
 function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
     try {
-        const { scene } = useGLTF(Earth);
+        const { scene } = useGLTF(Earth, true); // true enables default draco loader
         const clone = useMemo(() => scene.clone(), [scene]);
 
         useEffect(() => {
