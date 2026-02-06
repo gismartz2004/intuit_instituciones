@@ -117,7 +117,7 @@ export function ModuleAssignmentWizard({ onClose, onSuccess }: ModuleAssignmentW
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 max-h-[calc(90vh-200px)]">
                     <div className="relative mb-6">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <Input

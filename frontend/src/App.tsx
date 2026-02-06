@@ -100,10 +100,9 @@ function App() {
 
           <Route path="/">
             {!user ? <Redirect to="/login" /> :
-              user.role === "superadmin" ? <Redirect to="/superadmin" /> :
-                user.role === "admin" ? <Redirect to="/admin" /> :
-                  user.role === "professor" ? <Redirect to="/teach" /> :
-                    <Redirect to="/dashboard" />}
+              user.role === "superadmin" || user.role === "admin" ? <Redirect to="/admin" /> :
+                user.role === "professor" ? <Redirect to="/teach" /> :
+                  <Redirect to="/dashboard" />}
           </Route>
 
           <Route path="/dashboard">
@@ -116,12 +115,11 @@ function App() {
             <StudentDashboard3D user={user!} />
           </Route>
           <Route path="/admin">
-            <AdminDashboard user={user!} onLogout={handleLogout} />
+            <SuperAdminDashboard />
           </Route>
-          <Route path="/admin/users">
-            <AdminDashboard user={user!} onLogout={handleLogout} />
+          <Route path="/superadmin">
+            <SuperAdminDashboard />
           </Route>
-          <Route path="/superadmin" component={SuperAdminDashboard} />
           <Route path="/teach">
             <ProfessorDashboard user={user!} />
           </Route>

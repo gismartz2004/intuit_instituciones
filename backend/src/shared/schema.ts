@@ -38,6 +38,9 @@ export const usuarios = pgTable('usuarios', {
   avatar: varchar('avatar', { length: 255 }).default('avatar_boy'),
   onboardingCompleted: boolean('onboarding_completed').default(false),
   emailPadre: varchar('email_padre', { length: 100 }),
+  nombrePadre: varchar('nombre_padre', { length: 100 }),
+  celularPadre: varchar('celular_padre', { length: 20 }),
+  trabajoPadre: varchar('trabajo_padre', { length: 100 }),
 });
 
 // 4. Tabla de Módulos

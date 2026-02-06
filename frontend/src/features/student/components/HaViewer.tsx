@@ -1,4 +1,4 @@
-
+import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { studentApi } from "@/features/student/services/student.api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -271,9 +271,20 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
         console.error("Error parsing seccionesDinamicas", e);
     }
 
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            if (viewport) {
+                viewport.scrollTop = 0;
+            }
+        }
+    }, [currentSection]);
+
     return (
         <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative px-4 overflow-hidden">
-            <ScrollArea className="flex-1 w-full h-full">
+            <ScrollArea ref={scrollAreaRef} className="flex-1 w-full h-full">
                 <div className="pb-8 py-4">
 
                     {/* Section Progress Indicator */}
@@ -324,19 +335,26 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-6"
                                 >
-                                    <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
-                                        <div className="relative z-10 text-center">
-                                            <Trophy className="w-12 h-12 mx-auto mb-2 text-yellow-300" />
-                                            <Badge variant="outline" className="mb-2 border-white/50 text-white bg-white/20 text-[10px]">
-                                                Hito de Aprendizaje
-                                            </Badge>
-                                            <h1 className="text-2xl font-black mb-2">
-                                                {haData.fase || "Fase de Aprendizaje"}
-                                            </h1>
-                                            <p className="text-md text-cyan-100 max-w-2xl mx-auto line-clamp-2">
-                                                {haData.objetivoSemana}
-                                            </p>
+                                    <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
+                                        <div className="relative z-10 text-center space-y-4">
+                                            <div className="inline-flex items-center justify-center p-4 bg-white/10 rounded-full mb-2 backdrop-blur-sm">
+                                                <Trophy className="w-16 h-16 text-yellow-300 drop-shadow-md" />
+                                            </div>
+                                            <div>
+                                                <Badge variant="outline" className="mb-3 border-white/40 text-white bg-white/10 text-sm px-4 py-1">
+                                                    🚀 Desafío Final: Hito de Aprendizaje
+                                                </Badge>
+                                                <h1 className="text-4xl font-black mb-4 tracking-tight">
+                                                    {haData.fase || "Fase de Aprendizaje"}
+                                                </h1>
+                                                <div className="bg-white/10 rounded-xl p-4 max-w-2xl mx-auto border border-white/10">
+                                                    <p className="text-sm font-bold text-cyan-200 uppercase tracking-wider mb-1">Objetivo del Desafío</p>
+                                                    <p className="text-lg text-white leading-relaxed">
+                                                        "{haData.objetivoSemana}"
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -362,6 +380,11 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-6"
                                 >
+                                    <div className="text-center mb-2">
+                                        <h2 className="text-3xl font-black text-slate-800">🎯 Contexto del Desafío</h2>
+                                        <p className="text-slate-500">Antes de empezar, asegúrate de tener claros los fundamentos.</p>
+                                    </div>
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* Concepto Clave */}
                                         <motion.div
@@ -369,20 +392,21 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.1 }}
                                         >
-                                            <Card className="border-none shadow-xl bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-2xl transition-shadow group h-full">
-                                                <CardHeader className="p-6 pb-2">
-                                                    <CardTitle className="text-amber-600 flex items-center gap-2 text-lg">
-                                                        <div className="p-2 bg-amber-100 rounded-lg group-hover:scale-110 transition-transform">
-                                                            <Lightbulb className="w-5 h-5" />
+                                            <Card className="border-none shadow-xl bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-2xl transition-all group h-full overflow-hidden">
+                                                <CardHeader className="p-6 pb-2 relative z-10">
+                                                    <CardTitle className="text-amber-700 flex items-center gap-3 text-xl">
+                                                        <div className="p-3 bg-white/80 rounded-xl shadow-sm group-hover:scale-110 transition-transform text-amber-500">
+                                                            <Lightbulb className="w-6 h-6" />
                                                         </div>
                                                         Concepto Clave
                                                     </CardTitle>
                                                 </CardHeader>
-                                                <CardContent className="p-6 pt-2 space-y-3">
-                                                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
+                                                <CardContent className="p-6 pt-4 relative z-10">
+                                                    <p className="text-slate-700 text-lg leading-relaxed whitespace-pre-line font-medium">
                                                         {haData.conceptoClave || "Sin concepto definido."}
                                                     </p>
                                                 </CardContent>
+                                                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
                                             </Card>
                                         </motion.div>
 
@@ -392,20 +416,21 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.2 }}
                                         >
-                                            <Card className="border-none shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-2xl transition-shadow group h-full">
-                                                <CardHeader className="p-6 pb-2">
-                                                    <CardTitle className="text-green-600 flex items-center gap-2 text-lg">
-                                                        <div className="p-2 bg-green-100 rounded-lg group-hover:scale-110 transition-transform">
-                                                            <Target className="w-5 h-5" />
+                                            <Card className="border-none shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-2xl transition-all group h-full overflow-hidden">
+                                                <CardHeader className="p-6 pb-2 relative z-10">
+                                                    <CardTitle className="text-emerald-700 flex items-center gap-3 text-xl">
+                                                        <div className="p-3 bg-white/80 rounded-xl shadow-sm group-hover:scale-110 transition-transform text-emerald-500">
+                                                            <Target className="w-6 h-6" />
                                                         </div>
                                                         Resultado Esperado
                                                     </CardTitle>
                                                 </CardHeader>
-                                                <CardContent className="p-6 pt-2">
-                                                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
+                                                <CardContent className="p-6 pt-4 relative z-10">
+                                                    <p className="text-slate-700 text-lg leading-relaxed whitespace-pre-line font-medium">
                                                         {haData.resultadoEsperado || "Sin resultado definido."}
                                                     </p>
                                                 </CardContent>
+                                                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
                                             </Card>
                                         </motion.div>
                                     </div>
@@ -417,27 +442,32 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ delay: 0.3 }}
                                         >
-                                            <Card className="border-none shadow-lg overflow-hidden bg-white">
-                                                <div className="bg-slate-50 p-4 px-6 border-b border-slate-100 flex items-center gap-3">
-                                                    <div className="p-2 bg-blue-100 rounded-lg">
-                                                        <ListTodo className="w-5 h-5 text-blue-600" />
+                                            <Card className="border-none shadow-lg overflow-hidden bg-white ring-1 ring-slate-100">
+                                                <div className="bg-slate-50/80 p-5 px-6 border-b border-slate-100 flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                                            <ListTodo className="w-6 h-6" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-black text-slate-800 text-lg">🛠 Pasos para Completar</h3>
+                                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Sigue esta guía</p>
+                                                        </div>
                                                     </div>
-                                                    <h3 className="font-black text-slate-800">Pasos de Exploración</h3>
                                                 </div>
-                                                <CardContent className="p-6">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <CardContent className="p-6 bg-slate-50/30">
+                                                    <div className="grid grid-cols-1 gap-3">
                                                         {pasosGuiados.map((item: any, i: number) => (
                                                             <motion.div
                                                                 key={i}
                                                                 initial={{ opacity: 0, x: -10 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: 0.4 + (i * 0.1) }}
-                                                                className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-200"
+                                                                className="flex items-center gap-4 p-4 rounded-xl bg-white shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all group"
                                                             >
-                                                                <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                                                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
                                                                     {i + 1}
                                                                 </div>
-                                                                <p className="text-slate-700 text-sm font-medium">{item.paso}</p>
+                                                                <p className="text-slate-700 text-md font-medium">{item.paso}</p>
                                                             </motion.div>
                                                         ))}
                                                     </div>
@@ -476,40 +506,40 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-6"
                                 >
-                                    <Card className="border-none shadow-2xl bg-white overflow-hidden relative">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-purple-600" />
+                                    <Card className="border-none shadow-2xl bg-white overflow-hidden relative ring-1 ring-slate-100">
+                                        <div className="absolute top-0 left-0 w-2 h-full bg-purple-600" />
                                         <CardHeader className="p-8 pb-4">
-                                            <CardTitle className="flex items-center gap-3 text-purple-700 text-2xl font-black">
-                                                <div className="p-3 bg-purple-100 rounded-2xl">
+                                            <CardTitle className="flex items-center gap-4 text-purple-800 text-3xl font-black">
+                                                <div className="p-3 bg-purple-100 rounded-2xl shadow-sm text-purple-600">
                                                     <FileText className="w-8 h-8" />
                                                 </div>
-                                                Evidencia de Aprendizaje
+                                                📂 Entrega de Evidencia
                                             </CardTitle>
-                                            <CardDescription className="text-lg text-slate-500">Documenta tus resultados para completar el hito</CardDescription>
+                                            <CardDescription className="text-lg text-slate-500 pl-20">
+                                                Sube los archivos solicitados para demostrar tu dominio del tema.
+                                            </CardDescription>
                                         </CardHeader>
-                                        <CardContent className="p-8 pt-4 space-y-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2">
-                                                            <CheckCircle className="w-4 h-4 text-green-500" /> Qué debes subir:
+                                        <CardContent className="p-8 pt-4 space-y-8">
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                                <div className="space-y-6">
+                                                    <div className="bg-purple-50/50 p-6 rounded-3xl border border-purple-100">
+                                                        <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 text-lg">
+                                                            <CheckCircle className="w-5 h-5 text-purple-500" /> Requisitos de Entrega:
                                                         </h4>
-                                                        <div className="flex flex-wrap gap-2">
+                                                        <div className="flex flex-wrap gap-2 mb-4">
                                                             {evidenciaTipos.map((tipo: string) => (
-                                                                <Badge key={tipo} className="bg-purple-50 text-purple-700 border border-purple-100 px-3 py-1 font-bold">
+                                                                <Badge key={tipo} className="bg-white text-purple-700 border border-purple-200 px-4 py-1.5 font-bold shadow-sm">
                                                                     {tipo}
                                                                 </Badge>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                                        <p className="text-slate-600 text-sm leading-relaxed italic">
+                                                        <p className="text-slate-600 text-md leading-relaxed italic bg-white p-4 rounded-xl border border-purple-100/50">
                                                             "{haData.evidenciaDescripcion}"
                                                         </p>
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-4">
+                                                <div className="flex flex-col h-full">
                                                     {/* Real File Input */}
                                                     <input
                                                         type="file"
@@ -521,35 +551,36 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
 
                                                     {/* Upload Trigger Area */}
                                                     <motion.div
-                                                        whileHover={{ scale: 1.02 }}
-                                                        whileTap={{ scale: 0.98 }}
+                                                        whileHover={{ scale: 1.01 }}
+                                                        whileTap={{ scale: 0.99 }}
                                                         className={cn(
-                                                            "border-3 border-dashed rounded-3xl p-10 text-center transition-all cursor-pointer h-full flex flex-col items-center justify-center gap-4",
+                                                            "flex-1 border-3 border-dashed rounded-[2rem] p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-4 shadow-sm relative overflow-hidden",
                                                             evidenceFiles.length > 0
-                                                                ? "bg-green-50 border-green-300 shadow-inner"
-                                                                : "bg-slate-50 border-slate-200 hover:border-purple-400 hover:bg-purple-50 group"
+                                                                ? "bg-green-50 border-green-400"
+                                                                : "bg-slate-50 border-slate-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-md group"
                                                         )}
                                                         onClick={triggerFileInput}
                                                     >
                                                         {evidenceFiles.length > 0 ? (
-                                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
-                                                                <div className="p-4 bg-green-100 rounded-full inline-block mb-3">
-                                                                    <CheckCircle className="w-10 h-10 text-green-600" />
+                                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center relative z-10">
+                                                                <div className="p-4 bg-green-100 rounded-full inline-block mb-3 shadow-inner">
+                                                                    <CheckCircle className="w-12 h-12 text-green-600" />
                                                                 </div>
-                                                                <p className="text-xl font-black text-green-700">Evidencia Lista</p>
-                                                                <p className="text-sm text-green-600/80 mt-1">Haz clic para cambiar el archivo</p>
+                                                                <p className="text-2xl font-black text-green-700">¡Evidencia Lista!</p>
+                                                                <p className="text-sm text-green-600/80 mt-1 font-medium">Haz clic para agregar otro archivo o cambiar</p>
                                                             </motion.div>
                                                         ) : (
-                                                            <>
-                                                                <div className="p-5 bg-white rounded-3xl shadow-sm group-hover:shadow-md transition-shadow">
-                                                                    <Sparkles className="w-10 h-10 text-purple-500" />
+                                                            <div className="relative z-10">
+                                                                <div className="p-6 bg-white rounded-full shadow-lg group-hover:shadow-xl transition-all mb-4 inline-block">
+                                                                    <Sparkles className="w-12 h-12 text-purple-500" />
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-lg font-bold text-slate-800">Cargar Archivo</p>
-                                                                    <p className="text-xs text-slate-500 mt-1">Arrastra o haz clic aquí</p>
+                                                                    <p className="text-xl font-black text-slate-700 group-hover:text-purple-700 transition-colors">Cargar Archivo</p>
+                                                                    <p className="text-sm text-slate-500 mt-2 font-medium">Arrastra tu archivo aquí o haz clic</p>
                                                                 </div>
-                                                            </>
+                                                            </div>
                                                         )}
+                                                        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] pointer-events-none" />
                                                     </motion.div>
                                                 </div>
                                             </div>
@@ -561,11 +592,11 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: 'auto' }}
                                                         exit={{ opacity: 0, height: 0 }}
-                                                        className="mt-4 p-4 bg-green-500/5 rounded-2xl border border-green-500/20"
+                                                        className="p-4 bg-slate-50 rounded-2xl border border-slate-200"
                                                     >
                                                         <div className="flex items-center gap-2 mb-3">
-                                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                                            <p className="text-xs font-black text-green-700 uppercase tracking-wider">Archivos Seleccionados</p>
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                                                            <p className="text-xs font-black text-slate-500 uppercase tracking-wider">Archivos Adjuntos</p>
                                                         </div>
                                                         <div className="flex flex-wrap gap-3">
                                                             {evidenceFiles.map((item, idx) => (
@@ -573,13 +604,15 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                                                     key={idx}
                                                                     initial={{ scale: 0.9 }}
                                                                     animate={{ scale: 1 }}
-                                                                    className="flex items-center gap-2 bg-white p-2 px-4 rounded-xl border border-green-100 shadow-sm"
+                                                                    className="flex items-center gap-3 bg-white p-3 px-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all"
                                                                 >
-                                                                    <FileText className="w-4 h-4 text-green-600" />
+                                                                    <div className="p-1.5 bg-green-100 rounded-lg">
+                                                                        <FileText className="w-4 h-4 text-green-700" />
+                                                                    </div>
                                                                     <span className="text-sm font-bold text-slate-700 truncate max-w-[200px]">
                                                                         {item.file?.name || 'Archivo'}
                                                                     </span>
-                                                                    <Badge variant="outline" className="text-[10px] bg-slate-50 border-slate-200">
+                                                                    <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-600">
                                                                         {item.type}
                                                                     </Badge>
                                                                 </motion.div>
@@ -590,14 +623,15 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                                             </AnimatePresence>
                                         </CardContent>
 
-                                        {/* Bottom Navigation with Conditional State */}
+                                        {/* Bottom Navigation */}
                                         <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                                             <Button
-                                                variant="ghost"
+                                                variant="outline"
                                                 onClick={handlePrevSection}
-                                                className="text-slate-500 hover:text-slate-800"
+                                                className="border-slate-300 hover:bg-white hover:text-slate-800 text-slate-500"
+                                                size="lg"
                                             >
-                                                <ChevronLeft className="w-4 h-4 mr-2" /> Regresar
+                                                <ChevronLeft className="w-5 h-5 mr-2" /> Regresar
                                             </Button>
 
                                             <div className="flex items-center gap-4">
@@ -743,14 +777,17 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
                     </div>
 
 
-                    <div className={cn("fixed bottom-4 right-4 z-50 pointer-events-none transition-opacity duration-500", !avatarState.isVisible && "opacity-0")}>
-                        <div className="pointer-events-auto">
-                            <AvatarGuide
-                                emotion={avatarState.emotion}
-                                message={avatarState.message}
-                            />
-                        </div>
-                    </div>
+                    {createPortal(
+                        <div className={cn("fixed bottom-4 right-2 z-[9999] pointer-events-none transition-opacity duration-500", !avatarState.isVisible && "opacity-0")}>
+                            <div className="pointer-events-auto">
+                                <AvatarGuide
+                                    emotion={avatarState.emotion}
+                                    message={avatarState.message}
+                                />
+                            </div>
+                        </div>,
+                        document.body
+                    )}
 
                 </div>
             </ScrollArea>

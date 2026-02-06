@@ -73,11 +73,11 @@ export const IntroSplash = ({
                     className="flex gap-3 justify-center"
                 >
                     <Badge className="bg-blue-500/30 text-blue-100 border-blue-400/30 px-4 py-1.5 text-md">
-                        {modality}
+                        Modalidad: {modality}
                     </Badge>
                     {type && (
                         <Badge className="bg-purple-500/30 text-purple-100 border-purple-400/30 px-4 py-1.5 text-md">
-                            {type}
+                            Enfoque: {type}
                         </Badge>
                     )}
                 </motion.div>
@@ -151,6 +151,9 @@ export const ConceptDeck = ({
                         Conceptos Clave
                     </span>
                 </h3>
+                <p className="text-sm text-slate-500 mb-8 max-w-lg mt-1">
+                    Estos son los fundamentos teóricos que necesitarás dominar para aplicar en la parte práctica. Revísalos con atención.
+                </p>
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
                     <span>{currentIndex + 1} de {concepts.length}</span>
                     <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -201,7 +204,7 @@ export const ConceptDeck = ({
                     >
                         <Card className="h-full border-0 shadow-2xl bg-white rounded-3xl overflow-hidden flex flex-col md:flex-row">
                             <div className={cn(
-                                "w-full h-48 md:w-1/2 md:h-full bg-slate-100 relative group overflow-hidden",
+                                "w-full md:w-5/12 h-48 md:h-full bg-slate-100 relative group overflow-hidden shrink-0",
                                 !concepts[currentIndex].imagenUrl && "bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center"
                             )}>
                                 {concepts[currentIndex].imagenUrl ? (
@@ -218,18 +221,21 @@ export const ConceptDeck = ({
                                 </div>
                             </div>
 
-                            <div className="flex-1 p-6 flex flex-col justify-center bg-white relative overflow-hidden">
+                            <div className="flex-1 p-8 flex flex-col h-full bg-white relative overflow-hidden min-w-0">
                                 <div className="absolute top-0 right-0 p-3 opacity-5">
                                     <BookOpen className="w-40 h-40" />
                                 </div>
-                                <h2 className="text-2xl font-black text-slate-800 mb-4 leading-tight">
+                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 leading-tight">
                                     {concepts[currentIndex].titulo}
                                 </h2>
-                                <div className="prose prose-slate text-slate-600 leading-relaxed text-md mb-6 overflow-y-auto max-h-[150px] custom-scrollbar">
-                                    {concepts[currentIndex].descripcion}
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                                    <div className="prose prose-slate text-slate-600 leading-relaxed text-lg">
+                                        {concepts[currentIndex].descripcion}
+                                    </div>
                                 </div>
 
-                                <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-100">
+                                <div className="mt-6 flex justify-between items-center pt-6 border-t border-slate-100 shrink-0">
                                     <Button
                                         variant="ghost"
                                         onClick={previousCard}
@@ -240,7 +246,7 @@ export const ConceptDeck = ({
                                     </Button>
                                     <Button
                                         onClick={nextCard}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8"
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 shadow-lg shadow-indigo-200"
                                     >
                                         {currentIndex === concepts.length - 1 ? "Completar" : "Siguiente"}
                                         <ArrowRight className="w-4 h-4 ml-2" />
@@ -284,7 +290,12 @@ export const MissionTimeline = ({
             {/* Sidebar Timeline */}
             <div className="w-1/4 shrink-0 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col">
                 <div className="p-4 bg-slate-50 border-b border-slate-100">
-                    <h3 className="font-bold text-slate-800 text-md">Tu Camino</h3>
+                    <h3 className="font-bold text-slate-800 text-md flex items-center gap-2">
+                        📍 Ruta de Misión
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                        Sigue estos pasos secuenciales para completar el desafío.
+                    </p>
                     <div className="mt-2 text-sm text-slate-500">
                         {completedSteps.length} de {steps.length} completados
                     </div>
@@ -374,12 +385,12 @@ export const MissionTimeline = ({
                         {/* Content Area */}
                         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
                             {steps[currentStepIndex]?.imagenUrl && (
-                                <div className="w-full h-32 bg-slate-200 rounded-2xl overflow-hidden mb-3 shadow-inner relative group cursor-zoom-in">
+                                <div className="w-full max-h-[400px] min-h-[200px] bg-slate-100 rounded-2xl overflow-hidden mb-6 shadow-sm border border-slate-200 relative group">
                                     <img
                                         src={steps[currentStepIndex].imagenUrl}
-                                        className="w-full h-full object-contain bg-slate-100 transition-transform group-hover:scale-105"
+                                        className="w-full h-full object-contain mix-blend-multiply"
+                                        alt="Ilustración del paso"
                                     />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
                                 </div>
                             )}
 

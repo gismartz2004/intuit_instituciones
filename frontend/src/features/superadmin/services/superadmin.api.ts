@@ -137,4 +137,9 @@ export const superadminApi = {
     getSystemStats: (): Promise<SystemStats> => {
         return apiClient.get('/api/superadmin/stats');
     },
+
+    // Create a new user manually
+    createUser: (userData: any): Promise<any> => {
+        return apiClient.post('/api/usuarios', userData);
+    },
 };

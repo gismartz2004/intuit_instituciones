@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import {
   Card,
@@ -334,60 +335,73 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, x: -100 }}
-              className="max-w-4xl mx-auto space-y-4 py-4"
+              className="h-full overflow-y-auto custom-scrollbar p-4"
             >
-              <div className="text-center mb-4">
-                <h2 className="text-3xl font-black text-slate-800 mb-2">Tu Objetivo</h2>
-                <p className="text-lg text-slate-600 max-w-2xl mx-auto">{data.objetivoAprendizaje}</p>
-              </div>
+              <div className="max-w-4xl mx-auto space-y-4 pb-20">
+                <div className="text-center mb-4">
+                  <h2 className="text-3xl font-black text-slate-800 mb-2">🎯 Meta del Módulo</h2>
+                  <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">{data.objetivoAprendizaje}</p>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-lg hover:shadow-xl transition-all">
-                  <CardHeader>
-                    <CardTitle className="text-indigo-800 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5" /> Competencias Técnicas
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {data.competenciasTecnicas?.split(/\n|•/).map((s: string, i: number) => (
-                        s.trim() && <Badge key={i} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-default px-3 py-1">{s.trim()}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-lg hover:shadow-xl transition-all">
-                  <CardHeader>
-                    <CardTitle className="text-purple-800 flex items-center gap-2">
-                      <Target className="w-5 h-5" /> Competencias Blandas
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {data.competenciasBlandas?.split(/\n|•/).map((s: string, i: number) => (
-                        s.trim() && <Badge key={i} className="bg-purple-100 text-purple-700 hover:bg-purple-200 cursor-default px-3 py-1">{s.trim()}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  <div className="bg-blue-50/50 rounded-xl p-4 max-w-xl mx-auto border border-blue-100 mb-8">
+                    <p className="text-sm text-blue-700 font-medium">
+                      🚀 <strong>¿Para qué sirve esto?</strong><br />
+                      Al completar este módulo, dominarás tanto las herramientas técnicas como las habilidades de gestión necesarias para destacar en este rol.
+                    </p>
+                  </div>
+                </div>
 
-              <div className="flex justify-center gap-4 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={handlePrevSection}
-                  size="lg"
-                  className="rounded-full px-10 py-6 text-lg"
-                >
-                  Regresar
-                </Button>
-                <Button
-                  onClick={handleNextSection}
-                  size="lg"
-                  className="bg-slate-900 text-white rounded-full px-10 py-6 text-lg hover:scale-105 transition-transform"
-                >
-                  Entendido, Continuar <ArrowRight className="ml-2" />
-                </Button>
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-bold text-slate-700">🚀 Habilidades que potenciarás</h3>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-lg hover:shadow-xl transition-all">
+                    <CardHeader>
+                      <CardTitle className="text-indigo-800 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5" /> Competencias Técnicas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {data.competenciasTecnicas?.split(/\n|•/).map((s: string, i: number) => (
+                          s.trim() && <Badge key={i} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-default px-3 py-1">{s.trim()}</Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-lg hover:shadow-xl transition-all">
+                    <CardHeader>
+                      <CardTitle className="text-purple-800 flex items-center gap-2">
+                        <Target className="w-5 h-5" /> Competencias Blandas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {data.competenciasBlandas?.split(/\n|•/).map((s: string, i: number) => (
+                          s.trim() && <Badge key={i} className="bg-purple-100 text-purple-700 hover:bg-purple-200 cursor-default px-3 py-1">{s.trim()}</Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="flex justify-center gap-4 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevSection}
+                    size="lg"
+                    className="rounded-full px-10 py-6 text-lg"
+                  >
+                    Regresar
+                  </Button>
+                  <Button
+                    onClick={handleNextSection}
+                    size="lg"
+                    className="bg-slate-900 text-white rounded-full px-10 py-6 text-lg hover:scale-105 transition-transform"
+                  >
+                    Entendido, Continuar <ArrowRight className="ml-2" />
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -399,6 +413,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="h-full overflow-y-auto custom-scrollbar p-4"
             >
               <ConceptDeck
                 concepts={data.contenidoClave || []}
@@ -416,60 +431,64 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto py-4"
+              className="h-full overflow-y-auto custom-scrollbar p-4"
             >
-              <Card className="shadow-xl border-0 overflow-hidden">
-                <div className="bg-slate-900 p-4 text-white text-center">
-                  <FileText className="w-12 h-12 mx-auto mb-2 text-indigo-400" />
-                  <h2 className="text-2xl font-bold mb-1">Evidencia Previa</h2>
-                  <p className="text-slate-400 text-sm">Antes de iniciar la misión, necesitamos validar tu trabajo previo.</p>
-                </div>
-                <CardContent className="p-8 space-y-6">
-                  <input
-                    type="file"
-                    ref={evidenceInputRef}
-                    className="hidden"
-                    onChange={handleMissionEvidenceUpload}
-                  />
-                  <div
-                    onClick={() => !isUploading && evidenceInputRef.current?.click()}
-                    className={cn(
-                      "border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:bg-slate-50",
-                      missionEvidence ? "border-green-400 bg-green-50/50" : "border-slate-300"
-                    )}
-                  >
-                    {missionEvidence ? (
-                      <>
-                        <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
-                        <p className="text-xl font-bold text-green-700">¡Listo para enviar!</p>
-                        <p className="text-green-600">{missionEvidence.name}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-lg font-medium text-slate-700">Arrastra tu archivo aquí o haz clic</p>
-                        <p className="text-sm text-slate-500 mt-2 italic">Si ya subiste uno, se mostrará como completado abajo.</p>
-                      </>
-                    )}
+              <div className="max-w-2xl mx-auto pb-10">
+                <Card className="shadow-xl border-0 overflow-hidden">
+                  <div className="bg-slate-900 p-4 text-white text-center">
+                    <FileText className="w-12 h-12 mx-auto mb-2 text-indigo-400" />
+                    <h2 className="text-2xl font-bold mb-1">Evidencia Previa</h2>
+                    <p className="text-slate-400 text-sm max-w-md mx-auto">
+                      Para asegurar que estás listo para la misión, necesitamos validar que has completado las tareas preparatorias. Esto garantiza que tengas las bases sólidas para el éxito.
+                    </p>
                   </div>
+                  <CardContent className="p-8 space-y-6">
+                    <input
+                      type="file"
+                      ref={evidenceInputRef}
+                      className="hidden"
+                      onChange={handleMissionEvidenceUpload}
+                    />
+                    <div
+                      onClick={() => !isUploading && evidenceInputRef.current?.click()}
+                      className={cn(
+                        "border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:bg-slate-50 relative group",
+                        missionEvidence ? "border-green-400 bg-green-50/50" : "border-slate-300"
+                      )}
+                    >
+                      {missionEvidence ? (
+                        <>
+                          <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
+                          <p className="text-xl font-bold text-green-700">¡Listo para enviar!</p>
+                          <p className="text-green-600">{missionEvidence.name}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-lg font-medium text-slate-700">Arrastra tu archivo aquí o haz clic</p>
+                          <p className="text-sm text-slate-500 mt-2 italic">Si ya subiste uno, se mostrará como completado abajo.</p>
+                        </>
+                      )}
+                    </div>
 
-                  <div className="flex gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={handlePrevSection}
-                      className="flex-1 h-12 text-lg"
-                    >
-                      Regresar
-                    </Button>
-                    <Button
-                      onClick={handleNextSection}
-                      disabled={!missionEvidence || isUploading || !missionEvidenceUrl}
-                      className="flex-[2] h-12 text-lg bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      {isUploading ? "Subiendo..." : "Confirmar y Empezar Misión"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="flex gap-4">
+                      <Button
+                        variant="outline"
+                        onClick={handlePrevSection}
+                        className="flex-1 h-12 text-lg"
+                      >
+                        Regresar
+                      </Button>
+                      <Button
+                        onClick={handleNextSection}
+                        disabled={!missionEvidence || isUploading || !missionEvidenceUrl}
+                        className="flex-[2] h-12 text-lg bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        {isUploading ? "Subiendo..." : "Confirmar y Empezar Misión"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </motion.div>
           )}
 
@@ -589,15 +608,18 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
         </AnimatePresence>
       </div>
 
-      <div className={cn("fixed bottom-6 right-6 z-50 pointer-events-none transition-opacity duration-500", !avatarState.isVisible && "opacity-0")}>
-        <div className="pointer-events-auto">
-          <AvatarGuide
-            emotion={avatarState.emotion}
-            message={avatarState.message}
-            className="transition-opacity duration-300"
-          />
-        </div>
-      </div>
+      {createPortal(
+        <div className={cn("fixed bottom-4 right-2 z-[9999] pointer-events-none transition-opacity duration-500", !avatarState.isVisible && "opacity-0")}>
+          <div className="pointer-events-auto">
+            <AvatarGuide
+              emotion={avatarState.emotion}
+              message={avatarState.message}
+              className="transition-opacity duration-300"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 });

@@ -18,7 +18,7 @@ export const env = {
    * API Base URL - URL del backend
    * @default 'http://localhost:3000'
    */
-  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', 'http://localhost:8080'),
+  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', '/api'),
 
   /**
    * Nombre de la aplicación

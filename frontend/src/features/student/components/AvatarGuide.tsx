@@ -122,7 +122,7 @@ export default function AvatarGuide({ emotion, message, className, actionLabel, 
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                 onMouseLeave={() => setIsMinimized(true)}
                 transition={{ type: "spring", stiffness: 300, damping: 25 } as const}
-                className={cn("relative z-50 max-w-sm pointer-events-auto translate-x-2 translate-y-2", className)}
+                className={cn("relative z-50 max-w-sm pointer-events-auto", className)}
             >
                 {/* Main Card */}
                 <div className={cn(

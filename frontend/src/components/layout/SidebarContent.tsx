@@ -83,17 +83,14 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
     };
 
     const adminLinks = [
-        { href: "/admin", icon: Shield, label: "Panel Admin" },
+        { href: "/admin", icon: Shield, label: "Dashboard" },
         { href: "/admin/users", icon: User, label: "Usuarios" },
         { href: "/admin/modules", icon: Book, label: "Módulos" },
-        { href: "/profile", icon: Settings, label: "Configuración" },
+        { href: "/admin/assignments", icon: Target, label: "Asignaciones" },
+        { href: "/admin/prizes", icon: Trophy, label: "Premios" },
     ];
 
-    const superadminLinks = [
-        { href: "/superadmin", icon: Shield, label: "Dashboard" },
-        { href: "/admin", icon: Shield, label: "Panel Admin" },
-        { href: "/admin/users", icon: User, label: "Gestión Usuarios" },
-    ];
+    const superadminLinks = adminLinks;
 
     const professorLinks = [
         { href: "/teach", icon: GraduationCap, label: "Mis Módulos" },

@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronRight, Sparkles } from "lucide-react";
+import { Check, ChevronRight, Sparkles, User, Phone, Briefcase, Mail } from "lucide-react";
 import confetti from "canvas-confetti";
 import { authApi } from '../services/auth.api';
 
@@ -12,6 +14,7 @@ import avatarBoy from "@/assets/avatars/avatar_boy.png";
 import avatarGirl from "@/assets/avatars/avatar_girl.png";
 import avatarRobot from "@/assets/avatars/avatar_robot.png";
 import avatarPet from "@/assets/avatars/avatar_pet.png";
+import { useToast } from "@/hooks/use-toast";
 
 const AVATARS = [
     { id: 'avatar_boy', src: avatarBoy, label: "Genio Tech" },
@@ -30,13 +33,44 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
     const [step, setStep] = useState(1);
     const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0].id);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { toast } = useToast();
+
+    // Parent Info State
+    const [parentInfo, setParentInfo] = useState({
+        nombrePadre: '',
+        emailPadre: '', // Will try to pre-fill if available in user context later
+        celularPadre: '',
+        trabajoPadre: ''
+    });
+
+    // Validations
+    const isParentStepValid = () => {
+        return (
+            parentInfo.nombrePadre.trim().length > 3 &&
+            parentInfo.celularPadre.trim().length > 5 &&
+            parentInfo.trabajoPadre.trim().length > 2
+        );
+    };
 
     const handleFinish = async () => {
+        if (!isParentStepValid()) {
+            toast({
+                title: "Faltan datos",
+                description: "Por favor completa toda la información de tu representante.",
+                variant: "destructive"
+            });
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             await authApi.updateUser(userId, {
                 avatar: selectedAvatar,
-                onboardingCompleted: true
+                onboardingCompleted: true,
+                nombrePadre: parentInfo.nombrePadre,
+                // emailPadre: parentInfo.emailPadre, // Optional update if needed
+                celularPadre: parentInfo.celularPadre,
+                trabajoPadre: parentInfo.trabajoPadre
             });
 
             confetti({
@@ -47,6 +81,11 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
             onComplete(selectedAvatar);
         } catch (error) {
             console.error("Failed to complete onboarding", error);
+            toast({
+                title: "Error",
+                description: "No se pudo guardar la información. Inténtalo de nuevo.",
+                variant: "destructive"
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -54,7 +93,7 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
 
     return (
         <Dialog open={isOpen} onOpenChange={() => { }}>
-            <DialogContent className="sm:max-w-[600px] h-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl">
+            <DialogContent className="sm:max-w-[600px] h-[550px] p-0 overflow-hidden bg-white border-none shadow-2xl">
                 <div className="relative w-full h-full flex flex-col">
                     {/* Decorative Background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-700 opacity-10 z-0" />
@@ -74,9 +113,9 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                                 <div className="bg-blue-100 p-4 rounded-full mb-4">
                                     <span className="text-4xl">👋</span>
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-800">¡Bienvenido a Edu-Connect!</h2>
+                                <h2 className="text-3xl font-black text-slate-800">¡Bienvenido a Arg Academy!</h2>
                                 <p className="text-lg text-slate-600 max-w-md">
-                                    Estás a punto de iniciar una aventura increíble. Aprende programación, electrónica y más mientras exploras nuestra ciudad tecnológica.
+                                    Estás a punto de iniciar una aventura increíble. Antes de comenzar, necesitamos configurar tu perfil.
                                 </p>
                                 <Button
                                     size="lg"
@@ -121,11 +160,75 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                                     <Button variant="ghost" onClick={() => setStep(1)}>Atrás</Button>
                                     <Button
                                         size="lg"
-                                        className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-full px-8 shadow-lg"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full px-8 shadow-lg"
+                                        onClick={() => setStep(3)}
+                                    >
+                                        Siguiente <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 3 && (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="relative z-10 flex flex-col items-center justify-center h-full p-8 space-y-4 w-full max-w-md mx-auto"
+                            >
+                                <div className="text-center mb-2">
+                                    <h2 className="text-2xl font-bold text-slate-800">Datos de tu Representante</h2>
+                                    <p className="text-sm text-slate-500">Información de contacto importante</p>
+                                </div>
+
+                                <div className="w-full space-y-3">
+                                    <div className="space-y-1">
+                                        <Label className="flex items-center gap-2 text-slate-600">
+                                            <User className="w-4 h-4" /> Nombre Completo del Padre/Madre
+                                        </Label>
+                                        <Input
+                                            placeholder="Ej: María Pérez"
+                                            value={parentInfo.nombrePadre}
+                                            onChange={(e) => setParentInfo({ ...parentInfo, nombrePadre: e.target.value })}
+                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label className="flex items-center gap-2 text-slate-600">
+                                            <Phone className="w-4 h-4" /> Teléfono / Celular
+                                        </Label>
+                                        <Input
+                                            placeholder="Ej: 0991234567"
+                                            value={parentInfo.celularPadre}
+                                            onChange={(e) => setParentInfo({ ...parentInfo, celularPadre: e.target.value })}
+                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label className="flex items-center gap-2 text-slate-600">
+                                            <Briefcase className="w-4 h-4" /> Profesión / Lugar de Trabajo
+                                        </Label>
+                                        <Input
+                                            placeholder="Ej: Ingeniera Civil / Empresa X"
+                                            value={parentInfo.trabajoPadre}
+                                            onChange={(e) => setParentInfo({ ...parentInfo, trabajoPadre: e.target.value })}
+                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-4 w-full justify-center">
+                                    <Button variant="ghost" onClick={() => setStep(2)}>Atrás</Button>
+                                    <Button
+                                        size="lg"
+                                        className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-full px-8 shadow-lg w-full max-w-[200px]"
                                         onClick={handleFinish}
                                         disabled={isSubmitting}
                                     >
-                                        {isSubmitting ? "Guardando..." : "¡Listo para la acción!"}
+                                        {isSubmitting ? "Guardando..." : "¡Finalizar!"}
                                     </Button>
                                 </div>
                             </motion.div>

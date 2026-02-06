@@ -134,4 +134,33 @@ export class SuperadminController {
         await this.schedulerService.checkStudentActivity();
         return { success: true, message: 'Notification checks triggered' };
     }
+
+    /**
+     * Reset user progress (XP, points, streak, assignments, evidence)
+     * POST /api/superadmin/users/:id/reset
+     */
+    @Post('users/:id/reset')
+    async resetUserProgress(@Param('id', ParseIntPipe) userId: number) {
+        return this.superadminService.resetUserProgress(userId);
+    }
+
+    /**
+     * Bulk reset multiple users
+     * POST /api/superadmin/users/bulk-reset
+     */
+    @Post('users/bulk-reset')
+    async bulkResetUsers(@Body() body: { userIds: number[] }) {
+        try {
+            console.log('[BULK RESET REQUEST]', body);
+            if (!body.userIds || !Array.isArray(body.userIds)) {
+                throw new BadRequestException('Invalid userIds format');
+            }
+            // Ensure they are numbers
+            const ids = body.userIds.map(id => Number(id)).filter(id => !isNaN(id));
+            return await this.superadminService.bulkResetUsers(ids);
+        } catch (error) {
+            console.error('[BULK RESET CONTROLLER ERROR]', error);
+            throw error;
+        }
+    }
 }

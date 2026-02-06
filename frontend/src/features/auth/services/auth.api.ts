@@ -26,6 +26,9 @@ export interface LoginResponse {
 export interface UpdateUserPayload {
   avatar?: string;
   onboardingCompleted?: boolean;
+  nombrePadre?: string;
+  celularPadre?: string;
+  trabajoPadre?: string;
 }
 
 export const authApi = {
