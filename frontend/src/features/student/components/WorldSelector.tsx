@@ -49,12 +49,14 @@ function EarthFallback({ color, hovered }: { color: string; hovered: boolean }) 
 /**
  * COMPONENTE PLANETA (USANDO MODELO GLB EXTERNO)
  */
-// Preload with Draco
-useGLTF.preload(Earth, true);
+// Using a public optimized Earth model to ensure reliable loading and avoid 500 errors with large local assets
+const Earth = "https://raw.githubusercontent.com/pmndrs/drei-assets/master/earth.gltf";
+// Preload standard GLB
+useGLTF.preload(Earth);
 
 function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
     try {
-        const { scene } = useGLTF(Earth, true); // true enables default draco loader
+        const { scene } = useGLTF(Earth); // Standard loader
         const clone = useMemo(() => scene.clone(), [scene]);
 
         useEffect(() => {
