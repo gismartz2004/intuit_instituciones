@@ -111,11 +111,23 @@ export default function LevelViewer() {
   }, []);
 
   const ragRef = useRef<any>(null);
+  const haRef = useRef<any>(null);
+  const pimRef = useRef<any>(null);
 
   const handlePrev = () => {
     if (viewMode === 'rag' && ragRef.current) {
       ragRef.current.goPrev();
       return;
+    }
+
+    if (viewMode === 'ha' && haRef.current) {
+      const result = haRef.current.goPrev();
+      if (result?.handled) return;
+    }
+
+    if (viewMode === 'pim' && pimRef.current) {
+      const result = pimRef.current.goPrev();
+      if (result?.handled) return;
     }
 
     // Logic for other modes
@@ -124,7 +136,6 @@ export default function LevelViewer() {
     } else if (viewMode === 'ha') {
       setViewMode('rag');
     }
-    // Level jump disabled as per user request: "no debe permitir reresar a una level anterior"
   };
 
   const handleNext = () => {
@@ -133,13 +144,22 @@ export default function LevelViewer() {
       return;
     }
 
+    if (viewMode === 'ha' && haRef.current) {
+      const result = haRef.current.goNext();
+      if (result?.handled) return;
+    }
+
+    if (viewMode === 'pim' && pimRef.current) {
+      const result = pimRef.current.goNext();
+      if (result?.handled) return;
+    }
+
     // Logic: RAG -> HA -> PIM
     if (viewMode === 'rag') {
       setViewMode('ha');
     } else if (viewMode === 'ha') {
       setViewMode('pim');
     }
-    // Level jump disabled to keep it within the level
   };
 
   const menuItems = [
@@ -346,8 +366,8 @@ export default function LevelViewer() {
                 className="w-full h-full will-change-transform"
               >
                 {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} />}
-                {viewMode === 'ha' && <HaViewer levelId={levelId} onAddPoints={handleAddPoints} />}
-                {viewMode === 'pim' && <PimViewer levelId={levelId} />}
+                {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} />}
+                {viewMode === 'pim' && <PimViewer ref={pimRef} levelId={levelId} />}
               </motion.div>
             </AnimatePresence>
           </div>

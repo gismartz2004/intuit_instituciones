@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,10 +11,13 @@ import {
     PenTool,
     CheckCircle2,
     Info,
+    ChevronLeft,
     ChevronRight,
     Sparkles,
     ArrowRight,
-    BookOpen
+    BookOpen,
+    Rocket,
+    CheckCircle
 } from "lucide-react";
 import { studentApi } from "@/features/student/services/student.api";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,13 +25,12 @@ import { cn } from "@/lib/utils";
 import AvatarGuide from "./AvatarGuide";
 import { AvatarState } from "@/types/gamification";
 
-interface PimViewerProps {
-    levelId: number;
-}
+type PimSection = 'intro' | 'project_context' | 'technical_modules' | 'submission';
 
-export default function PimViewer({ levelId }: PimViewerProps) {
+export const PimViewer = forwardRef(({ levelId }: { levelId: number }, ref) => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [currentSection, setCurrentSection] = useState<PimSection>('intro');
     const [activeModuleIdx, setActiveModuleIdx] = useState(0);
     const [avatarState, setAvatarState] = useState<AvatarState>({
         isVisible: true,
@@ -38,317 +39,399 @@ export default function PimViewer({ levelId }: PimViewerProps) {
     });
 
     useEffect(() => {
-        const fetchPim = async () => {
+        const fetchData = async () => {
+            setLoading(true);
             try {
                 const result = await studentApi.getPimTemplate(levelId);
                 if (result) {
+                    // Parse modulos if string
                     result.modulos = typeof result.modulos === 'string' ? JSON.parse(result.modulos) : result.modulos;
                     setData(result);
-
-                    if (result.modulos && result.modulos.length > 0) {
-                        setAvatarState({
-                            emotion: 'neutral',
-                            message: `Este proyecto tiene ${result.modulos.length} módulos técnicos. Haz clic en cada uno para explorar el desafío.`,
-                            isVisible: true
-                        });
-                    }
                 }
             } catch (error) {
-                console.error("Error fetching PIM:", error);
+                console.error("Error fetching PIM template:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchPim();
-    }, [levelId]); // Removed activeModuleIdx to prevent re-fetching on module change
+        fetchData();
+    }, [levelId]);
 
-    if (loading) return <div className="p-12 text-center text-slate-500">Cargando Proyecto Integrador...</div>;
-    if (!data) return (
-        <div className="flex flex-col items-center justify-center p-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-100">
-            <Layers className="w-16 h-16 mb-4 opacity-10" />
-            <p className="text-lg font-medium">No hay un Proyecto Integrador definido para este nivel.</p>
+    const handleNext = () => {
+        const sections: PimSection[] = ['intro', 'project_context', 'technical_modules', 'submission'];
+        const currentIdx = sections.indexOf(currentSection);
+
+        if (currentSection === 'technical_modules') {
+            if (activeModuleIdx < (data?.modulos?.length - 1)) {
+                setActiveModuleIdx(prev => prev + 1);
+                setAvatarState({
+                    isVisible: true,
+                    emotion: 'happy',
+                    message: `Estamos en el módulo ${activeModuleIdx + 2}: ${data.modulos[activeModuleIdx + 1].titulo}.`
+                });
+                return true;
+            }
+        }
+
+        if (currentIdx < sections.length - 1) {
+            const nextSec = sections[currentIdx + 1];
+            setCurrentSection(nextSec);
+
+            // Update avatar message based on section
+            if (nextSec === 'project_context') {
+                setAvatarState({
+                    isVisible: true,
+                    emotion: 'thinking',
+                    message: "Es fundamental entender el contexto y los objetivos antes de comenzar a construir."
+                });
+            } else if (nextSec === 'technical_modules') {
+                setAvatarState({
+                    isVisible: true,
+                    emotion: 'happy',
+                    message: "¡Hora de la verdad! Vamos a ver los módulos técnicos que debes implementar."
+                });
+            } else if (nextSec === 'submission') {
+                setAvatarState({
+                    isVisible: true,
+                    emotion: 'celebrating',
+                    message: "¡Has revisado todo el proyecto! Ahora solo queda completar la entrega."
+                });
+            }
+            return true;
+        }
+        return false;
+    };
+
+    const handlePrev = () => {
+        const sections: PimSection[] = ['intro', 'project_context', 'technical_modules', 'submission'];
+        const currentIdx = sections.indexOf(currentSection);
+
+        if (currentSection === 'technical_modules') {
+            if (activeModuleIdx > 0) {
+                setActiveModuleIdx(prev => prev - 1);
+                return true;
+            }
+        }
+
+        if (currentIdx > 0) {
+            setCurrentSection(sections[currentIdx - 1]);
+            return true;
+        }
+        return false;
+    };
+
+    useImperativeHandle(ref, () => ({
+        goNext: () => {
+            const success = handleNext();
+            return { handled: success };
+        },
+        goPrev: () => {
+            const success = handlePrev();
+            return { handled: success };
+        }
+    }));
+
+    if (loading) return (
+        <div className="w-full h-full flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <p className="font-black text-xs text-slate-400 uppercase tracking-widest">Cargando desafío PIM...</p>
+            </div>
         </div>
     );
 
-    // Safety check for modulos array
-    if (!data.modulos || !Array.isArray(data.modulos) || data.modulos.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center p-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-100">
-                <Layers className="w-16 h-16 mb-4 opacity-10" />
-                <p className="text-lg font-medium">Este Proyecto Integrador no tiene módulos definidos.</p>
-            </div>
-        );
-    }
+    if (!data) return <div className="p-8 text-center text-slate-500 font-bold uppercase tracking-widest">No hay proyecto integrador para este nivel.</div>;
 
-    const activeModule = data.modulos[activeModuleIdx];
+    const sections: PimSection[] = ['intro', 'project_context', 'technical_modules', 'submission'];
+    const activeSectionIdx = sections.indexOf(currentSection);
+    const activeModule = data.modulos?.[activeModuleIdx];
 
     return (
-        <div className="max-w-5xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-4 relative h-full flex flex-col">
+        <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative px-4 overflow-hidden pt-4">
 
-            {/* Project Hero Header */}
-            <div className="relative rounded-2xl overflow-hidden shadow-xl bg-indigo-900 text-white flex items-center p-4 md:p-6 shrink-0">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-indigo-500/20 to-transparent pointer-events-none" />
-                <div className="relative z-10 max-w-3xl space-y-2">
-                    <Badge className="bg-indigo-500/30 text-indigo-100 border-indigo-400/30 px-2 py-0.5 mb-1 text-[10px]">
-                        {data.anioNivel || "Proyecto Integrador"}
-                    </Badge>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">
-                        {data.tituloProyecto}
-                    </h1>
-                    <p className="text-sm md:text-md text-indigo-100/90 leading-relaxed max-w-2xl line-clamp-2">
-                        {data.descripcionGeneral}
-                    </p>
-                    <div className="flex items-center gap-3 pt-1">
-                        <div className="flex -space-x-1.5">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-900 bg-indigo-400 flex items-center justify-center">
-                                    <Sparkles className="w-3 h-3 text-indigo-900" />
-                                </div>
-                            ))}
-                        </div>
-                        <span className="text-indigo-200 text-[10px] font-medium">
-                            {data.modulos?.length} Módulos Técnicos
+            {/* PROGRESS TRACKER */}
+            <div className="flex items-center justify-between mb-8 px-8 relative shrink-0">
+                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
+                {sections.map((sec, idx) => (
+                    <div
+                        key={sec}
+                        className={cn(
+                            "relative z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-2",
+                            activeSectionIdx >= idx
+                                ? "bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.5)] scale-110"
+                                : "bg-white border-slate-300 scale-90"
+                        )}
+                    >
+                        {activeSectionIdx > idx ? (
+                            <CheckCircle className="w-5 h-5 text-white" />
+                        ) : (
+                            <span className={cn("font-black text-sm", activeSectionIdx === idx ? "text-white" : "text-slate-400")}>
+                                {idx + 1}
+                            </span>
+                        )}
+                        <span className={cn(
+                            "absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-tighter whitespace-nowrap transition-colors duration-500",
+                            activeSectionIdx >= idx ? "text-indigo-600 opacity-100" : "text-slate-400 opacity-60"
+                        )}>
+                            {sec.replace('_', ' ')}
                         </span>
                     </div>
-                </div>
-                {data.imagenUrl && (
-                    <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 w-32 h-32 rounded-xl overflow-hidden shadow-xl border-4 border-white/10">
-                        <img src={data.imagenUrl} className="w-full h-full object-cover" />
-                    </div>
-                )}
+                ))}
             </div>
 
-            {/* General Project Context Section - Compact */}
-            {(data.problematicaGeneral || data.contextoProblema || data.objetivoProyecto) && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 shrink-0">
-                    {data.problematicaGeneral && (
-                        <Card className="bg-red-50 border-red-100 shadow-sm hover:shadow-md transition-shadow">
-                            <CardHeader className="pb-3 px-4 pt-4">
-                                <CardTitle className="text-xs font-black text-red-600 uppercase tracking-widest flex items-center gap-2">
-                                    <Info className="w-4 h-4" /> La Problemática
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="px-4 pb-4">
-                                <p className="text-slate-700 text-xs leading-relaxed font-medium line-clamp-3">
-                                    {data.problematicaGeneral}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {data.contextoProblema && (
-                        <Card className="bg-amber-50 border-amber-100 shadow-sm hover:shadow-md transition-shadow">
-                            <CardHeader className="pb-3 px-4 pt-4">
-                                <CardTitle className="text-xs font-black text-amber-600 uppercase tracking-widest flex items-center gap-2">
-                                    <BookOpen className="w-4 h-4" /> Contexto
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="px-4 pb-4">
-                                <p className="text-slate-700 text-xs leading-relaxed font-medium line-clamp-3">
-                                    {data.contextoProblema}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {data.objetivoProyecto && (
-                        <Card className="bg-emerald-50 border-emerald-100 shadow-sm hover:shadow-md transition-shadow md:col-span-1">
-                            <CardHeader className="pb-3 px-4 pt-4">
-                                <CardTitle className="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                                    <Target className="w-4 h-4" /> Objetivo Final
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="px-4 pb-4">
-                                <p className="text-slate-700 text-xs leading-relaxed font-medium line-clamp-3">
-                                    {data.objetivoProyecto}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start flex-1 min-h-0">
-
-                {/* Module Sidebar Navigation */}
-                <div className="lg:col-span-3 space-y-2 h-full flex flex-col min-h-0">
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Estructura</h3>
-                    <div className="space-y-1 overflow-y-auto flex-1 custom-scrollbar pr-1">
-                        {data.modulos.map((mod: any, idx: number) => (
-                            <button
-                                key={idx}
-                                onClick={() => setActiveModuleIdx(idx)}
-                                className={cn(
-                                    "w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between group",
-                                    activeModuleIdx === idx
-                                        ? "bg-white shadow-md border-l-4 border-l-indigo-600 ring-1 ring-slate-200"
-                                        : "hover:bg-slate-50 text-slate-600"
-                                )}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <div className={cn(
-                                        "w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[10px]",
-                                        activeModuleIdx === idx ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-500"
-                                    )}>
-                                        {idx + 1}
+            <ScrollArea className="flex-1 w-full h-full">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSection + (currentSection === 'technical_modules' ? activeModuleIdx : '')}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="pb-24 pt-4"
+                    >
+                        {currentSection === 'intro' && (
+                            <Card className="border-none bg-slate-900 text-white overflow-hidden shadow-2xl relative group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-transparent to-purple-600/20 opacity-50" />
+                                <CardHeader className="relative z-10 p-12 text-center">
+                                    <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 mb-6">
+                                        <Rocket className="w-4 h-4 text-indigo-400" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">Proyecto Integrador Final</span>
                                     </div>
-                                    <span className="font-bold text-[10px] truncate max-w-[120px]">{mod.nombreModulo}</span>
-                                </div>
-                                <ChevronRight className={cn("w-3 h-3 transition-transform", activeModuleIdx === idx ? "text-indigo-600 translate-x-1" : "text-slate-300")} />
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Module Details Content */}
-                <div className="lg:col-span-9 h-full min-h-0">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeModuleIdx}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="h-full"
-                        >
-                            <Card className="border-none shadow-xl bg-white overflow-hidden h-full flex flex-col">
-                                <CardHeader className="bg-indigo-600 text-white p-4 shrink-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Badge className="bg-white/20 text-white border-none text-[10px]">Módulo {activeModuleIdx + 1}</Badge>
-                                    </div>
-                                    <CardTitle className="text-xl font-black truncate">{activeModule.nombreModulo}</CardTitle>
+                                    <CardTitle className="text-5xl font-black mb-6 tracking-tighter leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-100">
+                                        {data.tituloProyecto}
+                                    </CardTitle>
+                                    <CardDescription className="text-slate-300 text-lg font-medium max-w-2xl mx-auto leading-relaxed italic">
+                                        "{data.descripcionGeneral}"
+                                    </CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-4 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                                <CardContent className="relative z-10 px-12 pb-12 flex justify-center">
+                                    <Button onClick={handleNext} className="h-14 px-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-xs shadow-xl transition-all hover:scale-105 active:scale-95 group">
+                                        Comenzar Desafío <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
 
-                                    {/* Focus Points */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5 p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 shadow-sm">
-                                            <div className="flex items-center gap-2 text-indigo-700 font-bold text-[11px] uppercase tracking-wider">
-                                                <Target className="w-3.5 h-3.5" /> Enfoque Técnico
-                                            </div>
-                                            <div className="text-indigo-900/80 leading-relaxed text-[11px] font-medium">
-                                                {activeModule.enfoqueTecnico}
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1.5 p-3 rounded-2xl bg-orange-50/50 border border-orange-100/50 shadow-sm">
-                                            <div className="flex items-center gap-2 text-orange-700 font-bold text-[11px] uppercase tracking-wider">
-                                                <Search className="w-3.5 h-3.5" /> Problema Técnico
-                                            </div>
-                                            <div className="text-orange-900/80 leading-relaxed font-semibold italic text-[11px]">
-                                                "{activeModule.problemaTecnico}"
-                                            </div>
-                                        </div>
+                        {currentSection === 'project_context' && (
+                            <div className="space-y-6">
+                                <div className="text-center mb-10">
+                                    <h2 className="text-3xl font-black text-slate-800 tracking-tight">Contexto de la Misión</h2>
+                                    <p className="text-slate-500 font-medium">Analiza el problema antes de proponer una solución técnica.</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <Card className="bg-red-50 border-red-100 shadow-md hover:shadow-xl transition-all hover:-translate-y-2 group">
+                                        <CardHeader>
+                                            <CardTitle className="text-sm font-black text-red-600 uppercase tracking-widest flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-2xl bg-red-100 flex items-center justify-center group-hover:rotate-12 transition-transform">
+                                                    <Info className="w-5 h-5" />
+                                                </div>
+                                                Problemática
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                                {data.problematicaGeneral}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="bg-amber-50 border-amber-100 shadow-md hover:shadow-xl transition-all hover:-translate-y-2 group">
+                                        <CardHeader>
+                                            <CardTitle className="text-sm font-black text-amber-600 uppercase tracking-widest flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center group-hover:rotate-12 transition-transform">
+                                                    <BookOpen className="w-5 h-5" />
+                                                </div>
+                                                Contexto
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                                {data.contextoProblema}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="bg-emerald-50 border-emerald-100 shadow-md hover:shadow-xl transition-all hover:-translate-y-2 group h-full">
+                                        <CardHeader>
+                                            <CardTitle className="text-sm font-black text-emerald-600 uppercase tracking-widest flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                    <Target className="w-5 h-5" />
+                                                </div>
+                                                Meta Final
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                                {data.objetivoProyecto}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                                <div className="flex justify-center pt-8">
+                                    <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-12 h-14 font-black uppercase tracking-widest text-xs shadow-lg group">
+                                        Revisar Módulos Técnicos <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentSection === 'technical_modules' && activeModule && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex flex-col">
+                                        <h3 className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">Módulo Técnico {activeModuleIdx + 1} de {data.modulos.length}</h3>
+                                        <h2 className="text-4xl font-black text-slate-800 tracking-tighter">{activeModule.titulo}</h2>
                                     </div>
+                                    <div className="flex gap-2">
+                                        {data.modulos.map((_: any, idx: number) => (
+                                            <div
+                                                key={idx}
+                                                className={cn(
+                                                    "w-12 h-1.5 rounded-full transition-all duration-300",
+                                                    activeModuleIdx === idx ? "bg-indigo-600 w-20" : "bg-slate-200"
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
 
-                                    <div className="border-t border-slate-100" />
-
-                                    {/* Investigation Section */}
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-md font-bold flex items-center gap-2 text-slate-800">
-                                                <BookOpen className="w-4 h-4 text-blue-500" /> Investigación
-                                            </h3>
-                                            <div className="flex gap-1">
+                                <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden rounded-3xl border border-slate-100">
+                                    <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+                                    <CardHeader className="p-8">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-1 text-xs font-black uppercase">
+                                                <Layers className="w-4 h-4 mr-2" /> Enfoque: {activeModule.enfoqueTecnico}
+                                            </Badge>
+                                            <div className="flex gap-2">
                                                 {activeModule.formatoSugerido?.map((f: string, i: number) => (
-                                                    <Badge key={i} variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none text-[9px]">
+                                                    <Badge key={i} className="bg-slate-900 text-white text-[9px] font-black uppercase px-3">
                                                         {f}
                                                     </Badge>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                            {activeModule.actividadesInvestigacion?.map((act: string, i: number) => (
-                                                <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 transition-colors">
-                                                    <div className="w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-blue-600 text-[9px] shrink-0">
-                                                        {i + 1}
-                                                    </div>
-                                                    <p className="text-slate-700 text-[11px] leading-snug line-clamp-2">{act}</p>
+                                    </CardHeader>
+                                    <CardContent className="px-8 pb-12 space-y-10">
+                                        {/* Investigation */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-black flex items-center gap-3 text-slate-800 uppercase tracking-tight">
+                                                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                                                    <Search className="w-5 h-5" />
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Practice Section */}
-                                    <div className="space-y-3">
-                                        <h3 className="text-md font-bold flex items-center gap-2 text-slate-800">
-                                            <PenTool className="w-4 h-4 text-green-500" /> Práctica
-                                        </h3>
-                                        <div className="bg-slate-50 p-3 rounded-xl space-y-2">
-                                            <div className="flex flex-wrap gap-1">
-                                                {activeModule.actividadesPractica?.map((act: string, i: number) => (
-                                                    <Badge key={i} className="bg-white border-green-100 text-green-700 px-2.5 py-0.5 rounded-full text-[9px] font-medium shadow-sm flex items-center gap-1">
-                                                        <CheckCircle2 className="w-3 h-3 text-green-500" /> {act}
-                                                    </Badge>
+                                                Investigación Sugerida
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                {activeModule.actividadesInvestigacion?.map((act: string, i: number) => (
+                                                    <motion.div
+                                                        key={i}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: 0.1 * i }}
+                                                        className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-white transition-all group"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-black text-xs shrink-0 group-hover:scale-110 transition-transform">
+                                                            {i + 1}
+                                                        </div>
+                                                        <p className="text-slate-700 text-sm font-medium leading-snug">{act}</p>
+                                                    </motion.div>
                                                 ))}
                                             </div>
-                                            <div className="bg-white/60 p-3 rounded-xl border border-dashed border-green-200">
-                                                <p className="text-[9px] text-green-800 font-bold uppercase tracking-widest mb-1.5">Sugeridos:</p>
-                                                <ul className="space-y-1">
-                                                    {activeModule.ejerciciosPracticos?.map((ex: string, i: number) => (
-                                                        <li key={i} className="flex items-center gap-2 text-slate-700 text-[10px]">
-                                                            <div className="w-1 h-1 rounded-full bg-green-400 shrink-0" />
-                                                            <span className="truncate">{ex}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
                                         </div>
-                                    </div>
 
-                                    {/* Project Contribution */}
-                                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-4 rounded-2xl text-white shadow-lg relative overflow-hidden group shrink-0">
-                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                                        <div className="flex flex-col md:flex-row items-center gap-4 relative z-10">
-                                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shrink-0">
-                                                <Trophy className="w-6 h-6 text-yellow-300" />
-                                            </div>
-                                            <div className="flex-1 space-y-0.5 text-center md:text-left min-w-0">
-                                                <h4 className="text-sm font-black">Aporte Técnico</h4>
-                                                <div className="flex flex-wrap gap-1 justify-center md:justify-start">
-                                                    {activeModule.aporteTecnico?.map((ap: string, i: number) => (
-                                                        <div key={i} className="bg-white/20 px-2 py-0.5 rounded-full text-[9px] font-semibold backdrop-blur-md">
-                                                            {ap}
-                                                        </div>
+                                        {/* Practice */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-black flex items-center gap-3 text-slate-800 uppercase tracking-tight">
+                                                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-600">
+                                                    <PenTool className="w-5 h-5" />
+                                                </div>
+                                                Retos de Práctica
+                                            </h3>
+                                            <div className="bg-green-50/50 p-6 rounded-3xl border border-green-100 space-y-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {activeModule.actividadesPractica?.map((act: string, i: number) => (
+                                                        <Badge key={i} className="bg-white border-green-200 text-green-700 px-4 py-2 rounded-xl text-xs font-black shadow-sm flex items-center gap-2 hover:scale-105 transition-transform cursor-default">
+                                                            <CheckCircle2 className="w-4 h-4 text-green-500" /> {act}
+                                                        </Badge>
                                                     ))}
                                                 </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => setActiveModuleIdx(prev => Math.max(0, prev - 1))}
-                                                    disabled={activeModuleIdx === 0}
-                                                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                                                >
-                                                    Anterior
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        if (activeModuleIdx < data.modulos.length - 1) {
-                                                            setActiveModuleIdx(prev => prev + 1);
-                                                        }
-                                                    }}
-                                                    className="bg-yellow-400 hover:bg-yellow-500 text-indigo-950 font-black rounded-full px-4 text-[11px] h-8 shrink-0"
-                                                >
-                                                    {activeModuleIdx === data.modulos.length - 1 ? "Completado" : "Siguiente"} <ArrowRight className="w-3 h-3 ml-1" />
-                                                </Button>
+                                                <div className="bg-white p-6 rounded-2xl border border-dashed border-green-200 shadow-inner">
+                                                    <p className="text-xs text-green-800 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                        <Sparkles className="w-4 h-4" /> Ejercicios para el laboratorio
+                                                    </p>
+                                                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        {activeModule.ejerciciosPracticos?.map((ex: string, i: number) => (
+                                                            <li key={i} className="flex items-start gap-3 text-slate-700 text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 hover:border-green-100 transition-all">
+                                                                <div className="w-2 h-2 rounded-full bg-green-400 mt-1.5 shrink-0" />
+                                                                <span className="font-medium text-slate-700">{ex}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
+                                    </CardContent>
+                                </Card>
+
+                                <div className="flex justify-center gap-4 pt-4">
+                                    <Button variant="outline" onClick={handlePrev} className="rounded-full px-8 h-12 border-slate-200 font-black uppercase text-[10px] tracking-widest">
+                                        Anterior
+                                    </Button>
+                                    <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-12 h-12 font-black uppercase tracking-widest text-xs">
+                                        {activeModuleIdx === data.modulos.length - 1 ? 'Finalizar Revisión' : 'Siguiente Módulo'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentSection === 'submission' && (
+                            <div className="max-w-3xl mx-auto">
+                                <Card className="border-none shadow-2xl bg-indigo-600 text-white rounded-3xl overflow-hidden text-center p-12 relative group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/20 to-transparent" />
+                                    <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform">
+                                        <Trophy className="w-12 h-12 text-indigo-100" />
                                     </div>
+                                    <CardHeader>
+                                        <CardTitle className="text-4xl font-black mb-4 tracking-tighter">¡Listo para la Entrega!</CardTitle>
+                                        <CardDescription className="text-indigo-100 text-lg font-medium leading-relaxed">
+                                            Has revisado todos los requerimientos y módulos del proyecto. Asegúrate de que tu prototipo cumpla con todos los puntos técnicos.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-8">
+                                        <div className="flex flex-col gap-4 max-w-sm mx-auto">
+                                            <Button className="h-14 bg-white text-indigo-600 hover:bg-indigo-50 rounded-full font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">
+                                                Subir Mi Proyecto <Rocket className="ml-3 w-5 h-5" />
+                                            </Button>
+                                            <Button variant="ghost" onClick={() => setCurrentSection('intro')} className="text-white hover:bg-white/10 font-bold text-xs uppercase tracking-widest">
+                                                Volver a Revisar Todo
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            </ScrollArea>
 
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-
+            {/* NAV FOOTER (INTERNAL) - Repositioned to avoid overlap with total scroll */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/80 backdrop-blur-md border border-slate-200 px-6 py-3 rounded-full shadow-xl z-20 md:hidden">
+                <Button variant="ghost" size="icon" disabled={activeSectionIdx === 0} onClick={handlePrev} className="text-slate-500 hover:text-indigo-600">
+                    <ChevronLeft className="w-6 h-6" />
+                </Button>
+                <div className="w-px h-6 bg-slate-200" />
+                <Button variant="ghost" size="icon" onClick={handleNext} className="text-slate-500 hover:text-indigo-600">
+                    <ChevronRight className="w-6 h-6" />
+                </Button>
             </div>
 
-            {/* Mobile Avatar Guide */}
-            <div className="lg:hidden fixed bottom-6 right-6 z-50">
-                <AvatarGuide emotion={avatarState.emotion} message={avatarState.message} />
+            {/* AVATAR GUIDE */}
+            <div className="fixed bottom-4 right-4 z-50 pointer-events-none transition-opacity duration-500">
+                <div className="pointer-events-auto">
+                    <AvatarGuide emotion={avatarState.emotion} message={avatarState.message} />
+                </div>
             </div>
         </div>
     );
-}
+});
+
+export default PimViewer;
