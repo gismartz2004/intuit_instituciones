@@ -9,6 +9,11 @@ export interface User {
   modules?: Module[];
   profesorId?: number;
   fechaAsignacion?: string;
+  identificacion?: string;
+  fechaNacimiento?: string;
+  edad?: number;
+  institucion?: string;
+  curso?: string;
 }
 
 export interface Module {

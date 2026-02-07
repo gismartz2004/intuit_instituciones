@@ -12,7 +12,8 @@ import { Plus, Trash2, Save, ArrowLeft, CheckCircle, FileText, Target, Brain, Aw
 import professorApi from "@/features/professor/services/professor.api";
 import { toast } from "@/hooks/use-toast";
 import { ImagePickerModal } from "./ImagePickerModal";
-import { Image as ImageIcon, Camera } from "lucide-react";
+import { ImageViewer } from "./ImageViewer";
+import { Image as ImageIcon, Camera, Eye } from "lucide-react";
 
 interface KeyConcept {
     titulo: string;
@@ -108,6 +109,10 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
     // Image Picker State
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'concept' | 'hint' | 'general', index?: number } | null>(null);
+
+    // Image Viewer State
+    const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+    const viewImage = (url: string) => setViewerUrl(url);
 
     // Initial Data Load
     useEffect(() => {
@@ -354,19 +359,27 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                             }}
                                         />
                                         {item.imagenUrl && (
-                                            <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                            <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 bg-white group shrink-0">
                                                 <img src={item.imagenUrl} className="w-full h-full object-cover" />
-                                                <button
-                                                    className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-lg"
-                                                    onClick={() => {
-                                                        const n = [...keyConcepts];
-                                                        const { imagenUrl, ...rest } = n[index];
-                                                        n[index] = rest;
-                                                        setKeyConcepts(n);
-                                                    }}
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                    <button
+                                                        className="p-1 bg-white text-slate-800 rounded-full hover:bg-blue-50"
+                                                        onClick={() => viewImage(item.imagenUrl!)}
+                                                    >
+                                                        <Eye className="w-3 h-3" />
+                                                    </button>
+                                                    <button
+                                                        className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                                        onClick={() => {
+                                                            const n = [...keyConcepts];
+                                                            const { imagenUrl, ...rest } = n[index];
+                                                            n[index] = rest;
+                                                            setKeyConcepts(n);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -460,19 +473,29 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                                 </Button>
                                             </div>
                                             {item.imagenUrl && (
-                                                <div className="relative w-20 h-20 rounded border bg-white overflow-hidden">
+                                                <div className="relative w-20 h-20 rounded border bg-white overflow-hidden group shrink-0">
                                                     <img src={item.imagenUrl} className="w-full h-full object-cover" />
-                                                    <button
-                                                        className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl"
-                                                        onClick={() => {
-                                                            const n = [...guidedSteps];
-                                                            const { imagenUrl, ...rest } = n[index];
-                                                            n[index] = rest;
-                                                            setGuidedSteps(n);
-                                                        }}
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                        <button
+                                                            className="p-1 bg-white text-slate-800 rounded-full hover:bg-blue-50"
+                                                            onClick={() => viewImage(item.imagenUrl!)}
+                                                            title="Ver imagen"
+                                                        >
+                                                            <Eye className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                            className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                                            onClick={() => {
+                                                                const n = [...guidedSteps];
+                                                                const { imagenUrl, ...rest } = n[index];
+                                                                n[index] = rest;
+                                                                setGuidedSteps(n);
+                                                            }}
+                                                            title="Eliminar imagen"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -540,19 +563,27 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                                         </Button>
                                     </div>
                                     {hint.imagenUrl && (
-                                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 bg-white ml-10">
+                                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 bg-white ml-10 group shrink-0">
                                             <img src={hint.imagenUrl} className="w-full h-full object-cover" />
-                                            <button
-                                                className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-lg"
-                                                onClick={() => {
-                                                    const n = [...hints];
-                                                    const { imagenUrl, ...rest } = n[index];
-                                                    n[index] = rest;
-                                                    setHints(n);
-                                                }}
-                                            >
-                                                <Trash2 className="w-3 h-3" />
-                                            </button>
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                <button
+                                                    className="p-1 bg-white text-slate-800 rounded-full hover:bg-blue-50"
+                                                    onClick={() => viewImage(hint.imagenUrl!)}
+                                                >
+                                                    <Eye className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                    className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                                    onClick={() => {
+                                                        const n = [...hints];
+                                                        const { imagenUrl, ...rest } = n[index];
+                                                        n[index] = rest;
+                                                        setHints(n);
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -789,6 +820,11 @@ export default function RagEditor({ levelId, moduleId, initialData, onClose }: R
                 isOpen={isPickerOpen}
                 onClose={() => setIsPickerOpen(false)}
                 onSelect={handleImageSelect}
+            />
+            <ImageViewer
+                isOpen={!!viewerUrl}
+                imageUrl={viewerUrl || ""}
+                onClose={() => setViewerUrl(null)}
             />
         </div>
     );

@@ -11,7 +11,8 @@ import { Plus, Trash2, Save, ArrowLeft, CheckCircle, FileText, Target, Milestone
 import professorApi from "@/features/professor/services/professor.api";
 import { toast } from "@/hooks/use-toast";
 import { ImagePickerModal } from "./ImagePickerModal";
-import { Image as ImageIcon, Camera } from "lucide-react";
+import { ImageViewer } from "./ImageViewer";
+import { Image as ImageIcon, Camera, Eye } from "lucide-react";
 
 interface HaEditorProps {
     levelId: number;
@@ -38,7 +39,7 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
         evidenciaTipos: [] as string[] // Checkbox list
     });
 
-    const [pasosGuiados, setPasosGuiados] = useState<{ paso: string }[]>([{ paso: "" }]);
+    const [pasosGuiados, setPasosGuiados] = useState<{ paso: string; imagenUrl?: string }[]>([{ paso: "" }]);
 
     // Dynamic Sections State
     const [dynamicSections, setDynamicSections] = useState<DynamicSection[]>([]);
@@ -47,7 +48,10 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
 
     // Image Picker State
     const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'clave' | 'general', index?: number } | null>(null);
+    const [pickerTarget, setPickerTarget] = useState<{ type: 'step' | 'clave', index?: number } | null>(null);
+
+    // Image Viewer State
+    const [viewerUrl, setViewerUrl] = useState<string | null>(null);
 
     // Initial Data Load
     useEffect(() => {
@@ -135,17 +139,21 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
         if (!pickerTarget) return;
 
         if (pickerTarget.type === 'clave') {
-            setFormData({ ...formData, ...({ conceptoClaveImagen: url } as any) });
+            setFormData(prev => ({ ...prev, ...({ conceptoClaveImagen: url } as any) }));
         } else if (pickerTarget.type === 'step' && pickerTarget.index !== undefined) {
             const newSteps = [...pasosGuiados];
-            (newSteps[pickerTarget.index] as any).imagenUrl = url;
+            newSteps[pickerTarget.index] = { ...newSteps[pickerTarget.index], imagenUrl: url };
             setPasosGuiados(newSteps);
         }
     };
 
-    const openPicker = (type: 'step' | 'clave' | 'general', index?: number) => {
+    const openPicker = (type: 'step' | 'clave', index?: number) => {
         setPickerTarget({ type, index });
         setIsPickerOpen(true);
+    };
+
+    const viewImage = (url: string) => {
+        setViewerUrl(url);
     };
 
     return (
@@ -228,16 +236,28 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                                 placeholder="Explica el concepto clave..."
                             />
                             {(formData as any).conceptoClaveImagen && (
-                                <div className="relative w-full max-w-sm aspect-video rounded-lg overflow-hidden border">
+                                <div className="relative w-full max-w-sm aspect-video rounded-lg overflow-hidden border group">
                                     <img src={(formData as any).conceptoClaveImagen} className="w-full h-full object-cover" />
-                                    <Button
-                                        variant="destructive"
-                                        size="icon"
-                                        className="absolute top-2 right-2 h-8 w-8"
-                                        onClick={() => setFormData({ ...formData, ...({ conceptoClaveImagen: undefined } as any) })}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
+
+                                    {/* Action Buttons Overlay */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => viewImage((formData as any).conceptoClaveImagen)}
+                                            className="h-8 w-8 rounded-full"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="h-8 w-8 rounded-full"
+                                            onClick={() => setFormData({ ...formData, ...({ conceptoClaveImagen: undefined } as any) })}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </CardContent>
@@ -276,19 +296,27 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                                             <Trash2 className="w-4 h-4 text-slate-400" />
                                         </Button>
                                     </div>
-                                    {(item as any).imagenUrl && (
-                                        <div className="relative w-40 aspect-video rounded border bg-white overflow-hidden ml-6">
-                                            <img src={(item as any).imagenUrl} className="w-full h-full object-cover" />
-                                            <button
-                                                className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl"
-                                                onClick={() => {
-                                                    const n = [...pasosGuiados];
-                                                    delete (n[index] as any).imagenUrl;
-                                                    setPasosGuiados(n);
-                                                }}
-                                            >
-                                                <Trash2 className="w-3 h-3" />
-                                            </button>
+                                    {item.imagenUrl && (
+                                        <div className="relative w-40 aspect-video rounded border bg-white overflow-hidden ml-6 group shrink-0">
+                                            <img src={item.imagenUrl} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                <button
+                                                    className="p-1.5 bg-white text-slate-800 rounded-full hover:bg-blue-50"
+                                                    onClick={() => viewImage(item.imagenUrl!)}
+                                                >
+                                                    <Eye className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                    className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                                    onClick={() => {
+                                                        const n = [...pasosGuiados];
+                                                        delete n[index].imagenUrl;
+                                                        setPasosGuiados(n);
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -435,6 +463,11 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                 isOpen={isPickerOpen}
                 onClose={() => setIsPickerOpen(false)}
                 onSelect={handleImageSelect}
+            />
+            <ImageViewer
+                isOpen={!!viewerUrl}
+                imageUrl={viewerUrl || ""}
+                onClose={() => setViewerUrl(null)}
             />
         </div>
     );

@@ -41,6 +41,11 @@ export const usuarios = pgTable('usuarios', {
   nombrePadre: varchar('nombre_padre', { length: 100 }),
   celularPadre: varchar('celular_padre', { length: 20 }),
   trabajoPadre: varchar('trabajo_padre', { length: 100 }),
+  identificacion: varchar('identificacion', { length: 20 }),
+  fechaNacimiento: date('fecha_nacimiento'),
+  edad: integer('edad'),
+  institucion: varchar('institucion', { length: 255 }),
+  curso: varchar('curso', { length: 100 }),
 });
 
 // 4. Tabla de Módulos

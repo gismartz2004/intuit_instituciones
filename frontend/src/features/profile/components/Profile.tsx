@@ -42,6 +42,14 @@ export default function Profile({ user }: ProfileProps) {
     trabajoPadre: ''
   });
 
+  const [studentData, setStudentData] = useState({
+    identificacion: '',
+    fechaNacimiento: '',
+    edad: '',
+    institucion: '',
+    curso: ''
+  });
+
   useEffect(() => {
     loadCurriculum();
   }, [user.id]);
@@ -64,6 +72,13 @@ export default function Profile({ user }: ProfileProps) {
             celularPadre: userData.celularPadre || '',
             trabajoPadre: userData.trabajoPadre || ''
           });
+          setStudentData({
+            identificacion: userData.identificacion || '',
+            fechaNacimiento: userData.fechaNacimiento ? new Date(userData.fechaNacimiento).toISOString().split('T')[0] : '',
+            edad: userData.edad?.toString() || '',
+            institucion: userData.institucion || '',
+            curso: userData.curso || ''
+          });
         }
       }
     } catch (error) {
@@ -78,6 +93,21 @@ export default function Profile({ user }: ProfileProps) {
       setIsSaving(true);
       await authApi.updateUser(user.id, parentData);
       toast({ title: "¡Éxito!", description: "Datos del representante actualizados." });
+    } catch (e) {
+      toast({ title: "Error", description: "No se pudieron guardar los cambios.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateStudent = async () => {
+    try {
+      setIsSaving(true);
+      await authApi.updateUser(user.id, {
+        ...studentData,
+        edad: studentData.edad ? parseInt(studentData.edad) : undefined
+      });
+      toast({ title: "¡Éxito!", description: "Información personal actualizada." });
     } catch (e) {
       toast({ title: "Error", description: "No se pudieron guardar los cambios.", variant: "destructive" });
     } finally {
@@ -130,19 +160,57 @@ export default function Profile({ user }: ProfileProps) {
               <CardTitle>Información Personal</CardTitle>
               <CardDescription>Datos básicos de tu cuenta en ARG Academy.</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Nombre Completo</Label>
-                  <Input defaultValue={user.name} className="bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-11" />
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Número de Cédula</Label>
+                  <Input
+                    value={studentData.identificacion}
+                    onChange={(e) => setStudentData({ ...studentData, identificacion: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Email</Label>
-                  <Input defaultValue={`${user.name.toLowerCase().replace(" ", ".")}@arg-academy.com`} className="bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-11" />
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Edad</Label>
+                  <Input
+                    type="number"
+                    value={studentData.edad}
+                    onChange={(e) => setStudentData({ ...studentData, edad: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Fecha de Nacimiento</Label>
+                  <Input
+                    type="date"
+                    value={studentData.fechaNacimiento}
+                    onChange={(e) => setStudentData({ ...studentData, fechaNacimiento: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Institución</Label>
+                  <Input
+                    value={studentData.institucion}
+                    onChange={(e) => setStudentData({ ...studentData, institucion: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Curso / Grado</Label>
+                  <Input
+                    value={studentData.curso}
+                    onChange={(e) => setStudentData({ ...studentData, curso: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
                 </div>
               </div>
-              <Button className="bg-[#0047AB] hover:bg-blue-700 shadow-lg shadow-blue-500/20 px-8 h-12 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98]">
-                Guardar Cambios
+              <Button
+                onClick={handleUpdateStudent}
+                disabled={isSaving}
+                className="bg-[#0047AB] hover:bg-blue-700 shadow-lg shadow-blue-500/20 px-8 h-12 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {isSaving ? "Guardando..." : "Guardar Cambios"}
               </Button>
             </CardContent>
           </Card>

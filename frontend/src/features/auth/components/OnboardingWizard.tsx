@@ -38,9 +38,18 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
     // Parent Info State
     const [parentInfo, setParentInfo] = useState({
         nombrePadre: '',
-        emailPadre: '', // Will try to pre-fill if available in user context later
+        emailPadre: '',
         celularPadre: '',
         trabajoPadre: ''
+    });
+
+    // Student Extended Info State
+    const [studentInfo, setStudentInfo] = useState({
+        identificacion: '',
+        fechaNacimiento: '',
+        edad: '',
+        institucion: '',
+        curso: ''
     });
 
     // Validations
@@ -49,6 +58,15 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
             parentInfo.nombrePadre.trim().length > 3 &&
             parentInfo.celularPadre.trim().length > 5 &&
             parentInfo.trabajoPadre.trim().length > 2
+        );
+    };
+
+    const isStudentStepValid = () => {
+        return (
+            studentInfo.identificacion.trim().length > 5 &&
+            studentInfo.fechaNacimiento.trim().length > 0 &&
+            studentInfo.institucion.trim().length > 3 &&
+            studentInfo.curso.trim().length > 0
         );
     };
 
@@ -70,7 +88,12 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                 nombrePadre: parentInfo.nombrePadre,
                 emailPadre: parentInfo.emailPadre,
                 celularPadre: parentInfo.celularPadre,
-                trabajoPadre: parentInfo.trabajoPadre
+                trabajoPadre: parentInfo.trabajoPadre,
+                identificacion: studentInfo.identificacion,
+                fechaNacimiento: studentInfo.fechaNacimiento,
+                edad: studentInfo.edad ? parseInt(studentInfo.edad) : undefined,
+                institucion: studentInfo.institucion,
+                curso: studentInfo.curso
             });
 
             confetti({
@@ -93,7 +116,7 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
 
     return (
         <Dialog open={isOpen} onOpenChange={() => { }}>
-            <DialogContent className="sm:max-w-[600px] h-[550px] p-0 overflow-hidden bg-white border-none shadow-2xl">
+            <DialogContent className="sm:max-w-[600px] h-[600px] p-0 overflow-hidden bg-white border-none shadow-2xl">
                 <div className="relative w-full h-full flex flex-col">
                     {/* Decorative Background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-700 opacity-10 z-0" />
@@ -175,6 +198,89 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
+                                className="relative z-10 flex flex-col items-center justify-center h-full p-8 space-y-3 w-full max-w-md mx-auto overflow-y-auto"
+                            >
+                                <div className="text-center">
+                                    <h2 className="text-2xl font-bold text-slate-800">Tus Datos Personales</h2>
+                                    <p className="text-sm text-slate-500">Completa tu información de estudiante</p>
+                                </div>
+
+                                <div className="w-full space-y-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-slate-600">Número de Cédula</Label>
+                                            <Input
+                                                placeholder="Ej: 1712345678"
+                                                value={studentInfo.identificacion}
+                                                onChange={(e) => setStudentInfo({ ...studentInfo, identificacion: e.target.value })}
+                                                className="h-9 text-sm bg-slate-50 border-slate-200"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-slate-600">Edad</Label>
+                                            <Input
+                                                type="number"
+                                                placeholder="Ej: 14"
+                                                value={studentInfo.edad}
+                                                onChange={(e) => setStudentInfo({ ...studentInfo, edad: e.target.value })}
+                                                className="h-9 text-sm bg-slate-50 border-slate-200"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-slate-600">Fecha de Nacimiento</Label>
+                                        <Input
+                                            type="date"
+                                            value={studentInfo.fechaNacimiento}
+                                            onChange={(e) => setStudentInfo({ ...studentInfo, fechaNacimiento: e.target.value })}
+                                            className="h-9 text-sm bg-slate-50 border-slate-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-slate-600">Unidad Educativa / Institución</Label>
+                                        <Input
+                                            placeholder="Ej: Colegio San Gabriel"
+                                            value={studentInfo.institucion}
+                                            onChange={(e) => setStudentInfo({ ...studentInfo, institucion: e.target.value })}
+                                            className="h-9 text-sm bg-slate-50 border-slate-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-slate-600">Curso / Grado</Label>
+                                        <Input
+                                            placeholder="Ej: 10mo EGB / 2do BGU"
+                                            value={studentInfo.curso}
+                                            onChange={(e) => setStudentInfo({ ...studentInfo, curso: e.target.value })}
+                                            className="h-9 text-sm bg-slate-50 border-slate-200"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-2 w-full justify-center">
+                                    <Button variant="ghost" size="sm" onClick={() => setStep(2)}>Atrás</Button>
+                                    <Button
+                                        size="sm"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full px-6 shadow-md"
+                                        onClick={() => {
+                                            if (isStudentStepValid()) setStep(4);
+                                            else toast({ title: "Datos incompletos", description: "Por favor completa los campos obligatorios.", variant: "destructive" });
+                                        }}
+                                    >
+                                        Siguiente
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 4 && (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
                                 className="relative z-10 flex flex-col items-center justify-center h-full p-8 space-y-4 w-full max-w-md mx-auto"
                             >
                                 <div className="text-center mb-2">
@@ -234,7 +340,7 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                                 </div>
 
                                 <div className="flex gap-4 pt-4 w-full justify-center">
-                                    <Button variant="ghost" onClick={() => setStep(2)}>Atrás</Button>
+                                    <Button variant="ghost" onClick={() => setStep(3)}>Atrás</Button>
                                     <Button
                                         size="lg"
                                         className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-full px-8 shadow-lg w-full max-w-[200px]"

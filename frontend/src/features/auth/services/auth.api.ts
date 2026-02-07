@@ -30,6 +30,11 @@ export interface UpdateUserPayload {
   emailPadre?: string;
   celularPadre?: string;
   trabajoPadre?: string;
+  identificacion?: string;
+  fechaNacimiento?: string;
+  edad?: number;
+  institucion?: string;
+  curso?: string;
 }
 
 export const authApi = {
