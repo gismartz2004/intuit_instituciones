@@ -102,6 +102,198 @@ export const IntroSplash = ({
     );
 };
 
+// --- Activity Intro Component ---
+export const ActivityIntro = ({
+    name,
+    description,
+    onStart
+}: {
+    name: string;
+    description: string;
+    onStart: () => void;
+}) => {
+    return (
+        <div className="relative w-full min-h-full flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+            {/* Background decoration */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-green-200/40 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-3xl animate-pulse delay-700" />
+                </div>
+            </div>
+
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", duration: 0.8 }}
+                className="relative z-10 w-32 h-32 bg-white rounded-3xl flex items-center justify-center mb-8 shadow-[0_10px_40px_-10px_rgba(22,163,74,0.3)] border border-green-50"
+            >
+                <div className="absolute inset-0 bg-green-50 rounded-3xl animate-ping opacity-20" />
+                <Sparkles className="w-16 h-16 text-green-500" />
+            </motion.div>
+
+            <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="relative z-10 max-w-4xl"
+            >
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-green-700 font-bold text-sm tracking-wider uppercase mb-6 border border-green-200">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Desafío Autónomo
+                </div>
+
+                <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-6 leading-tight tracking-tight">
+                    {name}
+                </h1>
+
+                <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
+                    {description}
+                </p>
+
+                <Button
+                    onClick={onStart}
+                    size="lg"
+                    className="bg-green-600 hover:bg-green-500 text-white text-xl px-16 py-8 rounded-full shadow-2xl hover:shadow-[0_20px_40px_-10px_rgba(22,163,74,0.4)] hover:scale-105 transition-all duration-300 font-bold group"
+                >
+                    Aceptar Desafío <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                </Button>
+            </motion.div>
+        </div>
+    );
+};
+
+// --- Hint Deck Component ---
+export const HintDeck = ({
+    hints,
+    onComplete,
+    currentIndex,
+    setCurrentIndex
+}: {
+    hints: any[];
+    onComplete: () => void;
+    currentIndex: number;
+    setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
+}) => {
+    const nextHint = () => {
+        if (currentIndex < hints.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+        } else {
+            onComplete();
+        }
+    };
+
+    const prevHint = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+        }
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto py-4 h-full flex flex-col px-4">
+            <div className="flex items-center justify-between mb-8 shrink-0">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                            <Sparkles className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <span className="text-indigo-600 font-bold tracking-wide text-sm uppercase">Ayudas Progresivas</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800">
+                        ¿Necesitas una pista?
+                    </h3>
+                </div>
+                <div className="flex items-end gap-1">
+                    <span className="text-4xl font-black text-slate-200 leading-none">{currentIndex + 1}</span>
+                    <span className="text-lg font-bold text-slate-300 mb-1">/{hints.length}</span>
+                </div>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center p-4 min-h-0 perspective-1000">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentIndex}
+                        initial={{ opacity: 0, scale: 0.9, rotateX: 10 }}
+                        animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, rotateX: -10 }}
+                        transition={{ type: "spring", bounce: 0.4 }}
+                        className="w-full max-w-4xl h-full max-h-[500px]"
+                    >
+                        <Card className="w-full h-full border-0 shadow-xl bg-white rounded-[2rem] overflow-hidden flex flex-col md:flex-row ring-1 ring-black/5">
+                            <div className={cn(
+                                "w-full md:w-5/12 h-48 md:h-full bg-slate-100 relative group overflow-hidden shrink-0",
+                                !hints[currentIndex].imagenUrl && "bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
+                            )}>
+                                {hints[currentIndex].imagenUrl ? (
+                                    <img
+                                        src={hints[currentIndex].imagenUrl}
+                                        className="w-full h-full object-cover"
+                                        alt={`Pista ${currentIndex + 1}`}
+                                    />
+                                ) : (
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full" />
+                                        <Sparkles className="w-32 h-32 text-white/90 relative z-10" />
+                                    </div>
+                                )}
+
+                                {/* Badge */}
+                                <div className="absolute top-6 left-6 flex gap-2">
+                                    <div className="h-10 px-4 rounded-full bg-white/90 backdrop-blur shadow-lg flex items-center justify-center font-bold text-slate-800 border border-white/50">
+                                        Pista #{currentIndex + 1}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 p-6 md:p-8 flex flex-col justify-center bg-white relative">
+                                <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
+                                    <Sparkles className="w-64 h-64" />
+                                </div>
+
+                                <h4 className="text-xl font-bold text-slate-400 mb-6 uppercase tracking-wider flex items-center gap-2">
+                                    <span className="w-8 h-1 bg-slate-200 rounded-full" />
+                                    Detalle
+                                </h4>
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-8 flex items-center">
+                                    <p className="text-lg md:text-xl font-medium text-slate-700 leading-relaxed">
+                                        {hints[currentIndex].text || hints[currentIndex]}
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-4 pt-4 shrink-0">
+                                    <Button
+                                        variant="outline"
+                                        onClick={prevHint}
+                                        disabled={currentIndex === 0}
+                                        className="h-14 px-8 border-2 border-slate-100 hover:bg-slate-50 text-slate-500 rounded-2xl text-lg font-bold transition-all"
+                                    >
+                                        <ArrowLeft className="w-5 h-5 mr-2" /> Anterior
+                                    </Button>
+                                    <Button
+                                        onClick={nextHint}
+                                        className="flex-1 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-200 text-lg font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        {currentIndex === hints.length - 1 ? (
+                                            <span className="flex items-center">
+                                                Continuar a Evidencia <ArrowRight className="w-5 h-5 ml-2" />
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center">
+                                                Siguiente Pista <ArrowRight className="w-5 h-5 ml-2" />
+                                            </span>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </Card>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+};
+
 // --- Concept Deck Component ---
 export const ConceptDeck = ({
     concepts,
@@ -143,30 +335,38 @@ export const ConceptDeck = ({
     };
 
     return (
-        <div className="max-w-3xl mx-auto py-4">
-            <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold flex items-center gap-2">
-                    <BookOpen className="w-6 h-6 text-indigo-600" />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                        Conceptos Clave
-                    </span>
-                </h3>
-                <p className="text-sm text-slate-500 mb-8 max-w-lg mt-1">
-                    Estos son los fundamentos teóricos que necesitarás dominar para aplicar en la parte práctica. Revísalos con atención.
-                </p>
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                    <span>{currentIndex + 1} de {concepts.length}</span>
-                    <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div className="max-w-5xl mx-auto py-4 h-full flex flex-col">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 shrink-0 gap-4">
+                <div className="flex-1">
+                    <h3 className="text-2xl font-bold flex items-center gap-2 mb-1">
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                            <BookOpen className="w-6 h-6 text-indigo-600" />
+                        </div>
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700">
+                            Conceptos Clave
+                        </span>
+                    </h3>
+                    <p className="text-base text-slate-500 max-w-2xl leading-relaxed">
+                        Domina estos fundamentos teóricos para triunfar en la práctica.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-4 bg-white p-2 pr-4 rounded-full shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold text-sm">
+                        {currentIndex + 1}/{concepts.length}
+                    </div>
+                    <div className="w-32 h-2.5 bg-slate-100 rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                             initial={{ width: 0 }}
                             animate={{ width: `${((currentIndex + 1) / concepts.length) * 100}%` }}
+                            transition={{ ease: "circOut", duration: 0.5 }}
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="relative h-[400px] w-full perspective-1000">
+            <div className="relative flex-1 min-h-0 w-full perspective-1000">
                 <AnimatePresence initial={false} mode="wait" custom={direction}>
                     <motion.div
                         key={currentIndex}
@@ -200,9 +400,9 @@ export const ConceptDeck = ({
                             x: { type: "spring", stiffness: 300, damping: 30 },
                             opacity: { duration: 0.2 }
                         }}
-                        className="absolute w-full h-full"
+                        className="absolute w-full h-full flex items-center justify-center p-2"
                     >
-                        <Card className="h-full border-0 shadow-2xl bg-white rounded-3xl overflow-hidden flex flex-col md:flex-row">
+                        <Card className="w-full h-full max-h-[600px] border-0 shadow-xl bg-white rounded-[2rem] overflow-hidden flex flex-col md:flex-row ring-1 ring-black/5">
                             <div className={cn(
                                 "w-full md:w-5/12 h-48 md:h-full bg-slate-100 relative group overflow-hidden shrink-0",
                                 !concepts[currentIndex].imagenUrl && "bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center"
@@ -214,42 +414,46 @@ export const ConceptDeck = ({
                                         alt={concepts[currentIndex].titulo}
                                     />
                                 ) : (
-                                    <BookOpen className="w-24 h-24 text-indigo-100" />
+                                    <div className="text-center p-6">
+                                        <BookOpen className="w-24 h-24 text-indigo-200 mx-auto mb-4" />
+                                        <p className="text-indigo-300 font-bold uppercase tracking-widest text-sm">Sin Imagen</p>
+                                    </div>
                                 )}
-                                <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur shadow-md flex items-center justify-center font-bold text-indigo-800 text-lg">
+                                <div className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white/90 backdrop-blur shadow-lg flex items-center justify-center font-black text-indigo-800 text-xl border border-white/50">
                                     {currentIndex + 1}
                                 </div>
                             </div>
 
-                            <div className="flex-1 p-8 flex flex-col h-full bg-white relative overflow-hidden min-w-0">
-                                <div className="absolute top-0 right-0 p-3 opacity-5">
-                                    <BookOpen className="w-40 h-40" />
+                            <div className="flex-1 p-6 md:p-8 flex flex-col h-full bg-white relative overflow-hidden min-w-0">
+                                <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
+                                    <BookOpen className="w-64 h-64" />
                                 </div>
-                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-6 leading-tight">
+
+                                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4 leading-tight tracking-tight">
                                     {concepts[currentIndex].titulo}
                                 </h2>
 
-                                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                    <div className="prose prose-slate text-slate-600 leading-relaxed text-lg">
-                                        {concepts[currentIndex].descripcion}
+                                <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 text-justify">
+                                    <div className="prose prose-base prose-slate text-slate-600 leading-relaxed max-w-none">
+                                        <p>{concepts[currentIndex].descripcion}</p>
                                     </div>
                                 </div>
 
-                                <div className="mt-6 flex justify-between items-center pt-6 border-t border-slate-100 shrink-0">
+                                <div className="mt-4 flex justify-between items-center pt-4 border-t border-slate-100 shrink-0 gap-4">
                                     <Button
                                         variant="ghost"
                                         onClick={previousCard}
                                         disabled={currentIndex === 0}
-                                        className="text-slate-400 hover:text-indigo-600"
+                                        className="h-12 px-6 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-2xl text-lg font-bold"
                                     >
                                         Anterior
                                     </Button>
                                     <Button
                                         onClick={nextCard}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 shadow-lg shadow-indigo-200"
+                                        className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-10 shadow-xl shadow-indigo-200 text-lg font-bold transition-all hover:scale-105 active:scale-95"
                                     >
-                                        {currentIndex === concepts.length - 1 ? "Completar" : "Siguiente"}
-                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                        {currentIndex === concepts.length - 1 ? "Completar Módulo" : "Siguiente Concepto"}
+                                        <ArrowRight className="w-5 h-5 ml-3" />
                                     </Button>
                                 </div>
                             </div>
