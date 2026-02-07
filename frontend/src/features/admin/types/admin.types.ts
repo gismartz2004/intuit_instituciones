@@ -49,6 +49,10 @@ export interface AssignModulePayload {
 }
 
 export interface UpdateUserPayload {
+  nombre?: string;
+  email?: string;
+  password?: string;
+  roleId?: number;
   planId?: number;
   activo?: boolean;
   emailPadre?: string;

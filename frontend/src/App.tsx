@@ -114,10 +114,10 @@ function App() {
           <Route path="/dashboard-3d">
             <StudentDashboard3D user={user!} />
           </Route>
-          <Route path="/admin">
+          <Route path="/admin/:tab?">
             <AdminDashboard user={user!} onLogout={handleLogout} />
           </Route>
-          <Route path="/superadmin">
+          <Route path="/superadmin/:tab?">
             <AdminDashboard user={user!} onLogout={handleLogout} />
           </Route>
           <Route path="/teach">

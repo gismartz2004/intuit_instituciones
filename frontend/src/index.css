@@ -170,3 +170,12 @@
 .text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--cobalt))] to-[hsl(var(--neon-blue))];
 }
+
+/* Hide scrollbar but keep scroll */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
