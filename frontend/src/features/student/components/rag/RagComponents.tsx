@@ -66,21 +66,6 @@ export const IntroSplash = ({
                     </p>
                 </motion.div>
 
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex gap-3 justify-center"
-                >
-                    <Badge className="bg-blue-500/30 text-blue-100 border-blue-400/30 px-4 py-1.5 text-md">
-                        Modalidad: {modality}
-                    </Badge>
-                    {type && (
-                        <Badge className="bg-purple-500/30 text-purple-100 border-purple-400/30 px-4 py-1.5 text-md">
-                            Enfoque: {type}
-                        </Badge>
-                    )}
-                </motion.div>
 
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -98,6 +83,23 @@ export const IntroSplash = ({
                     </Button>
                 </motion.div>
             </div>
+
+            {/* Badges in bottom left */}
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 }}
+                className="absolute bottom-0 left-0 z-10 flex flex-col gap-1 p-2"
+            >
+                <div className="px-2.5 py-0.5 rounded-md bg-blue-500/20 border border-blue-400/30 text-blue-100 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm w-fit">
+                    Modalidad: {modality}
+                </div>
+                {type && (
+                    <div className="px-2.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-400/30 text-purple-100 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm w-fit">
+                        Enfoque: {type}
+                    </div>
+                )}
+            </motion.div>
         </motion.div>
     );
 };

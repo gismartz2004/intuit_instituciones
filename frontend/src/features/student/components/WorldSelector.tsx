@@ -426,15 +426,6 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
 
             {/* HUD Central ESCALADO (Diseño Gaming Elegante) */}
             <div className="absolute inset-0 pointer-events-none z-20 flex flex-col items-start justify-start pt-12 pl-10">
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/5 border border-white/10 px-6 py-2 rounded-full backdrop-blur-3xl mb-2 inline-flex items-center gap-3"
-                >
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,1)]" />
-                    <span className="text-[8px] font-black text-white/50 uppercase tracking-[0.4em]">ACADEMIA ARG • SELECCIÓN DE MISIÓN</span>
-                </motion.div>
-
                 <motion.h1
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
