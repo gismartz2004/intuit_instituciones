@@ -43,6 +43,13 @@
       "when": 1769572356328,
       "tag": "0005_bouncy_human_fly",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770431700797,
+      "tag": "0006_add_profesor_id_to_modulos",
+      "breakpoints": true
     }
   ]
 }

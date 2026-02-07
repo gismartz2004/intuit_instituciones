@@ -48,6 +48,7 @@ export const modulos = pgTable('modulos', {
   id: serial('id').primaryKey(),
   nombreModulo: varchar('nombre_modulo', { length: 100 }),
   duracionDias: integer('duracion_dias'),
+  profesorId: integer('profesor_id').references(() => usuarios.id),
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 

@@ -14,10 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
-    superadminApi,
-    Student,
-    ModuleWithStats
-} from '../services/superadmin.api';
+    adminApi,
+} from '../services/admin.api';
+import { User as Student, ModuleWithStats } from '../types/admin.types';
 import { useToast } from '@/hooks/use-toast';
 import { Search, BookOpen, Users, CheckCircle } from 'lucide-react';
 
@@ -46,8 +45,8 @@ export function ModuleAssignmentWizard({ onClose, onSuccess }: ModuleAssignmentW
     const loadData = async () => {
         try {
             const [modulesData, studentsData] = await Promise.all([
-                superadminApi.getAllModules(),
-                superadminApi.getSystemStudents()
+                adminApi.getAllModulesWithStats(),
+                adminApi.getSystemStudents()
             ]);
             setModules(modulesData);
             setStudents(studentsData);
@@ -67,7 +66,7 @@ export function ModuleAssignmentWizard({ onClose, onSuccess }: ModuleAssignmentW
 
         setSubmitting(true);
         try {
-            await superadminApi.bulkAssignModules(selectedModule.id, selectedStudentIds);
+            await adminApi.bulkAssignModules(selectedModule.id, selectedStudentIds);
             toast({
                 title: '¡Asignación exitosa!',
                 description: `Se asignó el módulo ${selectedModule.nombreModulo} a ${selectedStudentIds.length} estudiantes`,

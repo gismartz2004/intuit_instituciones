@@ -9,7 +9,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { superadminApi, Assignment } from '../services/superadmin.api';
+import { adminApi } from '../services/admin.api';
+import { Assignment } from '../types/admin.types';
 import { Search } from 'lucide-react';
 
 export function AssignmentsTable() {
@@ -23,7 +24,7 @@ export function AssignmentsTable() {
 
     const loadAssignments = async () => {
         try {
-            const data = await superadminApi.getAllAssignments();
+            const data = await adminApi.getAllAssignments();
             setAssignments(data);
         } catch (error) {
             console.error('Error loading assignments:', error);

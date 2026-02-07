@@ -13,7 +13,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProfessorModule } from './modules/professor/professor.module';
 import { StudentModule } from './modules/student/student.module';
 import { PlansModule } from './modules/plans/plans.module';
-import { SuperadminModule } from './modules/superadmin/superadmin.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PremiosModule } from './modules/premios/premios.module';
 import { AiModule } from './modules/ai/ai.module';
@@ -46,7 +46,7 @@ import { AiModule } from './modules/ai/ai.module';
     ProfessorModule,
     StudentModule,
     PlansModule,
-    SuperadminModule,
+    AdminModule,
     NotificationsModule,
     PremiosModule,
     AiModule,

@@ -14,10 +14,9 @@ import {
     Library
 } from 'lucide-react';
 import {
-    superadminApi,
-    Student,
-    ModuleWithStats
-} from '../services/superadmin.api';
+    adminApi,
+} from '../services/admin.api';
+import { User as Student, ModuleWithStats } from '../types/admin.types';
 import { useToast } from '@/hooks/use-toast';
 import {
     Table,
@@ -27,6 +26,14 @@ import {
     TableHeader,
     TableRow
 } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface AssignmentManagerViewProps {
     onClose: () => void;
@@ -41,6 +48,8 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
     const [actionLoading, setActionLoading] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [studentSearch, setStudentSearch] = useState('');
+    const [professors, setProfessors] = useState<Student[]>([]);
+    const [selectedProfessorId, setSelectedProfessorId] = useState<string>('none');
 
     const { toast } = useToast();
 
@@ -57,12 +66,14 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
     const loadInitialData = async () => {
         setLoading(true);
         try {
-            const [modulesData, studentsData] = await Promise.all([
-                superadminApi.getAllModules(),
-                superadminApi.getSystemStudents()
+            const [modulesData, studentsData, professorsData] = await Promise.all([
+                adminApi.getAllModulesWithStats(),
+                adminApi.getSystemStudents(),
+                adminApi.getSystemProfessors()
             ]);
             setModules(modulesData);
             setStudents(studentsData);
+            setProfessors(professorsData);
             if (modulesData.length > 0) {
                 setSelectedModule(modulesData[0]);
             }
@@ -79,10 +90,37 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
 
     const loadAssignedStudents = async (moduleId: number) => {
         try {
-            const data = await superadminApi.getModuleAssignments(moduleId);
+            const data = await adminApi.getModuleAssignments(moduleId);
             setAssignedStudents(data);
+
+            // Set current professor from assignments if any
+            if (data.length > 0 && data[0].profesorId) {
+                setSelectedProfessorId(data[0].profesorId.toString());
+            } else {
+                setSelectedProfessorId('none');
+            }
         } catch (error) {
             console.error('Error loading assignments:', error);
+        }
+    };
+
+    const handleAssignProfessor = async (professorId: string) => {
+        if (!selectedModule) return;
+
+        const id = professorId === 'none' ? null : parseInt(professorId);
+        try {
+            await adminApi.assignProfessorToModule(selectedModule.id, id as any);
+            setSelectedProfessorId(professorId);
+            toast({
+                title: 'Profesor asignado',
+                description: 'El profesor ha sido vinculado al módulo correctamente',
+            });
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'No se pudo asignar el profesor',
+                variant: 'destructive',
+            });
         }
     };
 
@@ -90,7 +128,8 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
         if (!selectedModule) return;
         setActionLoading(studentId);
         try {
-            await superadminApi.bulkAssignModules(selectedModule.id, [studentId]);
+            const professorId = selectedProfessorId === 'none' ? undefined : parseInt(selectedProfessorId);
+            await adminApi.bulkAssignModules(selectedModule.id, [studentId], professorId);
             toast({
                 title: 'Estudiante asignado',
                 description: 'La asignación se realizó correctamente',
@@ -111,7 +150,7 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
         if (!selectedModule) return;
         setActionLoading(studentId);
         try {
-            await superadminApi.unassignModule(selectedModule.id, studentId);
+            await adminApi.unassignModule(selectedModule.id, studentId);
             toast({
                 title: 'Asignación eliminada',
                 description: 'El estudiante fue removido del módulo',
@@ -229,6 +268,26 @@ export function AssignmentManagerView({ onClose }: AssignmentManagerViewProps) {
                                             ID: #{selectedModule.id}
                                         </Badge>
                                     </div>
+                                </div>
+
+                                <div className="flex flex-col gap-2 w-full md:w-64">
+                                    <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Profesor a Cargo</Label>
+                                    <Select
+                                        value={selectedProfessorId}
+                                        onValueChange={handleAssignProfessor}
+                                    >
+                                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11">
+                                            <SelectValue placeholder="Seleccionar profesor..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Sin profesor asignado</SelectItem>
+                                            {professors.map((prof) => (
+                                                <SelectItem key={prof.id} value={prof.id.toString()}>
+                                                    {prof.nombre}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 

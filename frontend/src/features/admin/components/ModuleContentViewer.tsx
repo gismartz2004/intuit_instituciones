@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Eye, FileText, Target, Layers, ArrowLeft } from 'lucide-react';
-import { superadminApi, ModuleContent } from '../services/superadmin.api';
+import { adminApi } from '../services/admin.api';
+import { ModuleContent } from '../types/admin.types';
 
 interface ModuleContentViewerProps {
     moduleId: number;
@@ -24,7 +25,7 @@ export function ModuleContentViewer({ moduleId, onClose, isInline = false }: Mod
     const loadContent = async () => {
         setLoading(true);
         try {
-            const data = await superadminApi.getModuleContent(moduleId);
+            const data = await adminApi.getModuleContent(moduleId);
             setContent(data);
         } catch (error) {
             console.error('Error loading module content:', error);

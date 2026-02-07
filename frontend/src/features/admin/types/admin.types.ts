@@ -7,6 +7,8 @@ export interface User {
   activo: boolean;
   emailPadre?: string;
   modules?: Module[];
+  profesorId?: number;
+  fechaAsignacion?: string;
 }
 
 export interface Module {
@@ -64,6 +66,56 @@ export interface CreatePremioPayload {
   costoPuntos: number;
   imagenUrl?: string;
   stock?: number;
+}
+
+export interface ModuleWithStats extends Module {
+  levelCount: number;
+  studentCount: number;
+  professorCount: number;
+}
+
+export interface SystemStats {
+  totalModules: number;
+  totalStudents: number;
+  totalProfessors: number;
+  totalAssignments: number;
+}
+
+export interface Assignment {
+  student: {
+    id: number;
+    nombre: string;
+    email: string;
+  };
+  module: {
+    id: number;
+    nombreModulo: string;
+  };
+  assignment: {
+    id: number;
+    estudianteId: number;
+    moduloId: number;
+    fechaAsignacion: string;
+  };
+}
+
+export interface ImportPreview {
+  students: any[];
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  columns: string[];
+}
+
+export interface ModuleContent {
+  module: Module;
+  levels: any[];
+}
+
+export interface Plan {
+  id: number;
+  nombrePlan: string;
+  precio?: string;
 }
 
 export const ROLE_MAP: Record<number, string> = {

@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { ExcelProcessorService } from '../../shared/services/excel-processor.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class SuperadminService {
+export class AdminService {
     constructor(
         @Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>,
         private excelProcessor: ExcelProcessorService,
@@ -30,40 +30,55 @@ export class SuperadminService {
     }
 
     /**
-     * Get all modules in the system
+     * Get all professors in the system
+     */
+    async getSystemProfessors() {
+        return this.db
+            .select({
+                id: schema.usuarios.id,
+                nombre: schema.usuarios.nombre,
+                email: schema.usuarios.email,
+                activo: schema.usuarios.activo,
+            })
+            .from(schema.usuarios)
+            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
+            .where(eq(schema.roles.nombreRol, 'Profesor'));
+    }
+
+    /**
+     * Get all modules in the system with stats
      */
     async getAllModules() {
         const modules = await this.db.select().from(schema.modulos);
 
         const modulesWithStats = await Promise.all(
             modules.map(async (mod) => {
-                // Count levels
                 const levels = await this.db
                     .select()
                     .from(schema.niveles)
                     .where(eq(schema.niveles.moduloId, mod.id));
 
-                // Get all assignments for this module to count students and unique professors
                 const allAssignments = await this.db
                     .select()
                     .from(schema.asignaciones)
                     .where(eq(schema.asignaciones.moduloId, mod.id));
 
-                // Count unique students (where estudianteId is present)
                 const studentCount = allAssignments.filter(a => a.estudianteId !== null).length;
 
-                // Count unique professors (where profesorId is present)
-                const uniqueProfessors = new Set(
-                    allAssignments
-                        .filter(a => a.profesorId !== null)
-                        .map(a => a.profesorId)
-                );
+                let professorName = null;
+                if (mod.profesorId) {
+                    const [prof] = await this.db
+                        .select({ nombre: schema.usuarios.nombre })
+                        .from(schema.usuarios)
+                        .where(eq(schema.usuarios.id, mod.profesorId));
+                    professorName = prof?.nombre || null;
+                }
 
                 return {
                     ...mod,
                     levelCount: levels.length,
                     studentCount: studentCount,
-                    professorCount: uniqueProfessors.size,
+                    professorName: professorName,
                 };
             }),
         );
@@ -75,7 +90,6 @@ export class SuperadminService {
      * Get complete content of a module (RAG, HA, PIM)
      */
     async getModuleContent(moduleId: number) {
-        // Get module info
         const [module] = await this.db
             .select()
             .from(schema.modulos)
@@ -85,40 +99,33 @@ export class SuperadminService {
             throw new Error('Módulo no encontrado');
         }
 
-        // Get all levels
         const levels = await this.db
             .select()
             .from(schema.niveles)
             .where(eq(schema.niveles.moduloId, moduleId));
 
-        // For each level, get RAG, HA, and PIM
         const levelsWithContent = await Promise.all(
             levels.map(async (level) => {
-                // Get RAG templates
                 const ragTemplates = await this.db
                     .select()
                     .from(schema.plantillasRag)
                     .where(eq(schema.plantillasRag.nivelId, level.id));
 
-                // Get HA templates
                 const haTemplates = await this.db
                     .select()
                     .from(schema.plantillasHa)
                     .where(eq(schema.plantillasHa.nivelId, level.id));
 
-                // Get PIM templates
                 const pimTemplates = await this.db
                     .select()
                     .from(schema.plantillasPim)
                     .where(eq(schema.plantillasPim.nivelId, level.id));
 
-                // Get contents
                 const contents = await this.db
                     .select()
                     .from(schema.contenidos)
                     .where(eq(schema.contenidos.nivelId, level.id));
 
-                // Get activities
                 const activities = await this.db
                     .select()
                     .from(schema.actividades)
@@ -142,10 +149,10 @@ export class SuperadminService {
     }
 
     /**
-     * Get all assignments in the system
+     * Get all assignments
      */
     async getAllAssignments() {
-        const assignments = await this.db
+        return this.db
             .select({
                 assignment: schema.asignaciones,
                 student: schema.usuarios,
@@ -160,8 +167,6 @@ export class SuperadminService {
                 schema.modulos,
                 eq(schema.asignaciones.moduloId, schema.modulos.id),
             );
-
-        return assignments;
     }
 
     /**
@@ -184,7 +189,7 @@ export class SuperadminService {
     }
 
     /**
-     * Unassign a module from a student
+     * Unassign a module
      */
     async unassignModule(moduleId: number, studentId: number) {
         await this.db
@@ -199,10 +204,27 @@ export class SuperadminService {
     }
 
     /**
-     * Bulk assign module to multiple students
+     * Assign a professor to all students in a module
      */
-    async bulkAssignModules(moduleId: number, studentIds: number[]) {
-        // Get existing assignments to avoid duplicates
+    async assignProfessorToModule(moduleId: number, professorId: number) {
+        await this.db
+            .update(schema.modulos)
+            .set({ profesorId: professorId })
+            .where(eq(schema.modulos.id, moduleId));
+
+        // Also sync existing assignments for this module
+        await this.db
+            .update(schema.asignaciones)
+            .set({ profesorId: professorId })
+            .where(eq(schema.asignaciones.moduloId, moduleId));
+
+        return { success: true };
+    }
+
+    /**
+     * Bulk assign
+     */
+    async bulkAssignModules(moduleId: number, studentIds: number[], professorId?: number) {
         const existing = await this.db
             .select({ studentId: schema.asignaciones.estudianteId })
             .from(schema.asignaciones)
@@ -215,35 +237,35 @@ export class SuperadminService {
             return { success: true, count: 0, message: 'Todos los estudiantes ya estaban asignados' };
         }
 
+        // Check if module has a professor assigned
+        const [module] = await this.db.select().from(schema.modulos).where(eq(schema.modulos.id, moduleId));
+        const effectiveProfessorId = professorId || module?.profesorId || null;
+
         const assignments = newStudentIds.map((studentId) => ({
             moduloId: moduleId,
             estudianteId: studentId,
-            profesorId: null,
+            profesorId: effectiveProfessorId,
             fechaAsignacion: new Date(),
         }));
 
+        console.log(`[DEBUG] Bulk assigning ${assignments.length} students to module ${moduleId} with professor ${professorId}`);
         await this.db.insert(schema.asignaciones).values(assignments);
 
         return { success: true, count: assignments.length };
     }
 
     /**
-     * Preview students from Excel file
+     * Excel Previews
      */
     async previewStudentsFromExcel(fileBuffer: Buffer) {
-        // Parse Excel
         const parsed = this.excelProcessor.parseStudentsFromExcel(fileBuffer);
-
-        // Get existing emails for validation
         const existingUsers = await this.db.select().from(schema.usuarios);
         const existingEmails = existingUsers.map((u) => u.email || '');
 
-        // Validate email uniqueness
-        const studentsWithValidation =
-            await this.excelProcessor.validateEmailUniqueness(
-                parsed.students,
-                existingEmails,
-            );
+        const studentsWithValidation = await this.excelProcessor.validateEmailUniqueness(
+            parsed.students,
+            existingEmails,
+        );
 
         return {
             ...parsed,
@@ -255,16 +277,10 @@ export class SuperadminService {
     }
 
     /**
-     * Import students from Excel file
+     * Excel Import
      */
-    async importStudentsFromExcel(
-        fileBuffer: Buffer,
-        onlyValid: boolean = true,
-    ) {
-        // Preview first to get validated data
+    async importStudentsFromExcel(fileBuffer: Buffer, onlyValid: boolean = true) {
         const preview = await this.previewStudentsFromExcel(fileBuffer);
-
-        // Filter students to import
         const studentsToImport = onlyValid
             ? preview.students.filter((s) => s.isValid)
             : preview.students;
@@ -273,21 +289,18 @@ export class SuperadminService {
             throw new Error('No hay estudiantes válidos para importar');
         }
 
-        // Get role ID for student
         const [studentRole] = await this.db
             .select()
             .from(schema.roles)
             .where(eq(schema.roles.nombreRol, 'Estudiante'));
 
-        // Get plan ID
-        const plans = await this.db.select().from(schema.planes);
-        const planMap = new Map(plans.map((p) => [p.nombrePlan, p.id]));
+        const planes = await this.db.select().from(schema.planes);
+        const planMap = new Map(planes.map((p) => [p.nombrePlan, p.id]));
 
-        // Hash passwords and prepare user data
         const usersToCreate = await Promise.all(
             studentsToImport.map(async (student) => {
                 const hashedPassword = await bcrypt.hash(student.password, 10);
-                const planId = planMap.get(student.plan) || 1; // Default to Basic
+                const planId = planMap.get(student.plan) || 1;
 
                 return {
                     nombre: student.nombre,
@@ -301,7 +314,6 @@ export class SuperadminService {
             }),
         );
 
-        // Insert users
         const createdUsers = await this.db
             .insert(schema.usuarios)
             .values(usersToCreate)
@@ -310,177 +322,89 @@ export class SuperadminService {
         return {
             success: true,
             imported: createdUsers.length,
-            skipped: preview.students.length - createdUsers.length,
             users: createdUsers,
         };
     }
 
     /**
-     * Get system statistics
+     * Get Stats
      */
     async getSystemStats() {
+        const modules = await this.db.select().from(schema.modulos);
+        const students = await this.db
+            .select()
+            .from(schema.usuarios)
+            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
+            .where(eq(schema.roles.nombreRol, 'Estudiante'));
+
+        const professors = await this.db
+            .select()
+            .from(schema.usuarios)
+            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
+            .where(eq(schema.roles.nombreRol, 'Profesor'));
+
+        const assignments = await this.db.select().from(schema.asignaciones);
+
+        return {
+            totalModules: modules?.length || 0,
+            totalStudents: students?.length || 0,
+            totalProfessors: professors?.length || 0,
+            totalAssignments: assignments?.length || 0,
+        };
+    }
+
+    /**
+     * Get Plans from DB
+     */
+    async getPlanes() {
+        return this.db.select().from(schema.planes);
+    }
+
+    /**
+     * Reset user progress
+     */
+    async resetUserProgress(userId: number) {
         try {
-            console.log('Fetching System Stats...');
-            const modules = await this.db.select().from(schema.modulos);
-            const students = await this.db
-                .select()
-                .from(schema.usuarios)
-                .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
-                .where(eq(schema.roles.nombreRol, 'Estudiante'));
+            await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.estudianteId, userId));
+            await this.db.delete(schema.progresoNiveles).where(eq(schema.progresoNiveles.estudianteId, userId));
+            await this.db.delete(schema.entregasHa).where(eq(schema.entregasHa.estudianteId, userId));
+            await this.db.delete(schema.entregasRag).where(eq(schema.entregasRag.estudianteId, userId));
+            await this.db.delete(schema.entregas).where(eq(schema.entregas.estudianteId, userId));
+            await this.db.delete(schema.progresoMisiones).where(eq(schema.progresoMisiones.estudianteId, userId));
+            await this.db.delete(schema.logrosDesbloqueados).where(eq(schema.logrosDesbloqueados.estudianteId, userId));
 
-            const professors = await this.db
-                .select()
-                .from(schema.usuarios)
-                .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
-                .where(eq(schema.roles.nombreRol, 'Profesor'));
+            try {
+                await this.db.delete(schema.rankingAwards).where(eq(schema.rankingAwards.estudianteId, userId));
+            } catch (e) { }
 
-            const assignments = await this.db.select().from(schema.asignaciones);
+            try {
+                await this.db.delete(schema.certificados).where(eq(schema.certificados.estudianteId, userId));
+            } catch (e) { }
 
-            return {
-                totalModules: modules?.length || 0,
-                totalStudents: students?.length || 0,
-                totalProfessors: professors?.length || 0,
-                totalAssignments: assignments?.length || 0,
-            };
+            await this.db.delete(schema.puntosLog).where(eq(schema.puntosLog.estudianteId, userId));
+
+            const [gamif] = await this.db.select().from(schema.gamificacionEstudiante).where(eq(schema.gamificacionEstudiante.estudianteId, userId));
+            if (gamif) {
+                await this.db.update(schema.gamificacionEstudiante)
+                    .set({ puntosDisponibles: 0, xpTotal: 0, rachaDias: 0, nivelActual: 1 })
+                    .where(eq(schema.gamificacionEstudiante.estudianteId, userId));
+            }
+
+            return { success: true, message: 'Usuario reseteado exitosamente' };
         } catch (error) {
-            console.error('Error fetching system stats:', error);
+            console.error(`[RESET ERROR] ${userId}:`, error);
             throw error;
         }
     }
 
     /**
-     * Reset user progress to zero
-     * Deletes: assignments, level progress, evidence, resets gamification
-     */
-    /**
-     * Reset user progress to zero
-     * Deletes: assignments, level progress, evidence, gamification stats, points log, etc.
-     */
-    async resetUserProgress(userId: number) {
-        try {
-            console.log(`[RESET] Starting reset for user ${userId}`);
-
-            // 1. Delete Assignments
-            await this.db
-                .delete(schema.asignaciones)
-                .where(eq(schema.asignaciones.estudianteId, userId));
-
-            // 2. Delete Level Progress
-            await this.db
-                .delete(schema.progresoNiveles)
-                .where(eq(schema.progresoNiveles.estudianteId, userId));
-
-            // 3. Delete HA Evidence
-            await this.db
-                .delete(schema.entregasHa)
-                .where(eq(schema.entregasHa.estudianteId, userId));
-
-            // 4. Delete RAG Evidence
-            await this.db
-                .delete(schema.entregasRag)
-                .where(eq(schema.entregasRag.estudianteId, userId));
-
-            // 5. Delete Generic Deliveries (Assignments)
-            await this.db
-                .delete(schema.entregas)
-                .where(eq(schema.entregas.estudianteId, userId));
-
-            // 6. Delete Mission Progress
-            await this.db
-                .delete(schema.progresoMisiones)
-                .where(eq(schema.progresoMisiones.estudianteId, userId));
-
-            // 7. Delete Unlocked Achievements
-            await this.db
-                .delete(schema.logrosDesbloqueados)
-                .where(eq(schema.logrosDesbloqueados.estudianteId, userId));
-
-            // 7.1 Delete Ranking Awards (Dependent on PuntosLog)
-            try {
-                await this.db
-                    .delete(schema.rankingAwards)
-                    .where(eq(schema.rankingAwards.estudianteId, userId));
-            } catch (e) {
-                console.log('Error deleting ranking awards (might not exist):', e);
-            }
-
-            // 7.2 Delete Certificates
-            try {
-                await this.db
-                    .delete(schema.certificados)
-                    .where(eq(schema.certificados.estudianteId, userId));
-            } catch (e) {
-                console.log('Error deleting certificates (might not exist):', e);
-            }
-
-            // 8. Delete Points Log (History)
-            await this.db
-                .delete(schema.puntosLog)
-                .where(eq(schema.puntosLog.estudianteId, userId));
-
-            // 9. Reset Gamification Stats (Update or Insert)
-            const existingGamification = await this.db
-                .select()
-                .from(schema.gamificacionEstudiante)
-                .where(eq(schema.gamificacionEstudiante.estudianteId, userId))
-                .limit(1);
-
-            if (existingGamification.length > 0) {
-                await this.db
-                    .update(schema.gamificacionEstudiante)
-                    .set({
-                        puntosDisponibles: 0,
-                        xpTotal: 0,
-                        rachaDias: 0,
-                        nivelActual: 1,
-                    })
-                    .where(eq(schema.gamificacionEstudiante.estudianteId, userId));
-            } else {
-                await this.db.insert(schema.gamificacionEstudiante).values({
-                    estudianteId: userId,
-                    puntosDisponibles: 0,
-                    xpTotal: 0,
-                    rachaDias: 0,
-                    nivelActual: 1,
-                });
-            }
-
-            console.log(`[RESET] Successful reset for user ${userId}`);
-            return {
-                success: true,
-                message: 'Progreso del usuario reseteado exitosamente',
-            };
-        } catch (error) {
-            console.error(`[RESET ERROR] Failed to reset user ${userId}:`, error);
-            throw error; // Re-throw to be caught by allSettled
-        }
-    }
-
-    /**
-     * Bulk reset multiple users
+     * Bulk Reset
      */
     async bulkResetUsers(userIds: number[]) {
-        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-            return {
-                success: false,
-                message: 'No se proporcionaron IDs válidos',
-                successful: 0,
-                failed: 0
-            };
-        }
-
-        const results = await Promise.allSettled(
-            userIds.map((id) => this.resetUserProgress(id)),
-        );
-
-        const successful = results.filter((r) => r.status === 'fulfilled').length;
-        const failed = results.filter((r) => r.status === 'rejected').length;
-
-        return {
-            success: true,
-            message: `${successful} usuarios reseteados, ${failed} fallidos`,
-            successful,
-            failed,
-        };
+        if (!userIds || userIds.length === 0) return { success: false, message: 'No IDs provided' };
+        const results = await Promise.allSettled(userIds.map(id => this.resetUserProgress(id)));
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
+        return { success: true, message: `${successful} reseteados, ${failed} fallidos`, successful, failed };
     }
 }

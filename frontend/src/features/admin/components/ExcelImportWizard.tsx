@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Download } from 'lucide-react';
-import { superadminApi, StudentPreview } from '../services/superadmin.api';
+import { adminApi } from '../services/admin.api';
+import { ImportPreview } from '../types/admin.types';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExcelImportWizardProps {
@@ -23,7 +24,7 @@ interface ExcelImportWizardProps {
 export function ExcelImportWizard({ onClose, onSuccess }: ExcelImportWizardProps) {
     const [step, setStep] = useState<'upload' | 'preview' | 'importing'>('upload');
     const [file, setFile] = useState<File | null>(null);
-    const [preview, setPreview] = useState<StudentPreview[] | null>(null);
+    const [preview, setPreview] = useState<ImportPreview['students'] | null>(null);
     const [stats, setStats] = useState<any>(null);
     const [importing, setImporting] = useState(false);
     const { toast } = useToast();
@@ -36,7 +37,7 @@ export function ExcelImportWizard({ onClose, onSuccess }: ExcelImportWizardProps
 
         // Auto-preview
         try {
-            const result = await superadminApi.previewStudentsFromExcel(selectedFile);
+            const result = await adminApi.previewStudentsFromExcel(selectedFile);
             setPreview(result.students);
             setStats({
                 total: result.totalRows,
@@ -60,7 +61,7 @@ export function ExcelImportWizard({ onClose, onSuccess }: ExcelImportWizardProps
         setImporting(true);
 
         try {
-            const result = await superadminApi.importStudentsFromExcel(file, true);
+            const result = await adminApi.importStudentsFromExcel(file, true);
             toast({
                 title: '¡Importación exitosa!',
                 description: `Se crearon ${result.imported} estudiantes`,

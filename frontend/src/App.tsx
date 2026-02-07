@@ -16,7 +16,7 @@ import { Login } from "@/features/auth";
 import { Profile } from "@/features/profile";
 import { AITutor, ProCourses } from "@/features/courses";
 import { GamerRaffle, MissionsHub } from "@/features/gamification";
-import { SuperAdminDashboard } from "@/features/superadmin";
+// import { SuperAdminDashboard } from "@/features/superadmin"; // Removido por unificación
 import { Toaster } from "@/components/ui/toaster";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { notificationService } from "@/services/notification.service";
@@ -115,10 +115,10 @@ function App() {
             <StudentDashboard3D user={user!} />
           </Route>
           <Route path="/admin">
-            <SuperAdminDashboard />
+            <AdminDashboard user={user!} onLogout={handleLogout} />
           </Route>
           <Route path="/superadmin">
-            <SuperAdminDashboard />
+            <AdminDashboard user={user!} onLogout={handleLogout} />
           </Route>
           <Route path="/teach">
             <ProfessorDashboard user={user!} />

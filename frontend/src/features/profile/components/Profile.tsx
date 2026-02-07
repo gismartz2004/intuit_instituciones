@@ -21,6 +21,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { studentApi } from "@/features/student/services/student.api";
+import { authApi } from "@/features/auth/services/auth.api";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileProps {
   user: { name: string; role: string; id: string; plan?: string };
@@ -28,7 +30,17 @@ interface ProfileProps {
 
 export default function Profile({ user }: ProfileProps) {
   const [curriculum, setCurriculum] = useState<any>(null);
+  const [fullUserInfo, setFullUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const [parentData, setParentData] = useState({
+    nombrePadre: '',
+    emailPadre: '',
+    celularPadre: '',
+    trabajoPadre: ''
+  });
 
   useEffect(() => {
     loadCurriculum();
@@ -39,13 +51,37 @@ export default function Profile({ user }: ProfileProps) {
       setLoading(true);
       const studentId = parseInt(user.id);
       if (!isNaN(studentId)) {
-        const data = await studentApi.getCurriculum(studentId);
-        setCurriculum(data);
+        const [currData, userData] = await Promise.all([
+          studentApi.getCurriculum(studentId),
+          authApi.getUserInfo(user.id)
+        ]);
+        setCurriculum(currData);
+        setFullUserInfo(userData);
+        if (userData) {
+          setParentData({
+            nombrePadre: userData.nombrePadre || '',
+            emailPadre: userData.emailPadre || '',
+            celularPadre: userData.celularPadre || '',
+            trabajoPadre: userData.trabajoPadre || ''
+          });
+        }
       }
     } catch (error) {
-      console.error("Error fetching curriculum:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateParent = async () => {
+    try {
+      setIsSaving(true);
+      await authApi.updateUser(user.id, parentData);
+      toast({ title: "¡Éxito!", description: "Datos del representante actualizados." });
+    } catch (e) {
+      toast({ title: "Error", description: "No se pudieron guardar los cambios.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -79,6 +115,9 @@ export default function Profile({ user }: ProfileProps) {
           </TabsTrigger>
           <TabsTrigger value="settings" className="rounded-lg font-bold gap-2">
             <SettingsIcon className="w-4 h-4" /> Ajustes
+          </TabsTrigger>
+          <TabsTrigger value="parent" className="rounded-lg font-bold gap-2">
+            <User className="w-4 h-4" /> Representante
           </TabsTrigger>
           <TabsTrigger value="notifications" className="rounded-lg font-bold gap-2">
             <Bell className="w-4 h-4" /> Notificaciones
@@ -300,6 +339,58 @@ export default function Profile({ user }: ProfileProps) {
                 </div>
                 <Button variant="outline">Cambiar a Oscuro</Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="parent">
+          <Card className="border-2 border-slate-100 overflow-hidden shadow-sm">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <CardTitle>Datos del Representante</CardTitle>
+              <CardDescription>Información del padre, madre o tutor legal.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Nombre del Representante</Label>
+                  <Input
+                    value={parentData.nombrePadre}
+                    onChange={(e) => setParentData({ ...parentData, nombrePadre: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Correo Electrónico</Label>
+                  <Input
+                    value={parentData.emailPadre}
+                    onChange={(e) => setParentData({ ...parentData, emailPadre: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Teléfono / Celular</Label>
+                  <Input
+                    value={parentData.celularPadre}
+                    onChange={(e) => setParentData({ ...parentData, celularPadre: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Ocupación / Trabajo</Label>
+                  <Input
+                    value={parentData.trabajoPadre}
+                    onChange={(e) => setParentData({ ...parentData, trabajoPadre: e.target.value })}
+                    className="bg-white border-slate-200 focus:border-blue-500 rounded-xl h-11"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleUpdateParent}
+                disabled={isSaving}
+                className="bg-[#0047AB] hover:bg-blue-700 shadow-lg shadow-blue-500/20 px-8 h-12 rounded-xl font-bold"
+              >
+                {isSaving ? "Guardando..." : "Actualizar Datos"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

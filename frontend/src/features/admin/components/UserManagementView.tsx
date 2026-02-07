@@ -20,16 +20,18 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { superadminApi, Student, ModuleWithStats } from '../services/superadmin.api';
+import { adminApi } from '../services/admin.api';
+import { User, ModuleWithStats, Plan } from '../types/admin.types';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, Trash2, BookOpen, AlertTriangle, CheckCircle, Plus } from 'lucide-react';
+import { Search, Users, Trash2, BookOpen, AlertTriangle, CheckCircle, Plus, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function UserManagementView() {
-    const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<User[]>([]);
     const [modules, setModules] = useState<ModuleWithStats[]>([]);
+    const [planes, setPlanes] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
@@ -59,12 +61,14 @@ export function UserManagementView() {
 
     const loadData = async () => {
         try {
-            const [studentsData, modulesData] = await Promise.all([
-                superadminApi.getSystemStudents(),
-                superadminApi.getAllModules(),
+            const [studentsData, modulesData, planesData] = await Promise.all([
+                adminApi.getSystemStudents(),
+                adminApi.getAllModulesWithStats(),
+                adminApi.getPlanes(),
             ]);
             setStudents(studentsData);
             setModules(modulesData);
+            setPlanes(planesData);
         } catch (error) {
             toast({
                 title: 'Error al cargar datos',
@@ -104,7 +108,7 @@ export function UserManagementView() {
             // Assign each module to all selected users
             await Promise.all(
                 selectedModuleIds.map((moduleId) =>
-                    superadminApi.bulkAssignModules(moduleId, selectedUserIds)
+                    adminApi.bulkAssignModules(moduleId, selectedUserIds)
                 )
             );
 
@@ -131,15 +135,10 @@ export function UserManagementView() {
 
         setSubmitting(true);
         try {
-            const response = await fetch('/api/superadmin/users/bulk-reset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userIds: selectedUserIds }),
-            });
+            const result = await adminApi.bulkResetUsers(selectedUserIds);
 
-            if (!response.ok) throw new Error('Error al resetear usuarios');
+            if (!result.success) throw new Error(result.message);
 
-            const result = await response.json();
             toast({
                 title: '¡Reset exitoso!',
                 description: result.message,
@@ -169,10 +168,11 @@ export function UserManagementView() {
 
         setSubmitting(true);
         try {
-            await superadminApi.createUser({
+            await adminApi.createUser({
                 ...newUser,
                 roleId: parseInt(newUser.roleId),
                 planId: parseInt(newUser.planId),
+                activo: true
             });
 
             toast({
@@ -268,19 +268,28 @@ export function UserManagementView() {
                     <div className="border rounded-xl overflow-hidden bg-white">
                         <Table>
                             <TableHeader className="bg-slate-50">
-                                <TableRow>
-                                    <TableHead className="w-[50px]">
+                                <TableRow className="hover:bg-transparent border-slate-200">
+                                    <TableHead className="w-[50px] py-4">
                                         <Checkbox
                                             checked={
-                                                selectedUserIds.length === filteredStudents.length &&
-                                                filteredStudents.length > 0
+                                                selectedUserIds.length === students.length &&
+                                                students.length > 0
                                             }
                                             onCheckedChange={toggleAllUsers}
                                         />
                                     </TableHead>
-                                    <TableHead>Estudiante</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead className="text-right">Estado</TableHead>
+                                    <TableHead className="text-slate-700 font-bold">
+                                        Usuario
+                                    </TableHead>
+                                    <TableHead className="text-slate-700 font-bold">
+                                        Email
+                                    </TableHead>
+                                    <TableHead className="text-slate-700 font-bold text-right">
+                                        Estado
+                                    </TableHead>
+                                    <TableHead className="text-slate-700 font-bold text-right px-6">
+                                        Acciones
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -303,17 +312,52 @@ export function UserManagementView() {
                                             {student.nombre}
                                         </TableCell>
                                         <TableCell className="text-slate-500">{student.email}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Badge
-                                                variant={student.activo ? 'default' : 'secondary'}
-                                                className={
-                                                    student.activo
-                                                        ? 'bg-green-100 text-green-700 hover:bg-green-100 border-none'
-                                                        : ''
-                                                }
-                                            >
-                                                {student.activo ? 'Activo' : 'Inactivo'}
-                                            </Badge>
+                                        <TableCell className="text-right px-6">
+                                            <div className="flex justify-end items-center gap-3">
+                                                <Badge
+                                                    variant={student.activo ? 'default' : 'secondary'}
+                                                    className={
+                                                        student.activo
+                                                            ? 'bg-green-100 text-green-700 hover:bg-green-100 border-none'
+                                                            : ''
+                                                    }
+                                                >
+                                                    {student.activo ? 'Activo' : 'Inactivo'}
+                                                </Badge>
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Resetear Progreso"
+                                                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg"
+                                                        onClick={() => {
+                                                            setSelectedUserIds([student.id]);
+                                                            setShowResetDialog(true);
+                                                        }}
+                                                    >
+                                                        <RotateCcw className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Eliminar Usuario"
+                                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                                        onClick={async () => {
+                                                            if (confirm(`¿Estás seguro de eliminar a ${student.nombre}?`)) {
+                                                                try {
+                                                                    await adminApi.deleteUser(student.id);
+                                                                    toast({ title: "Usuario eliminado" });
+                                                                    loadData();
+                                                                } catch (e) {
+                                                                    toast({ title: "Error", variant: "destructive" });
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -491,9 +535,9 @@ export function UserManagementView() {
                                         <SelectValue placeholder="Seleccionar Plan" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">Básico</SelectItem>
-                                        <SelectItem value="2">Digital</SelectItem>
-                                        <SelectItem value="3">Pro</SelectItem>
+                                        {planes.map(p => (
+                                            <SelectItem key={p.id} value={p.id.toString()}>{p.nombrePlan}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>

@@ -27,6 +27,7 @@ export interface UpdateUserPayload {
   avatar?: string;
   onboardingCompleted?: boolean;
   nombrePadre?: string;
+  emailPadre?: string;
   celularPadre?: string;
   trabajoPadre?: string;
 }

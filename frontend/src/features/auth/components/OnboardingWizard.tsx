@@ -68,7 +68,7 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                 avatar: selectedAvatar,
                 onboardingCompleted: true,
                 nombrePadre: parentInfo.nombrePadre,
-                // emailPadre: parentInfo.emailPadre, // Optional update if needed
+                emailPadre: parentInfo.emailPadre,
                 celularPadre: parentInfo.celularPadre,
                 trabajoPadre: parentInfo.trabajoPadre
             });
@@ -191,6 +191,19 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
                                             placeholder="Ej: María Pérez"
                                             value={parentInfo.nombrePadre}
                                             onChange={(e) => setParentInfo({ ...parentInfo, nombrePadre: e.target.value })}
+                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label className="flex items-center gap-2 text-slate-600">
+                                            <Mail className="w-4 h-4" /> Email del Padre/Madre
+                                        </Label>
+                                        <Input
+                                            placeholder="Ej: maria@perez.com"
+                                            type="email"
+                                            value={parentInfo.emailPadre}
+                                            onChange={(e) => setParentInfo({ ...parentInfo, emailPadre: e.target.value })}
                                             className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                         />
                                     </div>
