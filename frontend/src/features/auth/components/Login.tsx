@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Rocket, Lock, AtSign, Eye, EyeOff, Sparkles, Zap, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi } from '../services/auth.api';
+import { Seo } from "@/components/common/Seo";
 
 interface LoginProps {
   onLogin: (role: "student" | "admin" | "professor" | "superadmin", name: string, id: string, planId?: number, accessToken?: string) => void;
@@ -49,8 +50,13 @@ export default function Login({ onLogin }: LoginProps) {
     }
   };
 
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
+      <Seo
+        title="Iniciar Sesión"
+        description="Accede a la Plataforma Genios Bot para gestionar tus clases, ver tu progreso y explorar el ecosistema educativo gamificado."
+      />
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Floating Orbs */}

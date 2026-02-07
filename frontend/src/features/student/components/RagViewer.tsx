@@ -30,7 +30,7 @@ interface RagViewerProps {
   onAddPoints?: (amount: number, reason: string) => void;
 }
 
-type RagSection = 'intro' | 'objectives' | 'concepts' | 'evidence' | 'mission' | 'completion';
+type RagSection = 'intro' | 'objectives' | 'concepts' | 'mission' | 'evidence' | 'completion';
 
 export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewerProps, ref) {
   const [data, setData] = useState<any>(null);
@@ -57,6 +57,8 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
         const total = data?.contenidoClave?.length || 0;
         if (conceptIndex < total - 1) setConceptIndex(p => p + 1);
         else handleNextSection();
+      } else if (currentSection === 'mission') {
+        handleStepComplete();
       } else if (currentSection === 'evidence') {
         if (!missionEvidence || isUploading || !missionEvidenceUrl) {
           setAvatarState({
@@ -67,8 +69,6 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
           return;
         }
         handleNextSection();
-      } else if (currentSection === 'mission') {
-        handleStepComplete();
       } else {
         handleNextSection();
       }
@@ -277,7 +277,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
 
         setAvatarState({
           emotion: 'happy',
-          message: `¡Evidencia recibida! Vamos a la misión.`,
+          message: `¡Evidencia recibida! Has completado el desafío.`,
           isVisible: true
         });
       } catch (error: any) {
@@ -291,7 +291,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
   };
 
   const handleNextSection = () => {
-    const sections: RagSection[] = ['intro', 'objectives', 'concepts', 'evidence', 'mission', 'completion'];
+    const sections: RagSection[] = ['intro', 'objectives', 'concepts', 'mission', 'evidence', 'completion'];
     const currentIndex = sections.indexOf(currentSection);
     if (currentIndex < sections.length - 1) {
       setCurrentSection(sections[currentIndex + 1]);
@@ -299,7 +299,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
   };
 
   const handlePrevSection = () => {
-    const sections: RagSection[] = ['intro', 'objectives', 'concepts', 'evidence', 'mission', 'completion'];
+    const sections: RagSection[] = ['intro', 'objectives', 'concepts', 'mission', 'evidence', 'completion'];
     const currentIndex = sections.indexOf(currentSection);
     if (currentIndex > 0) {
       setCurrentSection(sections[currentIndex - 1]);
@@ -339,7 +339,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
             >
               <div className="max-w-4xl mx-auto space-y-4 pb-20">
                 <div className="text-center mb-4">
-                  <h2 className="text-3xl font-black text-slate-800 mb-2">🎯 Meta del Módulo</h2>
+                  <h2 className="text-3xl font-black text-slate-800 mb-2">🎯 Objetivo del RAG</h2>
                   <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">{data.objetivoAprendizaje}</p>
 
                   <div className="bg-blue-50/50 rounded-xl p-4 max-w-xl mx-auto border border-blue-100 mb-8">
@@ -437,9 +437,9 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
                 <Card className="shadow-xl border-0 overflow-hidden">
                   <div className="bg-slate-900 p-4 text-white text-center">
                     <FileText className="w-12 h-12 mx-auto mb-2 text-indigo-400" />
-                    <h2 className="text-2xl font-bold mb-1">Evidencia Previa</h2>
+                    <h2 className="text-2xl font-bold mb-1">Entrega de Evidencia Final</h2>
                     <p className="text-slate-400 text-sm max-w-md mx-auto">
-                      Para asegurar que estás listo para la misión, necesitamos validar que has completado las tareas preparatorias. Esto garantiza que tengas las bases sólidas para el éxito.
+                      ¡Felicidades por completar la misión! Ahora sube tu evidencia final para validar tu aprendizaje y obtener tu recompensa.
                     </p>
                   </div>
                   <CardContent className="p-8 space-y-6">
@@ -483,7 +483,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
                         disabled={!missionEvidence || isUploading || !missionEvidenceUrl}
                         className="flex-[2] h-12 text-lg bg-indigo-600 hover:bg-indigo-700"
                       >
-                        {isUploading ? "Subiendo..." : "Confirmar y Empezar Misión"}
+                        {isUploading ? "Subiendo..." : "Confirmar y Finalizar Módulo"}
                       </Button>
                     </div>
                   </CardContent>
