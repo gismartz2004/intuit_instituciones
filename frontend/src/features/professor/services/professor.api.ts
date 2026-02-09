@@ -166,6 +166,17 @@ export const professorApi = {
     return response.json();
   },
 
+  // Attendance
+  async getAttendance(levelId: number): Promise<any[]> {
+    return apiClient.get(`/api/professor/levels/${levelId}/attendance`);
+  },
+
+  async saveAttendance(levelId: number, professorId: number, records: { estudianteId: number; asistio: boolean }[]): Promise<any> {
+    return apiClient.post(`/api/professor/levels/${levelId}/attendance`, {
+      professorId,
+      records
+    });
+  },
 
   // RAG Templates
   async saveRagTemplate(levelId: number, data: any): Promise<any> {

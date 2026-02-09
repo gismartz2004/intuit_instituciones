@@ -113,6 +113,17 @@ export class StudentService {
     }
 
     async calculateLevelProgress(studentId: number, levelId: number) {
+        // 0. Attendance Check
+        const [attendance] = await this.db.select()
+            .from(schema.asistencia)
+            .where(and(
+                eq(schema.asistencia.estudianteId, studentId),
+                eq(schema.asistencia.nivelId, levelId)
+            ))
+            .limit(1);
+
+        const hasAttended = attendance?.asistio === true;
+
         // 1. Traditional Activities
         const activities = await this.db.select()
             .from(schema.actividades)
@@ -139,6 +150,11 @@ export class StudentService {
 
         for (const rag of rags) {
             totalTasks += 1;
+
+            if (hasAttended) {
+                completedTasks += 1;
+                continue;
+            }
 
             const ragSubmissions = await this.db.select()
                 .from(schema.entregasRag)
@@ -198,6 +214,21 @@ export class StudentService {
         const completado = porcentajeCompletado === 100;
 
         return { porcentajeCompletado, completado };
+    }
+
+    async getAttendanceStatus(studentId: number, levelId: number) {
+        const [attendance] = await this.db.select()
+            .from(schema.asistencia)
+            .where(and(
+                eq(schema.asistencia.estudianteId, studentId),
+                eq(schema.asistencia.nivelId, levelId)
+            ))
+            .limit(1);
+
+        return {
+            asistio: attendance?.asistio === true,
+            fecha: attendance?.fecha || null
+        };
     }
 
     async updateLevelProgress(studentId: number, levelId: number) {

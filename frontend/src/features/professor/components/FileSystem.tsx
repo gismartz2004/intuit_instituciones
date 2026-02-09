@@ -249,28 +249,31 @@ export default function FileSystem() {
         return (
             <div className={level > 0 ? "ml-4" : ""}>
                 {node.children.map((child) => (
-                    <div key={child.path}>
-                        <button
-                            onClick={() => setCurrentFolder(child.path)}
-                            className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${currentFolder === child.path
-                                ? "bg-blue-50 text-blue-700 font-semibold"
-                                : "hover:bg-slate-100 text-slate-700"
-                                }`}
-                        >
-                            <Folder className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate text-sm">{child.name}</span>
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setItemToDelete({ path: child.path, type: 'folder' });
-                                setShowDeleteConfirm(true);
-                            }}
-                            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                            title="Eliminar carpeta"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                    <div key={child.path} className="space-y-1">
+                        <div className="group relative flex items-center">
+                            <button
+                                onClick={() => setCurrentFolder(child.path)}
+                                className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${currentFolder === child.path
+                                    ? "bg-blue-50 text-blue-700 font-semibold"
+                                    : "hover:bg-slate-100 text-slate-700"
+                                    }`}
+                            >
+                                <Folder className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate text-sm">{child.name}</span>
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setItemToDelete({ path: child.path, type: 'folder' });
+                                    setShowDeleteConfirm(true);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all absolute right-2"
+                                title="Eliminar carpeta"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
                         {renderFolderTree(child, level + 1)}
                     </div>
                 ))}

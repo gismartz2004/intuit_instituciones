@@ -364,6 +364,16 @@ export const premios = pgTable('premios', {
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
+// 25. Asistencia
+export const asistencia = pgTable('asistencia', {
+  id: serial('id').primaryKey(),
+  estudianteId: integer('estudiante_id').references(() => usuarios.id),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+  profesorId: integer('profesor_id').references(() => usuarios.id),
+  asistio: boolean('asistio').default(false),
+  fecha: timestamp('fecha').defaultNow(),
+});
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -435,6 +445,7 @@ export const insertEntregaHaSchema = createInsertSchema(entregasHa);
 export const insertMisionSchema = createInsertSchema(misiones);
 export const insertProgresoMisionSchema = createInsertSchema(progresoMisiones);
 export const insertPremioSchema = createInsertSchema(premios);
+export const insertAsistenciaSchema = createInsertSchema(asistencia);
 
 
 export type Logro = typeof logros.$inferSelect;
@@ -460,4 +471,7 @@ export type InsertProgresoMision = z.infer<typeof insertProgresoMisionSchema>;
 
 export type Premio = typeof premios.$inferSelect;
 export type InsertPremio = z.infer<typeof insertPremioSchema>;
+
+export type Asistencia = typeof asistencia.$inferSelect;
+export type InsertAsistencia = z.infer<typeof insertAsistenciaSchema>;
 

@@ -29,11 +29,12 @@ import canvasConfetti from "canvas-confetti";
 interface RagViewerProps {
   levelId: number;
   onAddPoints?: (amount: number, reason: string) => void;
+  hasAttended?: boolean;
 }
 
 type RagSection = 'intro' | 'objectives' | 'concepts' | 'activity' | 'mission' | 'hints' | 'evidence' | 'completion';
 
-export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewerProps, ref) {
+export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended }: RagViewerProps, ref) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -147,6 +148,18 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
     };
     fetchRag();
   }, [levelId]);
+
+  // Handle Attendance Auto-Complete
+  useEffect(() => {
+    if (hasAttended && data) {
+      setCurrentSection('completion');
+      setAvatarState({
+        isVisible: true,
+        emotion: 'happy',
+        message: "¡Excelente! Como asististe a la clase presencial, hemos marcado esta guía RAG como completada. ¡Puedes pasar al Hito de Aprendizaje (HA)!"
+      });
+    }
+  }, [hasAttended, !!data]);
 
   const [currentUploadUrl, setCurrentUploadUrl] = useState<string | null>(null);
 

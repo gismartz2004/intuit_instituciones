@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File, Lock, Unlock, Save, Clock } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File, Lock, Unlock, Save, Clock, UserCheck } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 
@@ -17,6 +17,7 @@ import RagEditor from "./RagEditor";
 
 import HaEditor from "./HaEditor";
 import PimEditor from "./PimEditor";
+import { AttendanceManager } from "./AttendanceManager";
 
 interface Content {
     id: number;
@@ -60,6 +61,9 @@ export default function CourseEditor() {
     // PIM Editor State
     const [editingPimLevelId, setEditingPimLevelId] = useState<number | null>(null);
     const [pimInitialData, setPimInitialData] = useState<any>(null);
+
+    // Attendance State
+    const [editingAttendanceLevelId, setEditingAttendanceLevelId] = useState<number | null>(null);
 
     useEffect(() => {
         if (editingRagLevelId) {
@@ -306,6 +310,21 @@ export default function CourseEditor() {
         />;
     }
 
+    if (editingAttendanceLevelId) {
+        return (
+            <div className="p-8 max-w-4xl mx-auto">
+                <Button variant="ghost" onClick={() => setEditingAttendanceLevelId(null)} className="mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Volver al Editor
+                </Button>
+                <AttendanceManager
+                    levelId={editingAttendanceLevelId}
+                    levelName={levels.find(l => l.id === editingAttendanceLevelId)?.tituloNivel || "Nivel"}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="p-8 max-w-6xl mx-auto">
             {/* Header */}
@@ -495,6 +514,17 @@ export default function CourseEditor() {
                                                         }}
                                                     >
                                                         Proy PIM
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingAttendanceLevelId(level.id);
+                                                        }}
+                                                    >
+                                                        <UserCheck className="w-3 h-3 mr-1" /> Asistencia
                                                     </Button>
                                                 </div>
                                             </div>
