@@ -149,14 +149,13 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
     fetchRag();
   }, [levelId]);
 
-  // Handle Attendance Auto-Complete
+  // Handle Avatar Message for Attendance
   useEffect(() => {
-    if (hasAttended && data) {
-      setCurrentSection('completion');
+    if (data && !hasAttended) {
       setAvatarState({
         isVisible: true,
-        emotion: 'happy',
-        message: "¡Excelente! Como asististe a la clase presencial, hemos marcado esta guía RAG como completada. ¡Puedes pasar al Hito de Aprendizaje (HA)!"
+        emotion: 'thinking',
+        message: "Veo que no pudiste asistir a la clase presencial. ¡No te preocupes! Al completar esta guía, podrás recuperar tu asistencia y ganar puntos extra."
       });
     }
   }, [hasAttended, !!data]);

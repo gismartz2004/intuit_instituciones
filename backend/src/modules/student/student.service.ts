@@ -227,12 +227,36 @@ export class StudentService {
 
         return {
             asistio: attendance?.asistio === true,
+            recuperada: attendance?.recuperada === true,
             fecha: attendance?.fecha || null
         };
     }
 
     async updateLevelProgress(studentId: number, levelId: number) {
         const { porcentajeCompletado, completado } = await this.calculateLevelProgress(studentId, levelId);
+
+        // Check for attendance recovery
+        if (completado) {
+            const [attendance] = await this.db.select()
+                .from(schema.asistencia)
+                .where(and(
+                    eq(schema.asistencia.estudianteId, studentId),
+                    eq(schema.asistencia.nivelId, levelId),
+                    eq(schema.asistencia.asistio, false),
+                    eq(schema.asistencia.recuperada, false)
+                ))
+                .limit(1);
+
+            if (attendance) {
+                console.log(`[ATTENDANCE RECOVERY] Student ${studentId} recovered attendance for level ${levelId}`);
+                await this.db.update(schema.asistencia)
+                    .set({ recuperada: true })
+                    .where(eq(schema.asistencia.id, attendance.id));
+
+                // Award points for recovery
+                await this.gamificationService.awardXP(studentId, 150, "Asistencia Recuperada");
+            }
+        }
 
         // Check if progress record exists
         const existing = await this.db.select()

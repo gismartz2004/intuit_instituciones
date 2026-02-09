@@ -261,6 +261,17 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
         fileInputRef.current?.click();
     };
 
+    // Handle Avatar Message for Attendance
+    useEffect(() => {
+        if (haData && !hasAttended) {
+            setAvatarState({
+                isVisible: true,
+                emotion: 'thinking',
+                message: "A pesar de que no estuviste en la clase, ¡puedes completar este Hito para demostrar tu compromiso y recuperar tu asistencia!"
+            });
+        }
+    }, [hasAttended, !!haData]);
+
     if (loading) return <div className="p-8 text-center text-slate-500">Cargando Hito de Aprendizaje...</div>;
 
     if (!haData) return (
@@ -286,30 +297,7 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
         console.error("Error parsing seccionesDinamicas", e);
     }
 
-    if (hasAttended === false) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-center space-y-6 max-w-md mx-auto h-[60vh]">
-                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center text-red-600 shadow-inner">
-                    <Target className="w-12 h-12 opacity-50" />
-                    <div className="absolute">
-                        <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-                            <Badge variant="destructive" className="font-black">BLOQUEADO</Badge>
-                        </motion.div>
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-black text-slate-800">Hito no Disponible</h2>
-                    <p className="text-slate-500 leading-relaxed">
-                        Este Hito de Aprendizaje requiere haber asistido a la clase presencial correspondiente.
-                        Contacta a tu profesor si crees que esto es un error.
-                    </p>
-                </div>
-                <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-8">
-                    Volver al Mapa
-                </Button>
-            </div>
-        );
-    }
+
 
     return (
         <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative px-4 overflow-hidden">

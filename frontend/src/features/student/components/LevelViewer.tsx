@@ -58,7 +58,7 @@ export default function LevelViewer() {
   });
 
   // Attendance Status
-  const [attendance, setAttendance] = useState<{ asistio: boolean; fecha: string | null } | null>(null);
+  const [attendance, setAttendance] = useState<{ asistio: boolean; recuperada?: boolean; fecha: string | null } | null>(null);
 
   const handleAddPoints = (amount: number, reason: string) => {
     setGameState(prev => ({
@@ -386,13 +386,18 @@ export default function LevelViewer() {
               </h2>
             </div>
             {attendance?.asistio && (
-              <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 animate-pulse ml-4">
+              <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
                 <Target className="w-3 h-3 mr-1" /> ASISTENCIA REGISTRADA
               </Badge>
             )}
-            {!attendance?.asistio && attendance && (
-              <Badge variant="destructive" className="ml-4 animate-bounce">
-                <X className="w-3 h-3 mr-1" /> FALTA ASISTENCIA
+            {attendance?.recuperada && (
+              <Badge className="bg-blue-500 text-white border-0 shadow-lg shadow-blue-200 ml-4 px-3 py-1 animate-pulse">
+                <Target className="w-3 h-3 mr-1" /> ASISTENCIA RECUPERADA
+              </Badge>
+            )}
+            {!attendance?.asistio && !attendance?.recuperada && attendance && (
+              <Badge variant="destructive" className="ml-4 animate-bounce px-3 py-1">
+                <X className="w-3 h-3 mr-1" /> CLASE NO ASISTIDA
               </Badge>
             )}
           </div>
@@ -428,8 +433,8 @@ export default function LevelViewer() {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="w-full h-full will-change-transform"
               >
-                {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio} />}
-                {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio} />}
+                {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
+                {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
                 {viewMode === 'pim' && <PimViewer ref={pimRef} levelId={levelId} />}
               </motion.div>
             </AnimatePresence>

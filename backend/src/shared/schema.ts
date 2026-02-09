@@ -371,6 +371,7 @@ export const asistencia = pgTable('asistencia', {
   nivelId: integer('nivel_id').references(() => niveles.id),
   profesorId: integer('profesor_id').references(() => usuarios.id),
   asistio: boolean('asistio').default(false),
+  recuperada: boolean('recuperada').default(false),
   fecha: timestamp('fecha').defaultNow(),
 });
 
