@@ -7,11 +7,15 @@ import {
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and, asc, sql } from 'drizzle-orm';
+import { eq, and, asc, sql, like, or } from 'drizzle-orm';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ProfessorService {
-  constructor(@Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>) { }
+  constructor(
+    @Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>,
+    private readonly storageService: StorageService,
+  ) { }
 
   async getModulesByProfessor(professorId: number) {
     const assignedModules = await this.db
@@ -201,6 +205,49 @@ export class ProfessorService {
       .from(schema.recursos)
       //.where(eq(schema.recursos.profesorId, profesorId)) // Descomentar cuando tengamos auth real
       .orderBy(asc(schema.recursos.fechaSubida));
+  }
+
+  async deleteResource(id: number) {
+    const [resource] = await this.db
+      .select()
+      .from(schema.recursos)
+      .where(eq(schema.recursos.id, id));
+
+    if (!resource) return { success: false, message: 'Recurso no encontrado' };
+
+    // Delete physical file
+    try {
+      await this.storageService.deleteFile(resource.url);
+    } catch (error) {
+      console.error(`Error deleting file for resource ${id}:`, error);
+      // Continue with DB deletion even if file deletion fails (e.g. file already gone)
+    }
+
+    // Delete from DB
+    await this.db
+      .delete(schema.recursos)
+      .where(eq(schema.recursos.id, id));
+
+    return { success: true };
+  }
+
+  async deleteFolder(path: string) {
+    // Find all resources in this folder or subfolders
+    const items = await this.db
+      .select()
+      .from(schema.recursos)
+      .where(
+        or(
+          eq(schema.recursos.carpeta, path),
+          like(schema.recursos.carpeta, `${path}/%`)
+        )
+      );
+
+    for (const item of items) {
+      await this.deleteResource(item.id);
+    }
+
+    return { success: true, count: items.length };
   }
 
   async getHaTemplate(levelId: number) {

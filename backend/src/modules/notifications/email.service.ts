@@ -3,19 +3,23 @@ import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class EmailService {
-    private readonly logger = new Logger(EmailService.name);
+  private readonly logger = new Logger(EmailService.name);
 
-    constructor(private readonly mailerService: MailerService) { }
+  constructor(private readonly mailerService: MailerService) { }
 
-    /**
-     * Send a reminder to a professor about missing content in a module
-     */
-    async sendProfessorContentReminder(email: string, nombreProfe: string, nombreModulo: string) {
-        try {
-            await this.mailerService.sendMail({
-                to: email,
-                subject: `⚠️ Recordatorio: Falta contenido en el módulo ${nombreModulo}`,
-                html: `
+  /**
+   * Send a reminder to a professor about missing content in a module
+   */
+  async sendProfessorContentReminder(email: string, nombreProfe: string, nombreModulo: string) {
+    if (!process.env.SMTP_HOST || process.env.SMTP_HOST === 'smtp.example.com') {
+      this.logger.warn('Email service NOT configured (SMTP_HOST missing). Skipping email.');
+      return;
+    }
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: `⚠️ Recordatorio: Falta contenido en el módulo ${nombreModulo}`,
+        html: `
           <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
             <h2 style="color: #0047AB;">¡Hola ${nombreProfe}!</h2>
             <p>Hemos detectado que el módulo <strong>${nombreModulo}</strong> que tienes asignado aún no tiene contenido completo (niveles, RAG o HA).</p>
@@ -30,24 +34,28 @@ export class EmailService {
             <p style="font-size: 12px; color: #777;">ARG Academy - Sistema de Gestión de Aprendizaje</p>
           </div>
         `,
-            });
-            this.logger.log(`Reminder sent to professor: ${email}`);
-        } catch (error) {
-            this.logger.error(`Failed to send email to professor ${email}`, error);
-        }
+      });
+      this.logger.log(`Reminder sent to professor: ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send email to professor ${email}`, error);
     }
+  }
 
-    /**
-     * Send an alert to a parent about a student's inactivity
-     */
-    async sendParentInactivityAlert(emailPadre: string, nombreEstudiante: string, nombreModulo: string) {
-        if (!emailPadre) return;
+  /**
+   * Send an alert to a parent about a student's inactivity
+   */
+  async sendParentInactivityAlert(emailPadre: string, nombreEstudiante: string, nombreModulo: string) {
+    if (!process.env.SMTP_HOST || process.env.SMTP_HOST === 'smtp.example.com') {
+      this.logger.warn('Email service NOT configured (SMTP_HOST missing). Skipping email.');
+      return;
+    }
+    if (!emailPadre) return;
 
-        try {
-            await this.mailerService.sendMail({
-                to: emailPadre,
-                subject: `💡 Notificación de Progreso: ${nombreEstudiante}`,
-                html: `
+    try {
+      await this.mailerService.sendMail({
+        to: emailPadre,
+        subject: `💡 Notificación de Progreso: ${nombreEstudiante}`,
+        html: `
           <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
             <h2 style="color: #0047AB;">Estimado/a Padre de Familia,</h2>
             <p>Te escribimos por parte de <strong>ARG Academy</strong> para informarte que hemos notado que <strong>${nombreEstudiante}</strong> no ha tenido actividad reciente en el módulo <strong>${nombreModulo}</strong> durante los últimos días.</p>
@@ -57,10 +65,10 @@ export class EmailService {
             <p style="font-size: 12px; color: #777;">ARG Academy - Tu futuro en tecnología</p>
           </div>
         `,
-            });
-            this.logger.log(`Inactivity alert sent to parent: ${emailPadre}`);
-        } catch (error) {
-            this.logger.error(`Failed to send email to parent ${emailPadre}`, error);
-        }
+      });
+      this.logger.log(`Inactivity alert sent to parent: ${emailPadre}`);
+    } catch (error) {
+      this.logger.error(`Failed to send email to parent ${emailPadre}`, error);
     }
+  }
 }

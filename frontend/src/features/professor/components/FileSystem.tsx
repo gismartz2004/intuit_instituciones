@@ -60,6 +60,10 @@ export default function FileSystem() {
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
 
+    // Deletion state
+    const [itemToDelete, setItemToDelete] = useState<{ id?: number; path?: string; type: 'file' | 'folder' } | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
     // Image preview state
     const [previewImage, setPreviewImage] = useState<{
         url: string;
@@ -167,6 +171,42 @@ export default function FileSystem() {
         toast({ title: "Carpeta creada", description: newFolderName });
     };
 
+    const handleDeleteFile = async (resource: Resource) => {
+        try {
+            await professorApi.deleteResource(resource.id);
+            toast({ title: "Eliminado", description: `Archivo ${resource.nombre} eliminado` });
+            fetchResources();
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "No se pudo eliminar el archivo", variant: "destructive" });
+        }
+    };
+
+    const handleDeleteFolder = async (path: string) => {
+        try {
+            await professorApi.deleteFolder(path);
+            toast({ title: "Carpeta eliminada", description: `La carpeta y su contenido han sido eliminados` });
+            if (currentFolder === path || currentFolder.startsWith(path + '/')) {
+                setCurrentFolder("");
+            }
+            fetchResources();
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "No se pudo eliminar la carpeta", variant: "destructive" });
+        }
+    };
+
+    const confirmDelete = () => {
+        if (!itemToDelete) return;
+        if (itemToDelete.type === 'file' && itemToDelete.id) {
+            handleDeleteFile(resources.find(r => r.id === itemToDelete.id)!);
+        } else if (itemToDelete.type === 'folder' && itemToDelete.path) {
+            handleDeleteFolder(itemToDelete.path);
+        }
+        setShowDeleteConfirm(false);
+        setItemToDelete(null);
+    };
+
     const getFileIcon = (tipo: string) => {
         if (tipo.includes("pdf")) return <FileText className="w-8 h-8 text-red-500" />;
         if (tipo.includes("video")) return <Video className="w-8 h-8 text-blue-500" />;
@@ -212,13 +252,24 @@ export default function FileSystem() {
                     <div key={child.path}>
                         <button
                             onClick={() => setCurrentFolder(child.path)}
-                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${currentFolder === child.path
-                                    ? "bg-blue-50 text-blue-700 font-semibold"
-                                    : "hover:bg-slate-100 text-slate-700"
+                            className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${currentFolder === child.path
+                                ? "bg-blue-50 text-blue-700 font-semibold"
+                                : "hover:bg-slate-100 text-slate-700"
                                 }`}
                         >
                             <Folder className="w-4 h-4 flex-shrink-0" />
                             <span className="truncate text-sm">{child.name}</span>
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setItemToDelete({ path: child.path, type: 'folder' });
+                                setShowDeleteConfirm(true);
+                            }}
+                            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                            title="Eliminar carpeta"
+                        >
+                            <Trash2 className="w-4 h-4" />
                         </button>
                         {renderFolderTree(child, level + 1)}
                     </div>
@@ -248,8 +299,8 @@ export default function FileSystem() {
                     <button
                         onClick={() => setCurrentFolder("")}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left mb-2 transition-colors ${currentFolder === ""
-                                ? "bg-blue-50 text-blue-700 font-semibold"
-                                : "hover:bg-slate-100 text-slate-700"
+                            ? "bg-blue-50 text-blue-700 font-semibold"
+                            : "hover:bg-slate-100 text-slate-700"
                             }`}
                     >
                         <Home className="w-4 h-4" />
@@ -378,6 +429,17 @@ export default function FileSystem() {
                                                         <Download className="w-3 h-3 mr-1" />
                                                         Abrir
                                                     </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                        onClick={() => {
+                                                            setItemToDelete({ id: resource.id, type: 'file' });
+                                                            setShowDeleteConfirm(true);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -436,6 +498,38 @@ export default function FileSystem() {
                     onNavigate={handleImageNavigate}
                 />
             )}
+
+            {/* Deletion Confirmation Dialog */}
+            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <Trash2 className="w-5 h-5" />
+                            Confirmar Eliminación
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-slate-600">
+                            {itemToDelete?.type === 'folder'
+                                ? "¿Estás seguro de que deseas eliminar esta carpeta? Se eliminarán todos los archivos contenidos en ella de forma permanente."
+                                : "¿Estás seguro de que deseas eliminar este archivo de forma permanente?"}
+                        </p>
+                        {itemToDelete?.path && (
+                            <p className="mt-2 text-sm font-semibold text-slate-800">
+                                Ruta: {itemToDelete.path}
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                            Cancelar
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDelete}>
+                            Eliminar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

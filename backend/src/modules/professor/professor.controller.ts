@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
@@ -55,6 +56,16 @@ export class ProfessorController {
   @Get(':id/modules')
   async getModules(@Param('id', ParseIntPipe) id: number) {
     return this.professorService.getModulesByProfessor(id);
+  }
+
+  @Delete('resources/:id')
+  async deleteResource(@Param('id', ParseIntPipe) id: number) {
+    return this.professorService.deleteResource(id);
+  }
+
+  @Delete('folders')
+  async deleteFolder(@Query('path') path: string) {
+    return this.professorService.deleteFolder(path);
   }
 
   @Post('students')
