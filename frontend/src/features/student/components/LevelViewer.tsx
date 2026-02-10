@@ -3,6 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   FileText,
@@ -43,6 +44,7 @@ interface Content {
 export default function LevelViewer() {
   const [match, params] = useRoute("/level/:levelId");
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false); // Set to false initially as we don't fetch contents here anymore
   const [viewMode, setViewMode] = useState<"rag" | "ha" | "pim">("rag");
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
