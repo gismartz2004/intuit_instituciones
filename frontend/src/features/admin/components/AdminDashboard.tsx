@@ -33,11 +33,11 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { AdminOverviewView } from "../views/AdminOverviewView";
-import { AdminUsersView } from "../views/AdminUsersView";
-import { AdminModulesView } from "../views/AdminModulesView";
-import { AdminAssignmentsView } from "../views/AdminAssignmentsView";
-import { AdminPrizesView } from "../views/AdminPrizesView";
+import { AdminOverviewView } from "../dashboard/AdminOverviewView";
+import { AdminUsersView } from "../users/AdminUsersView";
+import { AdminModulesView } from "../modules/AdminModulesView";
+import { AdminAssignmentsView } from "../assignments/AdminAssignmentsView";
+import { AdminPrizesView } from "../prizes/AdminPrizesView";
 
 type AdminTab = "overview" | "users" | "modules" | "assignments" | "prizes";
 
