@@ -7,27 +7,37 @@ import {
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and, asc, sql } from 'drizzle-orm';
+import { eq, and, asc, sql, like, or } from 'drizzle-orm';
+import { StorageService } from '../storage/storage.service';
+import { StudentService } from '../student/student.service';
 
 @Injectable()
 export class ProfessorService {
-  constructor(@Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>) { }
+  constructor(
+    @Inject(DRIZZLE_DB) private db: NodePgDatabase<typeof schema>,
+    private readonly storageService: StorageService,
+    private readonly studentService: StudentService,
+  ) { }
 
   async getModulesByProfessor(professorId: number) {
-    const assignedModules = await this.db
-      .select({
-        module: schema.modulos,
-      })
+    // Select modules where the professor is either the owner OR assigned to students
+    const modulesSubquery = this.db
+      .select({ id: schema.asignaciones.moduloId })
       .from(schema.asignaciones)
-      .innerJoin(
-        schema.modulos,
-        eq(schema.asignaciones.moduloId, schema.modulos.id),
-      )
       .where(eq(schema.asignaciones.profesorId, professorId));
 
+    const assignedModules = await this.db
+      .select()
+      .from(schema.modulos)
+      .where(
+        or(
+          eq(schema.modulos.profesorId, professorId),
+          sql`${schema.modulos.id} IN (${modulesSubquery})`
+        )
+      );
+
     const modulesWithDetails = await Promise.all(
-      assignedModules.map(async (row) => {
-        const mod = row.module;
+      assignedModules.map(async (mod) => {
 
         const studentAssignments = await this.db
           .select({
@@ -201,6 +211,53 @@ export class ProfessorService {
       .from(schema.recursos)
       //.where(eq(schema.recursos.profesorId, profesorId)) // Descomentar cuando tengamos auth real
       .orderBy(asc(schema.recursos.fechaSubida));
+  }
+
+  async deleteResource(id: number) {
+    const [resource] = await this.db
+      .select()
+      .from(schema.recursos)
+      .where(eq(schema.recursos.id, id));
+
+    if (!resource) return { success: false, message: 'Recurso no encontrado' };
+
+    // Delete physical file
+    try {
+      await this.storageService.deleteFile(resource.url);
+    } catch (error) {
+      console.error(`Error deleting file for resource ${id}:`, error);
+      // Continue with DB deletion even if file deletion fails (e.g. file already gone)
+    }
+
+    // Delete from DB
+    await this.db
+      .delete(schema.recursos)
+      .where(eq(schema.recursos.id, id));
+
+    return { success: true };
+  }
+
+  async deleteFolder(path: string) {
+    console.log(`[DELETE FOLDER] Path: ${path}`);
+    // Find all resources in this folder or subfolders
+    const items = await this.db
+      .select()
+      .from(schema.recursos)
+      .where(
+        or(
+          eq(schema.recursos.carpeta, path),
+          like(schema.recursos.carpeta, `${path}/%`)
+        )
+      );
+
+    console.log(`[DELETE FOLDER] Found ${items.length} items to delete`);
+
+    for (const item of items) {
+      console.log(`[DELETE FOLDER] Deleting resource ${item.id} (${item.nombre})`);
+      await this.deleteResource(item.id);
+    }
+
+    return { success: true, count: items.length };
   }
 
   async getHaTemplate(levelId: number) {
@@ -418,5 +475,96 @@ export class ProfessorService {
     // For RAG, currently no grade column in schema, but we can assume feedback logic
     // This part is simplified for the demo
     return { success: true };
+  }
+
+  // Attendance Management
+  async getAttendance(nivelId: number) {
+    // 1. Get the module ID for this level
+    const [level] = await this.db
+      .select({ moduloId: schema.niveles.moduloId })
+      .from(schema.niveles)
+      .where(eq(schema.niveles.id, nivelId));
+
+    if (!level) throw new BadRequestException('Nivel no encontrado');
+
+    // 2. Get all students assigned to this module
+    const students = await this.db
+      .select({
+        id: schema.usuarios.id,
+        nombre: schema.usuarios.nombre,
+        email: schema.usuarios.email,
+        avatar: schema.usuarios.avatar,
+      })
+      .from(schema.asignaciones)
+      .innerJoin(schema.usuarios, eq(schema.asignaciones.estudianteId, schema.usuarios.id))
+      .where(eq(schema.asignaciones.moduloId, level.moduloId!));
+
+    // 3. Get existing attendance for this level
+    const existingAttendance = await this.db
+      .select()
+      .from(schema.asistencia)
+      .where(eq(schema.asistencia.nivelId, nivelId));
+
+    // 4. Merge
+    return students.map(student => {
+      const record = existingAttendance.find(a => a.estudianteId === student.id);
+      return {
+        ...student,
+        asistio: record ? record.asistio : false,
+        attendanceId: record ? record.id : null
+      };
+    });
+  }
+
+  async saveAttendance(nivelId: number, professorId: number, records: { estudianteId: number; asistio: boolean }[]) {
+    const results = [];
+
+    for (const record of records) {
+      // Check if exists
+      const [existing] = await this.db
+        .select()
+        .from(schema.asistencia)
+        .where(
+          and(
+            eq(schema.asistencia.nivelId, nivelId),
+            eq(schema.asistencia.estudianteId, record.estudianteId)
+          )
+        );
+
+      if (existing) {
+        const [updated] = await this.db
+          .update(schema.asistencia)
+          .set({
+            asistio: record.asistio,
+            profesorId: professorId,
+            fecha: new Date()
+          })
+          .where(eq(schema.asistencia.id, existing.id))
+          .returning();
+        results.push(updated);
+      } else {
+        const [inserted] = await this.db
+          .insert(schema.asistencia)
+          .values({
+            estudianteId: record.estudianteId,
+            nivelId,
+            profesorId: professorId,
+            asistio: record.asistio,
+          })
+          .returning();
+        results.push(inserted);
+      }
+    }
+
+    // Trigger level progress update for each student involved
+    for (const record of records) {
+      try {
+        await this.studentService.updateLevelProgress(record.estudianteId, nivelId);
+      } catch (err) {
+        console.error(`Error updating progress for student ${record.estudianteId} at level ${nivelId}:`, err);
+      }
+    }
+
+    return results;
   }
 }

@@ -57,6 +57,9 @@ export default function LevelViewer() {
     xpToNextLevel: 900,
   });
 
+  // Attendance Status
+  const [attendance, setAttendance] = useState<{ asistio: boolean; recuperada?: boolean; fecha: string | null } | null>(null);
+
   const handleAddPoints = (amount: number, reason: string) => {
     setGameState(prev => ({
       ...prev,
@@ -96,6 +99,18 @@ export default function LevelViewer() {
   }, []);
 
   useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const data = await studentApi.getAttendanceStatus(getStudentId(), levelId);
+        setAttendance(data);
+      } catch (error) {
+        console.error("Error fetching attendance:", error);
+      }
+    };
+    if (levelId) fetchAttendance();
+  }, [levelId]);
+
+  useEffect(() => {
     // Check mobile screen size
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
@@ -114,6 +129,35 @@ export default function LevelViewer() {
   const haRef = useRef<any>(null);
   const pimRef = useRef<any>(null);
 
+  const [moduleLevels, setModuleLevels] = useState<any[]>([]);
+  const [currentLevelData, setCurrentLevelData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchModuleData = async () => {
+      try {
+        const studentId = getStudentId();
+        // 1. Get all modules to find which one this level belongs to
+        const studentModules = await studentApi.getModules(studentId);
+
+        let foundModuleId = null;
+        for (const mod of studentModules) {
+          // Check if mod has levels or fetch them
+          // getStudentLevelProgress in backend takes (studentId, moduleId)
+          const levels = await studentApi.getModuleProgress(studentId, mod.id);
+          if (levels.find((l: any) => l.id === levelId)) {
+            foundModuleId = mod.id;
+            setModuleLevels(levels);
+            setCurrentLevelData(levels.find((l: any) => l.id === levelId));
+            break;
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching module levels:", error);
+      }
+    };
+    if (levelId) fetchModuleData();
+  }, [levelId]);
+
   const handlePrev = () => {
     if (viewMode === 'rag' && ragRef.current) {
       ragRef.current.goPrev();
@@ -130,11 +174,17 @@ export default function LevelViewer() {
       if (result?.handled) return;
     }
 
-    // Logic for other modes
+    // Navigating between modes
     if (viewMode === 'pim') {
       setViewMode('ha');
     } else if (viewMode === 'ha') {
       setViewMode('rag');
+    } else if (viewMode === 'rag') {
+      // Option: Go to previous level if available
+      const currentIndex = moduleLevels.findIndex(l => l.id === levelId);
+      if (currentIndex > 0) {
+        setLocation(`/level/${moduleLevels[currentIndex - 1].id}`);
+      }
     }
   };
 
@@ -154,11 +204,22 @@ export default function LevelViewer() {
       if (result?.handled) return;
     }
 
-    // Logic: RAG -> HA -> PIM
+    // Navigating between modes
     if (viewMode === 'rag') {
       setViewMode('ha');
     } else if (viewMode === 'ha') {
       setViewMode('pim');
+    } else if (viewMode === 'pim') {
+      // Option: Go to next level if available and unlocked
+      const currentIndex = moduleLevels.findIndex(l => l.id === levelId);
+      if (currentIndex < moduleLevels.length - 1) {
+        const nextLevel = moduleLevels[currentIndex + 1];
+        if (nextLevel.isUnlocked) {
+          setLocation(`/level/${nextLevel.id}`);
+        } else {
+          toast({ title: "Nivel Bloqueado", description: "Debes completar el nivel actual para avanzar.", variant: "destructive" });
+        }
+      }
     }
   };
 
@@ -166,14 +227,6 @@ export default function LevelViewer() {
     { id: 'rag', label: 'Guía RAG', icon: BookOpen, color: 'text-cyan-400' },
     { id: 'ha', label: 'Hito HA', icon: Target, color: 'text-purple-400' },
     { id: 'pim', label: 'Proyecto PIM', icon: Layers, color: 'text-indigo-400' },
-  ];
-
-  const levels = [
-    { id: 1, title: 'Conceptos Básicos', completed: true },
-    { id: 2, title: 'Condicionales y Push', completed: true },
-    { id: 3, title: 'Sensores de Proximidad', completed: false, active: true },
-    { id: 4, title: 'Pantallas LCD', completed: false },
-    { id: 5, title: 'Motores y PWM', completed: false },
   ];
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50">Cargando...</div>;
@@ -332,6 +385,21 @@ export default function LevelViewer() {
                 {menuItems.find(i => i.id === viewMode)?.label || "Módulo"}
               </h2>
             </div>
+            {attendance?.asistio && (
+              <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
+                <Target className="w-3 h-3 mr-1" /> ASISTENCIA REGISTRADA
+              </Badge>
+            )}
+            {attendance?.recuperada && (
+              <Badge className="bg-blue-500 text-white border-0 shadow-lg shadow-blue-200 ml-4 px-3 py-1 animate-pulse">
+                <Target className="w-3 h-3 mr-1" /> ASISTENCIA RECUPERADA
+              </Badge>
+            )}
+            {!attendance?.asistio && !attendance?.recuperada && attendance && (
+              <Badge variant="destructive" className="ml-4 animate-bounce px-3 py-1">
+                <X className="w-3 h-3 mr-1" /> CLASE NO ASISTIDA
+              </Badge>
+            )}
           </div>
           <EnhancedGamificationHud state={gameState} />
         </header>
@@ -343,11 +411,11 @@ export default function LevelViewer() {
             <Button
               variant="ghost"
               size="icon"
-              disabled={levelId <= 1 && viewMode === 'rag'}
+              disabled={levelId === moduleLevels[0]?.id && viewMode === 'rag'}
               onClick={handlePrev}
               className={cn(
                 "w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300",
-                levelId <= 1 && viewMode === 'rag' && "opacity-20 cursor-not-allowed"
+                levelId === moduleLevels[0]?.id && viewMode === 'rag' && "opacity-20 cursor-not-allowed"
               )}
             >
               <ChevronLeft className="w-8 h-8" />
@@ -365,8 +433,8 @@ export default function LevelViewer() {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="w-full h-full will-change-transform"
               >
-                {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} />}
-                {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} />}
+                {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
+                {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
                 {viewMode === 'pim' && <PimViewer ref={pimRef} levelId={levelId} />}
               </motion.div>
             </AnimatePresence>
@@ -377,11 +445,11 @@ export default function LevelViewer() {
             <Button
               variant="ghost"
               size="icon"
-              disabled={levelId >= levels.length && viewMode === 'pim'}
+              disabled={levelId === moduleLevels[moduleLevels.length - 1]?.id && viewMode === 'pim'}
               onClick={handleNext}
               className={cn(
                 "w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300",
-                levelId >= levels.length && viewMode === 'pim' && "opacity-20 cursor-not-allowed"
+                levelId === moduleLevels[moduleLevels.length - 1]?.id && viewMode === 'pim' && "opacity-20 cursor-not-allowed"
               )}
             >
               <ChevronRight className="w-8 h-8" />

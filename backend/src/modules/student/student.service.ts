@@ -113,6 +113,17 @@ export class StudentService {
     }
 
     async calculateLevelProgress(studentId: number, levelId: number) {
+        // 0. Attendance Check
+        const [attendance] = await this.db.select()
+            .from(schema.asistencia)
+            .where(and(
+                eq(schema.asistencia.estudianteId, studentId),
+                eq(schema.asistencia.nivelId, levelId)
+            ))
+            .limit(1);
+
+        const hasAttended = attendance?.asistio === true;
+
         // 1. Traditional Activities
         const activities = await this.db.select()
             .from(schema.actividades)
@@ -139,6 +150,11 @@ export class StudentService {
 
         for (const rag of rags) {
             totalTasks += 1;
+
+            if (hasAttended) {
+                completedTasks += 1;
+                continue;
+            }
 
             const ragSubmissions = await this.db.select()
                 .from(schema.entregasRag)
@@ -200,8 +216,47 @@ export class StudentService {
         return { porcentajeCompletado, completado };
     }
 
+    async getAttendanceStatus(studentId: number, levelId: number) {
+        const [attendance] = await this.db.select()
+            .from(schema.asistencia)
+            .where(and(
+                eq(schema.asistencia.estudianteId, studentId),
+                eq(schema.asistencia.nivelId, levelId)
+            ))
+            .limit(1);
+
+        return {
+            asistio: attendance?.asistio === true,
+            recuperada: attendance?.recuperada === true,
+            fecha: attendance?.fecha || null
+        };
+    }
+
     async updateLevelProgress(studentId: number, levelId: number) {
         const { porcentajeCompletado, completado } = await this.calculateLevelProgress(studentId, levelId);
+
+        // Check for attendance recovery
+        if (completado) {
+            const [attendance] = await this.db.select()
+                .from(schema.asistencia)
+                .where(and(
+                    eq(schema.asistencia.estudianteId, studentId),
+                    eq(schema.asistencia.nivelId, levelId),
+                    eq(schema.asistencia.asistio, false),
+                    eq(schema.asistencia.recuperada, false)
+                ))
+                .limit(1);
+
+            if (attendance) {
+                console.log(`[ATTENDANCE RECOVERY] Student ${studentId} recovered attendance for level ${levelId}`);
+                await this.db.update(schema.asistencia)
+                    .set({ recuperada: true })
+                    .where(eq(schema.asistencia.id, attendance.id));
+
+                // Award points for recovery
+                await this.gamificationService.awardXP(studentId, 150, "Asistencia Recuperada");
+            }
+        }
 
         // Check if progress record exists
         const existing = await this.db.select()

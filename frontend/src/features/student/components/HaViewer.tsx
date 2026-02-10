@@ -14,11 +14,12 @@ import { cn } from "@/lib/utils";
 interface HaViewerProps {
     levelId: number;
     onAddPoints?: (amount: number, reason: string) => void;
+    hasAttended?: boolean;
 }
 
 type HaSection = 'intro' | 'context' | 'evidence' | 'reflection' | 'completion';
 
-export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref) => {
+export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaViewerProps, ref) => {
     const [haData, setHaData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentSection, setCurrentSection] = useState<HaSection>('intro');
@@ -260,6 +261,17 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
         fileInputRef.current?.click();
     };
 
+    // Handle Avatar Message for Attendance
+    useEffect(() => {
+        if (haData && !hasAttended) {
+            setAvatarState({
+                isVisible: true,
+                emotion: 'thinking',
+                message: "A pesar de que no estuviste en la clase, ¡puedes completar este Hito para demostrar tu compromiso y recuperar tu asistencia!"
+            });
+        }
+    }, [hasAttended, !!haData]);
+
     if (loading) return <div className="p-8 text-center text-slate-500">Cargando Hito de Aprendizaje...</div>;
 
     if (!haData) return (
@@ -284,6 +296,8 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints }: HaViewerProps, ref
     } catch (e) {
         console.error("Error parsing seccionesDinamicas", e);
     }
+
+
 
     return (
         <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative px-4 overflow-hidden">

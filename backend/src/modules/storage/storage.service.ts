@@ -13,6 +13,24 @@ export class StorageService {
         this.sftp = new Client();
     }
 
+    async deleteFile(url: string): Promise<void> {
+        const storageType = process.env.STORAGE_TYPE || 'local';
+        const filename = url.split('/').pop();
+
+        if (!filename) throw new Error('Invalid URL');
+
+        if (storageType === 'local') {
+            await this.deleteLocal(filename);
+        } else if (storageType === 'sftp') {
+            try {
+                await this.deleteSftp(filename);
+            } catch (error) {
+                this.logger.warn(`SFTP Delete failed, trying local: ${error.message}`);
+                await this.deleteLocal(filename);
+            }
+        }
+    }
+
     async uploadFile(file: Express.Multer.File): Promise<string> {
         const storageType = process.env.STORAGE_TYPE || 'local';
 
@@ -94,5 +112,42 @@ export class StorageService {
         }
 
         throw lastError || new Error('Failed to upload file to remote server');
+    }
+
+    private async deleteLocal(filename: string): Promise<void> {
+        const uploadDir = './uploads';
+        const filepath = path.join(uploadDir, filename);
+
+        if (fs.existsSync(filepath)) {
+            this.logger.log(`Deleting local file: ${filepath}`);
+            fs.unlinkSync(filepath);
+        }
+    }
+
+    private async deleteSftp(filename: string): Promise<void> {
+        const config = {
+            host: process.env.FTP_HOST,
+            port: parseInt(process.env.FTP_PORT || '22'),
+            username: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
+            readyTimeout: 10000,
+        };
+
+        try {
+            await this.sftp.connect(config);
+            const remoteDir = process.env.FTP_REMOTE_PATH || '/public_html/uploads';
+            const remotePath = `${remoteDir}/${filename}`;
+
+            if (await this.sftp.exists(remotePath)) {
+                this.logger.log(`Deleting SFTP file: ${remotePath}`);
+                await this.sftp.delete(remotePath);
+            }
+            await this.sftp.end();
+        } catch (error) {
+            this.logger.error(`SFTP Delete Failed: ${error.message}`);
+            throw error;
+        } finally {
+            try { await this.sftp.end(); } catch (e) { }
+        }
     }
 }

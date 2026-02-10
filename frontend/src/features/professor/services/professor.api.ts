@@ -143,6 +143,41 @@ export const professorApi = {
     return response.json();
   },
 
+  /**
+   * Eliminar un recurso del sistema de archivos
+   */
+  async deleteResource(id: number): Promise<any> {
+    return apiClient.delete<any>(`/api/professor/resources/${id}`);
+  },
+
+  /**
+   * Eliminar una carpeta y todo su contenido
+   */
+  async deleteFolder(path: string): Promise<any> {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const response = await fetch(`${baseUrl}/api/professor/folders?path=${encodeURIComponent(path)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al eliminar carpeta');
+    }
+
+    return response.json();
+  },
+
+  // Attendance
+  async getAttendance(levelId: number): Promise<any[]> {
+    return apiClient.get(`/api/professor/levels/${levelId}/attendance`);
+  },
+
+  async saveAttendance(levelId: number, professorId: number, records: { estudianteId: number; asistio: boolean }[]): Promise<any> {
+    return apiClient.post(`/api/professor/levels/${levelId}/attendance`, {
+      professorId,
+      records
+    });
+  },
+
   // RAG Templates
   async saveRagTemplate(levelId: number, data: any): Promise<any> {
     return apiClient.post(`/api/professor/levels/${levelId}/rag`, data);

@@ -67,6 +67,13 @@ export const studentApi = {
   },
 
   /**
+   * Obtener estado de asistencia para un nivel
+   */
+  async getAttendanceStatus(studentId: number, levelId: number): Promise<{ asistio: boolean, fecha: string | null }> {
+    return apiClient.get(`/api/student/${studentId}/level/${levelId}/attendance`);
+  },
+
+  /**
    * Obtener el contenido de un nivel específico
    */
   async getLevelContents(levelId: string): Promise<LevelContent[]> {

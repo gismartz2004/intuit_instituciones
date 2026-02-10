@@ -28,11 +28,11 @@ import { AiModule } from './modules/ai/ai.module';
     ScheduleModule.forRoot(),
     MailerModule.forRoot({
       transport: {
-        host: process.env.SMTP_HOST || 'smtp.example.com',
+        host: process.env.SMTP_HOST || '',
         port: Number(process.env.SMTP_PORT) || 587,
         auth: {
-          user: process.env.SMTP_USER || 'user',
-          pass: process.env.SMTP_PASS || 'pass',
+          user: process.env.SMTP_USER || '',
+          pass: process.env.SMTP_PASS || '',
         },
       },
       defaults: {

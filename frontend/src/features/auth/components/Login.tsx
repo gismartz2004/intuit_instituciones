@@ -54,8 +54,9 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
       <Seo
-        title="Iniciar Sesión"
-        description="Accede a la Plataforma Genios Bot para gestionar tus clases, ver tu progreso y explorar el ecosistema educativo gamificado."
+        title="Plataforma Genios Bot"
+        description="Accede a la Plataforma Genios Bot, el ecosistema educativo líder para el aprendizaje de tecnología, programación y robótica gamificada. Entra ahora en academy.argsoft.tech."
+        keywords="Plataforma Genios Bot, Plataforma de Genios Bot, academy.argsoft.tech, Genios Bot Academy, Genios Bot Login"
       />
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">

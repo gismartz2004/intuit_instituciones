@@ -29,11 +29,12 @@ import canvasConfetti from "canvas-confetti";
 interface RagViewerProps {
   levelId: number;
   onAddPoints?: (amount: number, reason: string) => void;
+  hasAttended?: boolean;
 }
 
 type RagSection = 'intro' | 'objectives' | 'concepts' | 'activity' | 'mission' | 'hints' | 'evidence' | 'completion';
 
-export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewerProps, ref) {
+export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended }: RagViewerProps, ref) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -147,6 +148,17 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints }: RagViewer
     };
     fetchRag();
   }, [levelId]);
+
+  // Handle Avatar Message for Attendance
+  useEffect(() => {
+    if (data && !hasAttended) {
+      setAvatarState({
+        isVisible: true,
+        emotion: 'thinking',
+        message: "Veo que no pudiste asistir a la clase presencial. ¡No te preocupes! Al completar esta guía, podrás recuperar tu asistencia y ganar puntos extra."
+      });
+    }
+  }, [hasAttended, !!data]);
 
   const [currentUploadUrl, setCurrentUploadUrl] = useState<string | null>(null);
 

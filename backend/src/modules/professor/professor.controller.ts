@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
@@ -55,6 +56,16 @@ export class ProfessorController {
   @Get(':id/modules')
   async getModules(@Param('id', ParseIntPipe) id: number) {
     return this.professorService.getModulesByProfessor(id);
+  }
+
+  @Delete('resources/:id')
+  async deleteResource(@Param('id', ParseIntPipe) id: number) {
+    return this.professorService.deleteResource(id);
+  }
+
+  @Delete('folders')
+  async deleteFolder(@Query('path') path: string) {
+    return this.professorService.deleteFolder(path);
   }
 
   @Post('students')
@@ -174,5 +185,19 @@ export class ProfessorController {
   @Post('levels/:id/pim')
   async savePimTemplate(@Param('id', ParseIntPipe) levelId: number, @Body() data: any) {
     return this.professorService.createPimTemplate(levelId, data);
+  }
+
+  // Attendance Endpoints
+  @Get('levels/:id/attendance')
+  async getAttendance(@Param('id', ParseIntPipe) levelId: number) {
+    return this.professorService.getAttendance(levelId);
+  }
+
+  @Post('levels/:id/attendance')
+  async saveAttendance(
+    @Param('id', ParseIntPipe) levelId: number,
+    @Body() body: { professorId: number; records: { estudianteId: number; asistio: boolean }[] }
+  ) {
+    return this.professorService.saveAttendance(levelId, body.professorId || 1, body.records);
   }
 }

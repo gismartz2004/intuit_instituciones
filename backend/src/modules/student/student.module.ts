@@ -11,7 +11,7 @@ import { GamificationService } from './services/gamification.service';
   imports: [DatabaseModule, StorageModule],
   controllers: [StudentController, StudentUploadController, GamificationController],
   providers: [StudentService, GamificationService],
-  exports: [GamificationService],
+  exports: [StudentService, GamificationService],
 })
 export class StudentModule { }
 
