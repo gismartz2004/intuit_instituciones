@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Image as ImageIcon, Search, Check, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Search, Check, Loader2, Upload } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import professorApi from "@/features/professor/services/professor.api";
 
@@ -17,6 +18,7 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
     const [resources, setResources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -38,6 +40,38 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
         }
     };
 
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("profesorId", "1"); // Default ID
+        formData.append("carpeta", "Editor"); // Default folder for editor uploads
+
+        try {
+            const result = await professorApi.uploadFile(formData);
+            toast({ title: "Éxito", description: "Imagen subida correctamente" });
+
+            // Refresh images and select the new one if possible
+            await fetchImages();
+            if (result && result.url) {
+                onSelect(result.url);
+                onClose();
+            }
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: "Error",
+                description: "Error al subir la imagen",
+                variant: "destructive",
+            });
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const filteredImages = resources.filter(img =>
         img.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -55,14 +89,32 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="relative my-4">
-                    <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                        placeholder="Buscar por nombre..."
-                        className="pl-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex gap-2 my-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                        <Input
+                            placeholder="Buscar por nombre..."
+                            className="pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex-shrink-0">
+                        <label htmlFor="modal-upload" className="cursor-pointer">
+                            <div className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-md flex items-center justify-center transition-colors text-sm font-medium">
+                                <Upload className="w-4 h-4 mr-2" />
+                                {uploading ? "..." : "Subir"}
+                            </div>
+                        </label>
+                        <input
+                            id="modal-upload"
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleUpload}
+                            disabled={uploading}
+                        />
+                    </div>
                 </div>
 
                 {loading ? (

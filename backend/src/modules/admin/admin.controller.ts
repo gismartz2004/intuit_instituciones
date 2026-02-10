@@ -2,6 +2,7 @@ import {
     Controller,
     Get,
     Post,
+    Patch,
     Body,
     Param,
     ParseIntPipe,
@@ -96,6 +97,24 @@ export class AdminController {
     @Get('planes')
     async getPlanes() {
         return this.adminService.getPlanes();
+    }
+
+    @Post('planes')
+    async createPlan(@Body() payload: any) {
+        return this.adminService.createPlan(payload);
+    }
+
+    @Patch('planes/:id')
+    async updatePlan(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() payload: any,
+    ) {
+        return this.adminService.updatePlan(id, payload);
+    }
+
+    @Post('planes/:id/delete') // Usamos POST para delete por simplicidad o DELETE directo
+    async deletePlan(@Param('id', ParseIntPipe) id: number) {
+        return this.adminService.deletePlan(id);
     }
 
     @Post('test-notifications')

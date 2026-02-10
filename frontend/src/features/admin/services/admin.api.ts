@@ -111,6 +111,18 @@ export const adminApi = {
     return apiClient.get('/api/admin/planes');
   },
 
+  async createPlan(payload: any): Promise<Plan> {
+    return apiClient.post('/api/admin/planes', payload);
+  },
+
+  async updatePlan(id: number, payload: any): Promise<Plan> {
+    return apiClient.patch(`/api/admin/planes/${id}`, payload);
+  },
+
+  async deletePlan(id: number): Promise<void> {
+    return apiClient.post(`/api/admin/planes/${id}/delete`, {});
+  },
+
   // ========== EXCEL IMPORT ==========
 
   async previewStudentsFromExcel(file: File): Promise<ImportPreview> {

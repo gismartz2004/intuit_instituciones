@@ -124,6 +124,7 @@ interface StudentDashboardProps {
     id: string;
     role: string;
     avatar?: string;
+    planId?: number; // Added planId
     onboardingCompleted?: boolean;
   };
 }
@@ -144,23 +145,24 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(avatarBoy);
   const [levelProgress, setLevelProgress] = useState<Record<number, any>>({});
+  const [userData, setUserData] = useState<any>(null); // Storing full user data
 
   useEffect(() => {
     if (user?.id) {
-      // Refresh user data to check onboarding status
+      // Refresh user data to check onboarding status and plan
       studentApi.getUserInfo(user.id)
-        .then(userData => {
-          if (!userData.onboardingCompleted) {
+        .then(data => {
+          setUserData(data);
+          if (!data.onboardingCompleted) {
             setShowOnboarding(true);
           }
-          if (userData.avatar && AVATAR_MAP[userData.avatar]) {
-            setCurrentAvatar(AVATAR_MAP[userData.avatar]);
+          if (data.avatar && AVATAR_MAP[data.avatar]) {
+            setCurrentAvatar(AVATAR_MAP[data.avatar]);
           }
         });
 
       fetchModules();
       fetchProgress();
-      // fetchLevelProgress(); // Removing from here as it depends on modules
     }
   }, [user]);
 

@@ -23,6 +23,7 @@ export class AdminService {
                 nombre: schema.usuarios.nombre,
                 email: schema.usuarios.email,
                 activo: schema.usuarios.activo,
+                planId: schema.usuarios.planId,
             })
             .from(schema.usuarios)
             .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
@@ -406,5 +407,33 @@ export class AdminService {
         const successful = results.filter(r => r.status === 'fulfilled').length;
         const failed = results.filter(r => r.status === 'rejected').length;
         return { success: true, message: `${successful} reseteados, ${failed} fallidos`, successful, failed };
+    }
+
+    /**
+     * Create a new plan
+     */
+    async createPlan(payload: any) {
+        const [plan] = await this.db.insert(schema.planes).values(payload).returning();
+        return plan;
+    }
+
+    /**
+     * Update an existing plan
+     */
+    async updatePlan(id: number, payload: any) {
+        const [plan] = await this.db
+            .update(schema.planes)
+            .set(payload)
+            .where(eq(schema.planes.id, id))
+            .returning();
+        return plan;
+    }
+
+    /**
+     * Delete a plan
+     */
+    async deletePlan(id: number) {
+        await this.db.delete(schema.planes).where(eq(schema.planes.id, id));
+        return { success: true };
     }
 }

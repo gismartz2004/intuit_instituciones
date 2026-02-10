@@ -60,7 +60,7 @@ export class StorageService {
         this.logger.log(`Saving file locally to ${filepath}`);
         fs.writeFileSync(filepath, file.buffer);
 
-        const baseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
+        const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
         return `${baseUrl}/uploads/${filename}`;
     }
 

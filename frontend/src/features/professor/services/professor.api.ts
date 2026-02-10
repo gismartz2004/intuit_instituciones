@@ -130,7 +130,7 @@ export const professorApi = {
    */
   async uploadFile(formData: FormData): Promise<any> {
     // Special case for file upload - use fetch directly
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/professor/upload`, {
       method: 'POST',
       body: formData,
@@ -154,7 +154,7 @@ export const professorApi = {
    * Eliminar una carpeta y todo su contenido
    */
   async deleteFolder(path: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/professor/folders?path=${encodeURIComponent(path)}`, {
       method: 'DELETE',
     });

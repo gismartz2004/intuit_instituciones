@@ -12,10 +12,11 @@ import {
   Shield,
   Activity,
   ClipboardList,
+  CreditCard,
 } from "lucide-react";
 import { ModuleContentViewer } from "./ModuleContentViewer";
 import { ExcelImportWizard } from "./ExcelImportWizard";
-import { ModuleAssignmentWizard } from "./ModuleAssignmentWizard";
+import { PlansManagementView } from "./PlansManagementView";
 import { adminApi } from "../services/admin.api";
 import {
   type Premio,
@@ -39,7 +40,7 @@ import { AdminModulesView } from "../modules/AdminModulesView";
 import { AdminAssignmentsView } from "../assignments/AdminAssignmentsView";
 import { AdminPrizesView } from "../prizes/AdminPrizesView";
 
-type AdminTab = "overview" | "users" | "modules" | "assignments" | "prizes";
+type AdminTab = "overview" | "users" | "modules" | "assignments" | "prizes" | "licenses";
 
 const TAB_IDS: AdminTab[] = [
   "overview",
@@ -47,6 +48,7 @@ const TAB_IDS: AdminTab[] = [
   "modules",
   "assignments",
   "prizes",
+  "licenses",
 ];
 
 const normalizeTab = (tab?: string): AdminTab => {
@@ -249,6 +251,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               icon: Trophy,
               color: "text-pink-400",
             },
+            {
+              id: "licenses",
+              label: "Licencias",
+              icon: CreditCard,
+              color: "text-cyan-400",
+            },
           ].map((item) => (
             <button
               key={item.id}
@@ -308,7 +316,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     ? "Contenido Académico"
                     : activeTab === "assignments"
                       ? "Centro de Asignaciones"
-                      : "Catálogo de Premios"}
+                      : activeTab === "prizes"
+                        ? "Catálogo de Premios"
+                        : "Gestión de Licencias"}
             </h2>
             <h3 className="text-4xl font-black text-slate-800 tracking-tight">
               {activeTab === "overview" && "Panel de Control"}
@@ -316,6 +326,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               {activeTab === "modules" && "Matriz Curricular"}
               {activeTab === "assignments" && "Gestión de Accesos"}
               {activeTab === "prizes" && "Recompensas"}
+              {activeTab === "licenses" && "Planes y Suscripciones"}
             </h3>
           </div>
         </header>
@@ -351,6 +362,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               onDeletePrize={handleDeletePrize}
             />
           )}
+
+          {activeTab === "licenses" && <PlansManagementView />}
         </div>
       </main>
 
@@ -372,15 +385,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         />
       )}
 
-      {showAssignWizard && (
-        <ModuleAssignmentWizard
-          onClose={() => setShowAssignWizard(false)}
-          onSuccess={() => {
-            setShowAssignWizard(false);
-            loadData();
-          }}
-        />
-      )}
 
       <Dialog open={isPrizeDialogOpen} onOpenChange={setIsPrizeDialogOpen}>
         <DialogContent>

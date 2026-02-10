@@ -58,6 +58,16 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
     }, [currentRole, userPlanId]);
 
     const fetchPlanFeatures = async () => {
+        // Plan 1 (Genio Digital): Only "Aprender" and "Perfil"
+        if (userPlanId === 1) {
+            setStudentLinks([
+                { href: "/dashboard", icon: Book, label: "Aprender" },
+                { href: "/profile", icon: User, label: "Perfil" }
+            ]);
+            return;
+        }
+
+        // Other plans: Full access
         try {
             const planData = await apiClient.get<any>(`/api/plans/${userPlanId}/features`);
             const links = planData.sidebar.map((item: any) => ({
@@ -73,8 +83,13 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
             }
             setStudentLinks(links);
         } catch (error) {
+            // Fallback: Full access for all other plans
             setStudentLinks([
-                { href: "/dashboard", icon: Book, label: "Aprende" },
+                { href: "/dashboard", icon: Book, label: "Aprender" },
+                { href: "/achievements", icon: Trophy, label: "Logros" },
+                { href: "/leaderboard", icon: Award, label: "Ranking" },
+                { href: "/missions", icon: Target, label: "Misiones" },
+                { href: "/store", icon: Store, label: "Tienda" },
                 { href: "/lab", icon: Code, label: "Lab de Código" },
                 { href: "/arduino-lab", icon: Cpu, label: "Lab Arduino" },
                 { href: "/profile", icon: User, label: "Perfil" }
