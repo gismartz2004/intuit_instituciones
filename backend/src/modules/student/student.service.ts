@@ -232,6 +232,86 @@ export class StudentService {
         };
     }
 
+    async getDetailedLevelStatus(studentId: number, levelId: number) {
+        // 1. Attendance Check
+        const attendance = await this.getAttendanceStatus(studentId, levelId);
+        const hasAttended = attendance.asistio || attendance.recuperada;
+
+        // 2. RAG Completion
+        const rags = await this.db.select()
+            .from(schema.plantillasRag)
+            .where(eq(schema.plantillasRag.nivelId, levelId));
+
+        let ragCompleted = hasAttended; // If attended, RAG is practically done for progress
+        let ragPendingDeliverables = false;
+
+        if (!ragCompleted && rags.length > 0) {
+            const ragSubmissions = await this.db.select()
+                .from(schema.entregasRag)
+                .where(and(
+                    eq(schema.entregasRag.estudianteId, studentId),
+                    eq(schema.entregasRag.plantillaRagId, rags[0].id) // Assuming one RAG per level for simplicity
+                ));
+
+            // Parse steps
+            let pasos: any[] = [];
+            try {
+                const rawPasos = rags[0].pasosGuiados;
+                pasos = typeof rawPasos === 'string' ? JSON.parse(rawPasos) : (Array.isArray(rawPasos) ? rawPasos : []);
+            } catch (e) {
+                pasos = [];
+            }
+
+            if (pasos.length === 0) {
+                ragCompleted = true;
+            } else {
+                const submittedIndices = new Set(ragSubmissions.map(s => s.pasoIndice));
+                ragCompleted = pasos.every((p, idx) => !p.requiereEntregable || submittedIndices.has(idx));
+                ragPendingDeliverables = pasos.some((p, idx) => p.requiereEntregable && !submittedIndices.has(idx));
+            }
+        }
+
+        // 3. HA Completion
+        const has = await this.db.select()
+            .from(schema.plantillasHa)
+            .where(eq(schema.plantillasHa.nivelId, levelId));
+
+        let haCompleted = false;
+        if (has.length > 0) {
+            const haSubmissions = await this.db.select()
+                .from(schema.entregasHa)
+                .where(and(
+                    eq(schema.entregasHa.estudianteId, studentId),
+                    eq(schema.entregasHa.plantillaHaId, has[0].id)
+                ));
+            haCompleted = haSubmissions.length > 0;
+        }
+
+        // 4. PIM Completion (Future-proofing)
+        const pims = await this.db.select()
+            .from(schema.plantillasPim)
+            .where(eq(schema.plantillasPim.nivelId, levelId));
+        let pimCompleted = false;
+        // PIM logic can be added here once defined
+
+        return {
+            attendance,
+            rag: {
+                completed: ragCompleted,
+                pending: ragPendingDeliverables,
+                status: ragCompleted ? 'completed' : (hasAttended ? 'completed' : (ragPendingDeliverables ? 'pending' : 'missing'))
+            },
+            ha: {
+                completed: haCompleted,
+                status: haCompleted ? 'completed' : 'pending'
+            },
+            pim: {
+                completed: pimCompleted,
+                status: pimCompleted ? 'completed' : 'pending'
+            }
+        };
+    }
+
     async updateLevelProgress(studentId: number, levelId: number) {
         const { porcentajeCompletado, completado } = await this.calculateLevelProgress(studentId, levelId);
 

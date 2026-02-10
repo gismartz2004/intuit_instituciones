@@ -9,6 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+    DialogTitle,
+    DialogHeader,
+} from "@/components/ui/dialog";
+import {
     ArrowRight,
     ArrowLeft,
     Sparkles,
@@ -16,7 +23,8 @@ import {
     CheckCircle2,
     Lock,
     Play,
-    FileText
+    FileText,
+    ZoomIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import canvasConfetti from "canvas-confetti";
@@ -192,8 +200,8 @@ export const HintDeck = ({
     };
 
     return (
-        <div className="max-w-5xl mx-auto py-4 h-full flex flex-col px-4">
-            <div className="flex items-center justify-between mb-8 shrink-0">
+        <div className="max-w-5xl mx-auto py-2 h-full flex flex-col px-4">
+            <div className="flex items-center justify-between mb-6 shrink-0 relative z-10">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <div className="p-2 bg-indigo-100 rounded-lg">
@@ -219,7 +227,7 @@ export const HintDeck = ({
                         animate={{ opacity: 1, scale: 1, rotateX: 0 }}
                         exit={{ opacity: 0, scale: 0.95, rotateX: -10 }}
                         transition={{ type: "spring", bounce: 0.4 }}
-                        className="w-full max-w-4xl h-full max-h-[500px]"
+                        className="w-full max-w-4xl min-h-[350px] max-h-full h-auto"
                     >
                         <Card className="w-full h-full border-0 shadow-xl bg-white rounded-[2rem] overflow-hidden flex flex-col md:flex-row ring-1 ring-black/5">
                             <div className={cn(
@@ -227,11 +235,30 @@ export const HintDeck = ({
                                 !hints[currentIndex].imagenUrl && "bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
                             )}>
                                 {hints[currentIndex].imagenUrl ? (
-                                    <img
-                                        src={hints[currentIndex].imagenUrl}
-                                        className="w-full h-full object-cover"
-                                        alt={`Pista ${currentIndex + 1}`}
-                                    />
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <div className="w-full h-full cursor-zoom-in group/img relative bg-slate-200/50">
+                                                <img
+                                                    src={hints[currentIndex].imagenUrl}
+                                                    className="w-full h-full object-contain"
+                                                    alt={`Pista ${currentIndex + 1}`}
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+                                                    <ZoomIn className="w-10 h-10 text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-lg" />
+                                                </div>
+                                            </div>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+                                            <DialogHeader className="sr-only">
+                                                <DialogTitle>Imagen de Pista</DialogTitle>
+                                            </DialogHeader>
+                                            <img
+                                                src={hints[currentIndex].imagenUrl}
+                                                className="w-full h-full object-contain rounded-xl"
+                                                alt="Pista Fullscreen"
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
                                 ) : (
                                     <div className="relative">
                                         <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full" />
@@ -337,8 +364,8 @@ export const ConceptDeck = ({
     };
 
     return (
-        <div className="max-w-5xl mx-auto py-4 h-full flex flex-col">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 shrink-0 gap-4">
+        <div className="max-w-5xl mx-auto py-2 h-full flex flex-col">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 shrink-0 gap-4 relative z-10">
                 <div className="flex-1">
                     <h3 className="text-2xl font-bold flex items-center gap-2 mb-1">
                         <div className="p-2 bg-indigo-100 rounded-lg">
@@ -404,17 +431,36 @@ export const ConceptDeck = ({
                         }}
                         className="absolute w-full h-full flex items-center justify-center p-2"
                     >
-                        <Card className="w-full h-full max-h-[600px] border-0 shadow-xl bg-white rounded-[2rem] overflow-hidden flex flex-col md:flex-row ring-1 ring-black/5">
+                        <Card className="w-full h-full max-h-full min-h-[400px] border-0 shadow-xl bg-white rounded-[2rem] overflow-hidden flex flex-col md:flex-row ring-1 ring-black/5">
                             <div className={cn(
                                 "w-full md:w-5/12 h-48 md:h-full bg-slate-100 relative group overflow-hidden shrink-0",
                                 !concepts[currentIndex].imagenUrl && "bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center"
                             )}>
                                 {concepts[currentIndex].imagenUrl ? (
-                                    <img
-                                        src={concepts[currentIndex].imagenUrl}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        alt={concepts[currentIndex].titulo}
-                                    />
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <div className="w-full h-full cursor-zoom-in group/img relative bg-slate-200/50">
+                                                <img
+                                                    src={concepts[currentIndex].imagenUrl}
+                                                    className="w-full h-full object-contain transition-transform duration-700 group-hover/img:scale-105"
+                                                    alt={concepts[currentIndex].titulo}
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+                                                    <ZoomIn className="w-12 h-12 text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-lg" />
+                                                </div>
+                                            </div>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+                                            <DialogHeader className="sr-only">
+                                                <DialogTitle>Concepto: {concepts[currentIndex].titulo}</DialogTitle>
+                                            </DialogHeader>
+                                            <img
+                                                src={concepts[currentIndex].imagenUrl}
+                                                className="w-full h-full object-contain rounded-xl"
+                                                alt={concepts[currentIndex].titulo}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
                                 ) : (
                                     <div className="text-center p-6">
                                         <BookOpen className="w-24 h-24 text-indigo-200 mx-auto mb-4" />
@@ -576,7 +622,7 @@ export const MissionTimeline = ({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="flex flex-col h-full bg-slate-50/50"
+                        className="flex flex-col h-full bg-slate-50/50 min-h-0"
                     >
                         {/* Header */}
                         <div className="p-6 pb-2">
@@ -591,12 +637,31 @@ export const MissionTimeline = ({
                         {/* Content Area */}
                         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
                             {steps[currentStepIndex]?.imagenUrl && (
-                                <div className="w-full max-h-[400px] min-h-[200px] bg-slate-100 rounded-2xl overflow-hidden mb-6 shadow-sm border border-slate-200 relative group">
-                                    <img
-                                        src={steps[currentStepIndex].imagenUrl}
-                                        className="w-full h-full object-contain mix-blend-multiply"
-                                        alt="Ilustración del paso"
-                                    />
+                                <div className="w-full max-h-[350px] min-h-[200px] bg-slate-100 rounded-2xl overflow-hidden mb-6 shadow-sm border border-slate-200 relative group/step-container">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <div className="w-full h-full cursor-zoom-in relative bg-white/50">
+                                                <img
+                                                    src={steps[currentStepIndex].imagenUrl}
+                                                    className="w-full h-full object-contain mix-blend-multiply"
+                                                    alt="Ilustración del paso"
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-colors flex items-center justify-center group">
+                                                    <ZoomIn className="w-10 h-10 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </div>
+                                            </div>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+                                            <DialogHeader className="sr-only">
+                                                <DialogTitle>Imagen del Paso</DialogTitle>
+                                            </DialogHeader>
+                                            <img
+                                                src={steps[currentStepIndex].imagenUrl}
+                                                className="w-full h-full object-contain bg-white rounded-xl"
+                                                alt="Paso Fullscreen"
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             )}
 

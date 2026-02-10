@@ -39,14 +39,16 @@ import { AdminUsersView } from "../users/AdminUsersView";
 import { AdminModulesView } from "../modules/AdminModulesView";
 import { AdminAssignmentsView } from "../assignments/AdminAssignmentsView";
 import { AdminPrizesView } from "../prizes/AdminPrizesView";
+import { ProfessorAssignmentsView } from "../modules/ProfessorAssignmentsView";
 
-type AdminTab = "overview" | "users" | "modules" | "assignments" | "prizes" | "licenses";
+type AdminTab = "overview" | "users" | "modules" | "assignments" | "professors" | "prizes" | "licenses";
 
 const TAB_IDS: AdminTab[] = [
   "overview",
   "users",
   "modules",
   "assignments",
+  "professors",
   "prizes",
   "licenses",
 ];
@@ -246,6 +248,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               color: "text-orange-400",
             },
             {
+              id: "professors",
+              label: "Docentes",
+              icon: Users,
+              color: "text-purple-400",
+            },
+            {
               id: "prizes",
               label: "Premios",
               icon: Trophy,
@@ -316,15 +324,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     ? "Contenido Académico"
                     : activeTab === "assignments"
                       ? "Centro de Asignaciones"
-                      : activeTab === "prizes"
-                        ? "Catálogo de Premios"
-                        : "Gestión de Licencias"}
+                      : activeTab === "professors"
+                        ? "Gestión de Docentes"
+                        : activeTab === "prizes"
+                          ? "Catálogo de Premios"
+                          : "Gestión de Licencias"}
             </h2>
             <h3 className="text-4xl font-black text-slate-800 tracking-tight">
               {activeTab === "overview" && "Panel de Control"}
               {activeTab === "users" && "Directorio Global"}
               {activeTab === "modules" && "Matriz Curricular"}
               {activeTab === "assignments" && "Gestión de Accesos"}
+              {activeTab === "professors" && "Staff de Módulos"}
               {activeTab === "prizes" && "Recompensas"}
               {activeTab === "licenses" && "Planes y Suscripciones"}
             </h3>
@@ -352,6 +363,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           )}
 
           {activeTab === "assignments" && <AdminAssignmentsView />}
+
+          {activeTab === "professors" && <ProfessorAssignmentsView />}
 
           {activeTab === "prizes" && (
             <AdminPrizesView

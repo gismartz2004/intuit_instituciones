@@ -375,6 +375,14 @@ export const asistencia = pgTable('asistencia', {
   fecha: timestamp('fecha').defaultNow(),
 });
 
+// 26. Módulos - Profesores (Join Table for many-to-many)
+export const moduloProfesores = pgTable('modulo_profesores', {
+  id: serial('id').primaryKey(),
+  moduloId: integer('modulo_id').references(() => modulos.id),
+  profesorId: integer('profesor_id').references(() => usuarios.id),
+  fechaAsignacion: timestamp('fecha_asignacion').defaultNow(),
+});
+
 // Schemas for insertions
 export const insertRoleSchema = createInsertSchema(roles);
 export const insertPlanSchema = createInsertSchema(planes);
@@ -447,6 +455,7 @@ export const insertMisionSchema = createInsertSchema(misiones);
 export const insertProgresoMisionSchema = createInsertSchema(progresoMisiones);
 export const insertPremioSchema = createInsertSchema(premios);
 export const insertAsistenciaSchema = createInsertSchema(asistencia);
+export const insertModuloProfesorSchema = createInsertSchema(moduloProfesores);
 
 
 export type Logro = typeof logros.$inferSelect;
@@ -475,4 +484,7 @@ export type InsertPremio = z.infer<typeof insertPremioSchema>;
 
 export type Asistencia = typeof asistencia.$inferSelect;
 export type InsertAsistencia = z.infer<typeof insertAsistenciaSchema>;
+
+export type ModuloProfesor = typeof moduloProfesores.$inferSelect;
+export type InsertModuloProfesor = z.infer<typeof insertModuloProfesorSchema>;
 

@@ -20,7 +20,10 @@ import {
   LayoutDashboard,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CheckCircle,
+  AlertCircle,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -62,6 +65,13 @@ export default function LevelViewer() {
   // Attendance Status
   const [attendance, setAttendance] = useState<{ asistio: boolean; recuperada?: boolean; fecha: string | null } | null>(null);
 
+  // Detailed Level Progress Status
+  const [detailedStatus, setDetailedStatus] = useState<{
+    rag: { status: 'completed' | 'pending' | 'missing' },
+    ha: { status: 'completed' | 'pending' },
+    pim: { status: 'completed' | 'pending' }
+  } | null>(null);
+
   const handleAddPoints = (amount: number, reason: string) => {
     setGameState(prev => ({
       ...prev,
@@ -101,16 +111,21 @@ export default function LevelViewer() {
   }, []);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const fetchAttendanceAndStatus = async () => {
       try {
-        const data = await studentApi.getAttendanceStatus(getStudentId(), levelId);
-        setAttendance(data);
+        const studentId = getStudentId();
+        const [attendanceData, statusData] = await Promise.all([
+          studentApi.getAttendanceStatus(studentId, levelId),
+          studentApi.getDetailedLevelStatus(studentId, levelId)
+        ]);
+        setAttendance(attendanceData);
+        setDetailedStatus(statusData);
       } catch (error) {
-        console.error("Error fetching attendance:", error);
+        console.error("Error fetching attendance or status:", error);
       }
     };
-    if (levelId) fetchAttendance();
-  }, [levelId]);
+    if (levelId) fetchAttendanceAndStatus();
+  }, [levelId, viewMode]); // Re-fetch on viewMode change to update after submission
 
   useEffect(() => {
     // Check mobile screen size
@@ -162,8 +177,8 @@ export default function LevelViewer() {
 
   const handlePrev = () => {
     if (viewMode === 'rag' && ragRef.current) {
-      ragRef.current.goPrev();
-      return;
+      const result = ragRef.current.goPrev();
+      if (result?.handled) return;
     }
 
     if (viewMode === 'ha' && haRef.current) {
@@ -192,8 +207,8 @@ export default function LevelViewer() {
 
   const handleNext = () => {
     if (viewMode === 'rag' && ragRef.current) {
-      ragRef.current.goNext();
-      return;
+      const result = ragRef.current.goNext();
+      if (result?.handled) return;
     }
 
     if (viewMode === 'ha' && haRef.current) {
@@ -225,8 +240,15 @@ export default function LevelViewer() {
     }
   };
 
+  const getRagLabel = () => {
+    if (detailedStatus?.rag.status === 'completed') {
+      if (attendance?.recuperada || !attendance?.asistio) return 'Clase Recuperada';
+    }
+    return 'Guía RAG';
+  };
+
   const menuItems = [
-    { id: 'rag', label: 'Guía RAG', icon: BookOpen, color: 'text-cyan-400' },
+    { id: 'rag', label: getRagLabel(), icon: BookOpen, color: 'text-cyan-400' },
     { id: 'ha', label: 'Hito HA', icon: Target, color: 'text-purple-400' },
     { id: 'pim', label: 'Proyecto PIM', icon: Layers, color: 'text-indigo-400' },
   ];
@@ -263,70 +285,100 @@ export default function LevelViewer() {
         {/* Navigation - Centered & Refined */}
         <nav className="flex-1 flex flex-col justify-center px-4 space-y-4 overflow-y-auto relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none]">
           <div className="space-y-4">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setViewMode(item.id as any);
-                  if (isMobile) setIsSidebarOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center justify-center gap-4 px-4 py-5 rounded-2xl transition-all duration-500 relative group overflow-hidden",
-                  viewMode === item.id
-                    ? "text-white"
-                    : "text-slate-500 hover:text-slate-200"
-                )}
-              >
-                {viewMode === item.id && (
-                  <motion.div
-                    layoutId="navHighlight"
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-transparent border-l-2 border-cyan-400 z-0"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <div className={cn(
-                  "relative z-10 flex items-center w-full transition-all duration-500",
-                  (isSidebarOpen || isMobile) ? "gap-4 justify-start" : "justify-center"
-                )}>
-                  <AnimatePresence mode="wait">
-                    {!(isSidebarOpen || isMobile) ? (
-                      <motion.span
-                        key="short"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className={cn(
-                          "font-black text-xs tracking-tighter transition-colors duration-500",
-                          viewMode === item.id ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
-                        )}
-                      >
-                        {item.id.toUpperCase()}
-                      </motion.span>
-                    ) : (
-                      <motion.div
-                        key="full"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        className="flex items-center gap-4"
-                      >
-                        <item.icon className={cn(
-                          "w-6 h-6 flex-shrink-0 transition-all duration-500",
-                          viewMode === item.id ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] scale-110" : "group-hover:text-slate-300"
-                        )} />
-                        <span className={cn(
-                          "font-black text-xs tracking-[0.2em] uppercase whitespace-nowrap transition-all duration-500",
-                          viewMode === item.id ? "translate-x-1" : "group-hover:translate-x-1"
-                        )}>
-                          {item.label}
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </button>
-            ))}
+            {menuItems.map((item) => {
+              const status = detailedStatus?.[item.id as keyof typeof detailedStatus]?.status || 'pending';
+              const isSelected = viewMode === item.id;
+
+              // Color Mapping
+              const statusColors = {
+                completed: 'text-green-400',
+                pending: 'text-yellow-400',
+                missing: 'text-red-400'
+              };
+
+              const statusGlows = {
+                completed: 'drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]',
+                pending: 'drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]',
+                missing: 'drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
+              };
+
+              const StatusIcon = status === 'completed' ? CheckCircle : (status === 'missing' ? X : Clock);
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setViewMode(item.id as any);
+                    if (isMobile) setIsSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-4 px-4 py-5 rounded-2xl transition-all duration-500 relative group overflow-hidden",
+                    isSelected
+                      ? "text-white"
+                      : "text-slate-500 hover:text-slate-200"
+                  )}
+                >
+                  {isSelected && (
+                    <motion.div
+                      layoutId="navHighlight"
+                      className={cn(
+                        "absolute inset-0 bg-gradient-to-r to-transparent border-l-2 z-0",
+                        status === 'completed' ? "from-green-500/20 border-green-400" :
+                          (status === 'missing' ? "from-red-500/20 border-red-400" : "from-yellow-500/20 border-yellow-400")
+                      )}
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                  <div className={cn(
+                    "relative z-10 flex items-center w-full transition-all duration-500",
+                    (isSidebarOpen || isMobile) ? "gap-4 justify-start" : "justify-center"
+                  )}>
+                    <AnimatePresence mode="wait">
+                      {!(isSidebarOpen || isMobile) ? (
+                        <motion.div
+                          key="short"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="relative"
+                        >
+                          <StatusIcon className={cn("w-6 h-6", isSelected ? statusColors[status] : "text-slate-500")} />
+                          {status === 'completed' && !isSelected && (
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-slate-950" />
+                          )}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="full"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          className="flex items-center gap-4 w-full"
+                        >
+                          <div className="relative">
+                            <item.icon className={cn(
+                              "w-6 h-6 flex-shrink-0 transition-all duration-500",
+                              isSelected ? cn(statusColors[status], statusGlows[status], "scale-110") : "group-hover:text-slate-300"
+                            )} />
+                          </div>
+                          <span className={cn(
+                            "font-black text-xs tracking-[0.2em] uppercase whitespace-nowrap transition-all duration-500 flex-1",
+                            isSelected ? "translate-x-1" : "group-hover:translate-x-1"
+                          )}>
+                            {item.label}
+                          </span>
+                          <StatusIcon className={cn(
+                            "w-4 h-4 ml-auto",
+                            status === 'completed' ? "text-green-400" : (status === 'missing' ? "text-red-400 animate-pulse" : "text-yellow-400")
+                          )} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </nav>
 
@@ -413,12 +465,8 @@ export default function LevelViewer() {
             <Button
               variant="ghost"
               size="icon"
-              disabled={levelId === moduleLevels[0]?.id && viewMode === 'rag'}
               onClick={handlePrev}
-              className={cn(
-                "w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300",
-                levelId === moduleLevels[0]?.id && viewMode === 'rag' && "opacity-20 cursor-not-allowed"
-              )}
+              className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
             >
               <ChevronLeft className="w-8 h-8" />
             </Button>
@@ -447,12 +495,8 @@ export default function LevelViewer() {
             <Button
               variant="ghost"
               size="icon"
-              disabled={levelId === moduleLevels[moduleLevels.length - 1]?.id && viewMode === 'pim'}
               onClick={handleNext}
-              className={cn(
-                "w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300",
-                levelId === moduleLevels[moduleLevels.length - 1]?.id && viewMode === 'pim' && "opacity-20 cursor-not-allowed"
-              )}
+              className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
             >
               <ChevronRight className="w-8 h-8" />
             </Button>

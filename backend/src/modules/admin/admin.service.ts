@@ -66,6 +66,17 @@ export class AdminService {
 
                 const studentCount = allAssignments.filter(a => a.estudianteId !== null).length;
 
+                // Multi-professor logic
+                const moduleProfessors = await this.db
+                    .select({
+                        id: schema.usuarios.id,
+                        nombre: schema.usuarios.nombre,
+                        email: schema.usuarios.email
+                    })
+                    .from(schema.moduloProfesores)
+                    .innerJoin(schema.usuarios, eq(schema.moduloProfesores.profesorId, schema.usuarios.id))
+                    .where(eq(schema.moduloProfesores.moduloId, mod.id));
+
                 let professorName = null;
                 if (mod.profesorId) {
                     const [prof] = await this.db
@@ -80,6 +91,8 @@ export class AdminService {
                     levelCount: levels.length,
                     studentCount: studentCount,
                     professorName: professorName,
+                    professors: moduleProfessors, // List of all assigned professors
+                    professorCount: moduleProfessors.length + (mod.profesorId ? 1 : 0),
                 };
             }),
         );
@@ -366,13 +379,20 @@ export class AdminService {
      */
     async resetUserProgress(userId: number) {
         try {
+            console.log(`[FULL RESET] Starting comprehensive reset for user ${userId}`);
+
+            // 1. Delete progress and submissions
             await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.estudianteId, userId));
             await this.db.delete(schema.progresoNiveles).where(eq(schema.progresoNiveles.estudianteId, userId));
             await this.db.delete(schema.entregasHa).where(eq(schema.entregasHa.estudianteId, userId));
             await this.db.delete(schema.entregasRag).where(eq(schema.entregasRag.estudianteId, userId));
             await this.db.delete(schema.entregas).where(eq(schema.entregas.estudianteId, userId));
+            await this.db.delete(schema.asistencia).where(eq(schema.asistencia.estudianteId, userId));
+
+            // 2. Delete gamification and achievements
             await this.db.delete(schema.progresoMisiones).where(eq(schema.progresoMisiones.estudianteId, userId));
             await this.db.delete(schema.logrosDesbloqueados).where(eq(schema.logrosDesbloqueados.estudianteId, userId));
+            await this.db.delete(schema.puntosLog).where(eq(schema.puntosLog.estudianteId, userId));
 
             try {
                 await this.db.delete(schema.rankingAwards).where(eq(schema.rankingAwards.estudianteId, userId));
@@ -382,16 +402,25 @@ export class AdminService {
                 await this.db.delete(schema.certificados).where(eq(schema.certificados.estudianteId, userId));
             } catch (e) { }
 
-            await this.db.delete(schema.puntosLog).where(eq(schema.puntosLog.estudianteId, userId));
-
+            // 3. Reset main gamification record
             const [gamif] = await this.db.select().from(schema.gamificacionEstudiante).where(eq(schema.gamificacionEstudiante.estudianteId, userId));
             if (gamif) {
                 await this.db.update(schema.gamificacionEstudiante)
-                    .set({ puntosDisponibles: 0, xpTotal: 0, rachaDias: 0, nivelActual: 1 })
+                    .set({ puntosDisponibles: 0, xpTotal: 0, rachaDias: 0, nivelActual: 1, ultimaRachaUpdate: null })
                     .where(eq(schema.gamificacionEstudiante.estudianteId, userId));
             }
 
-            return { success: true, message: 'Usuario reseteado exitosamente' };
+            // 4. RESET USER ACCOUNT STATUS (Onboarding + Profile Defaults)
+            await this.db.update(schema.usuarios)
+                .set({
+                    onboardingCompleted: false,
+                    avatar: 'avatar_boy',
+                    // Potentially reset other fields if needed, but onboarding is the most critical
+                })
+                .where(eq(schema.usuarios.id, userId));
+
+            console.log(`[FULL RESET] User ${userId} reset to factory settings successfully`);
+            return { success: true, message: 'Usuario reseteado completamente (incluye onboarding)' };
         } catch (error) {
             console.error(`[RESET ERROR] ${userId}:`, error);
             throw error;
@@ -434,6 +463,60 @@ export class AdminService {
      */
     async deletePlan(id: number) {
         await this.db.delete(schema.planes).where(eq(schema.planes.id, id));
+        return { success: true };
+    }
+
+    /**
+     * Get all professors assigned to a module
+     */
+    async getModuleProfessors(moduleId: number) {
+        return this.db
+            .select({
+                id: schema.usuarios.id,
+                nombre: schema.usuarios.nombre,
+                email: schema.usuarios.email,
+            })
+            .from(schema.moduloProfesores)
+            .innerJoin(schema.usuarios, eq(schema.moduloProfesores.profesorId, schema.usuarios.id))
+            .where(eq(schema.moduloProfesores.moduloId, moduleId));
+    }
+
+    /**
+     * Add a professor to a module (multiple support)
+     */
+    async addProfessorToModule(moduleId: number, professorId: number) {
+        // Check if already assigned
+        const existing = await this.db
+            .select()
+            .from(schema.moduloProfesores)
+            .where(and(
+                eq(schema.moduloProfesores.moduloId, moduleId),
+                eq(schema.moduloProfesores.profesorId, professorId)
+            ))
+            .limit(1);
+
+        if (existing.length > 0) {
+            return { success: true, message: 'El profesor ya está asignado' };
+        }
+
+        await this.db.insert(schema.moduloProfesores).values({
+            moduloId: moduleId,
+            profesorId: professorId,
+        });
+
+        return { success: true };
+    }
+
+    /**
+     * Remove a professor from a module
+     */
+    async unassignProfessorFromModule(moduleId: number, professorId: number) {
+        await this.db
+            .delete(schema.moduloProfesores)
+            .where(and(
+                eq(schema.moduloProfesores.moduloId, moduleId),
+                eq(schema.moduloProfesores.profesorId, professorId)
+            ));
         return { success: true };
     }
 }

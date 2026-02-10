@@ -64,6 +64,27 @@ export class AdminController {
         return this.adminService.assignProfessorToModule(moduleId, professorId);
     }
 
+    @Get('modules/:id/professors')
+    async getModuleProfessors(@Param('id', ParseIntPipe) moduleId: number) {
+        return this.adminService.getModuleProfessors(moduleId);
+    }
+
+    @Post('modules/:id/professors/add')
+    async addProfessorToModule(
+        @Param('id', ParseIntPipe) moduleId: number,
+        @Body('professorId', ParseIntPipe) professorId: number,
+    ) {
+        return this.adminService.addProfessorToModule(moduleId, professorId);
+    }
+
+    @Post('modules/:id/professors/remove')
+    async unassignProfessorFromModule(
+        @Param('id', ParseIntPipe) moduleId: number,
+        @Body('professorId', ParseIntPipe) professorId: number,
+    ) {
+        return this.adminService.unassignProfessorFromModule(moduleId, professorId);
+    }
+
     @Post('modules/:id/assignments/unassign')
     async unassignModule(
         @Param('id', ParseIntPipe) moduleId: number,

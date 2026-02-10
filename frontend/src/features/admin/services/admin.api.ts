@@ -155,6 +155,30 @@ export const adminApi = {
   async deletePrize(prizeId: number): Promise<void> {
     return apiClient.delete<void>(`/api/premios/${prizeId}`);
   },
+
+  // ========== GESTIÓN DE DOCENTES ==========
+
+  async getModuleProfessors(moduleId: number): Promise<User[]> {
+    return apiClient.get<User[]>(`/api/admin/modules/${moduleId}/professors`);
+  },
+
+  async addProfessorToModule(
+    moduleId: number,
+    professorId: number,
+  ): Promise<any> {
+    return apiClient.post(`/api/admin/modules/${moduleId}/professors/add`, {
+      professorId,
+    });
+  },
+
+  async unassignProfessorFromModule(
+    moduleId: number,
+    professorId: number,
+  ): Promise<any> {
+    return apiClient.post(`/api/admin/modules/${moduleId}/professors/remove`, {
+      professorId,
+    });
+  },
 };
 
 export default adminApi;

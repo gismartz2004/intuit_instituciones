@@ -54,6 +54,14 @@ export class StudentController {
         return this.studentService.getAttendanceStatus(studentId, levelId);
     }
 
+    @Get(':id/level/:levelId/detailed-status')
+    async getDetailedLevelStatus(
+        @Param('id', ParseIntPipe) studentId: number,
+        @Param('levelId', ParseIntPipe) levelId: number
+    ) {
+        return this.studentService.getDetailedLevelStatus(studentId, levelId);
+    }
+
     @Get(':id/gamification')
     async getGamificationStats(@Param('id', ParseIntPipe) studentId: number) {
         return this.studentService.getGamificationStats(studentId);

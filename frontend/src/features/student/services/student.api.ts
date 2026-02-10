@@ -74,6 +74,13 @@ export const studentApi = {
   },
 
   /**
+   * Obtener estado detallado de completitud de un nivel (asistencia, RAG, HA)
+   */
+  async getDetailedLevelStatus(studentId: number, levelId: number): Promise<any> {
+    return apiClient.get(`/api/student/${studentId}/level/${levelId}/detailed-status`);
+  },
+
+  /**
    * Obtener el contenido de un nivel específico
    */
   async getLevelContents(levelId: string): Promise<LevelContent[]> {
