@@ -241,16 +241,13 @@ export default function LevelViewer() {
   };
 
   const getRagLabel = () => {
-    if (detailedStatus?.rag.status === 'completed') {
-      if (attendance?.recuperada || !attendance?.asistio) return 'Clase Recuperada';
-    }
     return 'Guía RAG';
   };
 
   const menuItems = [
-    { id: 'rag', label: getRagLabel(), icon: BookOpen, color: 'text-cyan-400' },
-    { id: 'ha', label: 'Hito HA', icon: Target, color: 'text-purple-400' },
-    { id: 'pim', label: 'Proyecto PIM', icon: Layers, color: 'text-indigo-400' },
+    { id: 'rag', label: getRagLabel(), shortLabel: 'RAG', color: 'text-cyan-400' },
+    { id: 'ha', label: 'Hito HA', shortLabel: 'HA', color: 'text-purple-400' },
+    { id: 'pim', label: 'Proyecto PIM', shortLabel: 'PIM', color: 'text-indigo-400' },
   ];
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50">Cargando...</div>;
@@ -341,11 +338,16 @@ export default function LevelViewer() {
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.8 }}
-                          className="relative"
+                          className="relative flex flex-col items-center"
                         >
-                          <StatusIcon className={cn("w-6 h-6", isSelected ? statusColors[status] : "text-slate-500")} />
+                          <span className={cn(
+                            "text-[10px] font-black tracking-tighter transition-all duration-300",
+                            isSelected ? statusColors[status] : "text-slate-500"
+                          )}>
+                            {item.shortLabel}
+                          </span>
                           {status === 'completed' && !isSelected && (
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-slate-950" />
+                            <div className="absolute -top-1 -right-2 w-2 h-2 bg-green-500 rounded-full border border-slate-950" />
                           )}
                         </motion.div>
                       ) : (
@@ -356,11 +358,13 @@ export default function LevelViewer() {
                           exit={{ opacity: 0, x: -10 }}
                           className="flex items-center gap-4 w-full"
                         >
-                          <div className="relative">
-                            <item.icon className={cn(
-                              "w-6 h-6 flex-shrink-0 transition-all duration-500",
-                              isSelected ? cn(statusColors[status], statusGlows[status], "scale-110") : "group-hover:text-slate-300"
-                            )} />
+                          <div className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all duration-500",
+                            isSelected
+                              ? cn(statusColors[status], "border-current bg-white/5", statusGlows[status])
+                              : "text-slate-500 border-white/10 group-hover:border-white/20"
+                          )}>
+                            {item.shortLabel}
                           </div>
                           <span className={cn(
                             "font-black text-xs tracking-[0.2em] uppercase whitespace-nowrap transition-all duration-500 flex-1",
@@ -455,7 +459,7 @@ export default function LevelViewer() {
               </Badge>
             )}
           </div>
-          <EnhancedGamificationHud state={gameState} />
+          <EnhancedGamificationHud state={gameState} className="self-start mt-4" />
         </header>
 
         {/* Main Content Fixed Area */}

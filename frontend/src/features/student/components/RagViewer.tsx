@@ -17,7 +17,9 @@ import {
   FileText,
   CheckCircle2,
   Sparkles,
-  Upload
+  Upload,
+  BookOpen,
+  Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AvatarGuide from "./AvatarGuide";
@@ -51,7 +53,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
   const [avatarState, setAvatarState] = useState<any>({
     isVisible: true,
     emotion: 'neutral',
-    message: "¡Hola! Bienvenido a tu Guía RAG. Vamos a recorrer esto juntos paso a paso."
+    message: "¡Hola! Bienvenido a tu Guía RAG. Soy tu tutor IA y te acompañaré en este viaje de aprendizaje."
   });
 
   const getStudentId = () => {
@@ -90,7 +92,22 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
     }
 
     if (currentIndex < sections.length - 1) {
-      setCurrentSection(sections[currentIndex + 1]);
+      const next = sections[currentIndex + 1];
+      setCurrentSection(next);
+
+      // Narrative Bridges
+      if (next === 'objectives') {
+        setAvatarState({ emotion: 'happy', message: "Antes de actuar, definamos qué metas y competencias vas a adquirir hoy.", isVisible: true });
+      } else if (next === 'concepts') {
+        setAvatarState({ emotion: 'thinking', message: "¡Excelente! Ahora veamos los fundamentos teóricos que necesitas dominar.", isVisible: true });
+      } else if (next === 'activity') {
+        setAvatarState({ emotion: 'starstruck', message: "¡Base teórica lista! Es hora de conocer tu gran desafío de hoy.", isVisible: true });
+      } else if (next === 'mission') {
+        setAvatarState({ emotion: 'neutral', message: "Este es el camino a seguir. Vamos paso a paso con tu Ruta de Misión.", isVisible: true });
+      } else if (next === 'evidence') {
+        setAvatarState({ emotion: 'happy', message: "¡Lo lograste! Ahora sube tu evidencia final para consolidar tu aprendizaje.", isVisible: true });
+      }
+
       return { handled: true };
     }
     return { handled: false };
@@ -363,6 +380,62 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-slate-50/50">
+      {/* Global Phase Navigator */}
+      <AnimatePresence>
+        {currentSection !== 'intro' && currentSection !== 'completion' && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="w-full bg-white border-b border-slate-100 px-6 py-4 shrink-0 z-50 shadow-sm"
+          >
+            <div className="max-w-5xl mx-auto flex items-center justify-between">
+              {[
+                { label: 'Preparación', sections: ['objectives'], icon: Target },
+                { label: 'Teoría', sections: ['concepts'], icon: BookOpen },
+                { label: 'Acción', sections: ['activity', 'mission', 'hints'], icon: Play },
+                { label: 'Finalización', sections: ['evidence'], icon: CheckCircle2 }
+              ].map((phase, idx, arr) => {
+                const isActive = phase.sections.includes(currentSection);
+                const isPast = arr.slice(0, idx).some(p => p.sections.includes(currentSection)) ||
+                  (!isActive && arr.slice(idx + 1).some(p => p.sections.includes(currentSection)));
+                const PhaseIcon = phase.icon;
+
+                return (
+                  <div key={idx} className="flex items-center flex-1 last:flex-none">
+                    <div className="flex flex-col items-center gap-1.5 relative group">
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 border-2",
+                        isActive ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110" :
+                          isPast ? "bg-green-500 border-green-500 text-white" : "bg-white border-slate-200 text-slate-400"
+                      )}>
+                        {isPast ? <CheckCircle2 className="w-5 h-5" /> : <PhaseIcon className="w-5 h-5" />}
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-black uppercase tracking-widest transition-colors duration-500",
+                        isActive ? "text-indigo-600" : isPast ? "text-green-600" : "text-slate-400"
+                      )}>
+                        {phase.label}
+                      </span>
+                    </div>
+                    {idx < arr.length - 1 && (
+                      <div className="flex-1 mx-4 h-0.5 bg-slate-100 relative">
+                        <motion.div
+                          className="absolute inset-0 bg-green-500 origin-left"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: isPast || isActive ? 1 : 0 }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="w-full flex-1 min-h-0 relative">
         <AnimatePresence mode="wait">
           {currentSection === 'intro' && (
@@ -387,7 +460,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
               <div className="max-w-5xl mx-auto space-y-8 pb-20">
                 <div className="text-center mb-8">
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-block">
-                    <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">🎯 Objetivo del RAG</h2>
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">🎯 Metas de Aprendizaje</h2>
                   </motion.div>
                   <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">{data.objetivoAprendizaje}</p>
                 </div>
@@ -397,7 +470,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
                     <CardHeader>
                       <CardTitle className="text-indigo-900 text-2xl flex items-center gap-3">
                         <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><Sparkles className="w-6 h-6" /></div>
-                        Competencias Técnicas
+                        Competencias que vas a adquirir
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -413,7 +486,7 @@ export default forwardRef(function RagViewer({ levelId, onAddPoints, hasAttended
                     <CardHeader>
                       <CardTitle className="text-purple-900 text-2xl flex items-center gap-3">
                         <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Target className="w-6 h-6" /></div>
-                        Competencias Blandas
+                        Metas de Crecimiento
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

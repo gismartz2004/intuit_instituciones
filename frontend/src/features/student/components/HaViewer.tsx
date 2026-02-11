@@ -4,7 +4,7 @@ import { studentApi } from "@/features/student/services/student.api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, Target, Lightbulb, Trophy, FileText, MessageSquare, ListTodo, Circle, ArrowRight, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, CheckCircle2, Target, Lightbulb, Trophy, FileText, MessageSquare, ListTodo, Circle, ArrowRight, Sparkles, ChevronLeft, ChevronRight, BookOpen, Play } from "lucide-react";
 import AvatarGuide from "./AvatarGuide";
 import { AvatarState } from "@/types/gamification";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
     const [avatarState, setAvatarState] = useState<AvatarState>({
         isVisible: true,
         emotion: 'thinking',
-        message: "¡Bienvenido al Hito de Aprendizaje! Aquí demostrarás todo lo que has aprendido."
+        message: "¡Bienvenido al Hito de Aprendizaje! Soy tu tutor IA y aquí consolidaremos todo lo que has progresado."
     });
 
     // Proactive hints on idle
@@ -150,30 +150,29 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
             switch (nextSection) {
                 case 'context':
                     setAvatarState({
-                        emotion: 'neutral',
-                        message: "Revisemos el contexto: el concepto clave y lo que debes lograr.",
+                        emotion: 'happy',
+                        message: "Antes de empezar, veamos las metas de aprendizaje y las competencias que vas a adquirir hoy.",
                         isVisible: true
                     });
                     break;
                 case 'evidence':
                     setAvatarState({
                         emotion: 'happy',
-                        message: "Ahora es momento de subir tu evidencia. ¡Muestra lo que has creado!",
+                        message: "¡Fundamentos claros! Es hora de pasar a la acción y subir tu evidencia maestra.",
                         isVisible: true
                     });
                     break;
                 case 'reflection':
                     setAvatarState({
                         emotion: 'thinking',
-                        message: "Por último, reflexiona sobre tu aprendizaje. ¿Qué aprendiste?",
+                        message: "Gran trabajo. Ahora, reflexionemos sobre lo que este hito significa para tu camino de aprendizaje.",
                         isVisible: true
                     });
                     break;
                 case 'completion':
-                    // Points are now handled by the backend on completion
                     setAvatarState({
                         emotion: 'celebrating',
-                        message: "¡Felicitaciones! Has completado el Hito de Aprendizaje.",
+                        message: "¡Misión cumplida! Has demostrado un gran dominio. ¡Sigue así!",
                         isVisible: true
                     });
                     break;
@@ -301,42 +300,65 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
 
     return (
         <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative px-4 overflow-hidden">
-            <ScrollArea ref={scrollAreaRef} className="flex-1 w-full h-full">
-                <div className="pb-8 py-4">
+            {/* Global Phase Navigator */}
+            <AnimatePresence>
+                {currentSection !== 'intro' && currentSection !== 'completion' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="w-full bg-white border-b border-slate-100 py-4 shrink-0 z-50 mb-4"
+                    >
+                        <div className="flex items-center justify-between max-w-3xl mx-auto">
+                            {[
+                                { label: 'Preparación', sections: ['context'], icon: Target },
+                                { label: 'Acción', sections: ['evidence'], icon: Play },
+                                { label: 'Reflexión', sections: ['reflection'], icon: MessageSquare },
+                                { label: 'Finalización', sections: ['completion'], icon: CheckCircle2 }
+                            ].map((phase, idx, arr) => {
+                                const isActive = phase.sections.includes(currentSection);
+                                const isPast = arr.slice(0, idx).some(p => p.sections.includes(currentSection)) ||
+                                    (!isActive && arr.slice(idx + 1).some(p => p.sections.includes(currentSection)));
+                                const PhaseIcon = phase.icon;
 
-                    {/* Section Progress Indicator */}
-                    <div className="flex items-center justify-center gap-1 mb-4">
-                        {['intro', 'context', 'evidence', 'reflection', 'completion'].map((section, idx) => (
-                            <div key={section} className="flex items-center">
-                                <motion.div
-                                    initial={false}
-                                    animate={{
-                                        scale: currentSection === section ? 1.2 : 1,
-                                        backgroundColor: currentSection === section
-                                            ? "#9333ea"
-                                            : ['intro', 'context', 'evidence', 'reflection', 'completion'].indexOf(currentSection) > idx
-                                                ? "#22c55e"
-                                                : "#e2e8f0"
-                                    }}
-                                    className={cn(
-                                        "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all text-white",
-                                        currentSection === section ? "shadow-lg shadow-purple-200" : ""
-                                    )}
-                                >
-                                    {idx + 1}
-                                </motion.div>
-                                {idx < 4 && (
-                                    <div className="w-6 h-0.5 bg-slate-100 mx-0.5">
-                                        <motion.div
-                                            initial={{ width: "0%" }}
-                                            animate={{ width: ['intro', 'context', 'evidence', 'reflection', 'completion'].indexOf(currentSection) > idx ? "100%" : "0%" }}
-                                            className="h-full bg-green-500"
-                                        />
+                                return (
+                                    <div key={idx} className="flex items-center flex-1 last:flex-none">
+                                        <div className="flex flex-col items-center gap-1.5 relative group">
+                                            <div className={cn(
+                                                "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-500 border-2",
+                                                isActive ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-200 scale-110" :
+                                                    isPast ? "bg-green-500 border-green-500 text-white" : "bg-white border-slate-200 text-slate-400"
+                                            )}>
+                                                {isPast ? <CheckCircle2 className="w-4 h-4" /> : <PhaseIcon className="w-4 h-4" />}
+                                            </div>
+                                            <span className={cn(
+                                                "text-[9px] font-black uppercase tracking-widest transition-colors duration-500",
+                                                isActive ? "text-purple-600" : isPast ? "text-green-600" : "text-slate-400"
+                                            )}>
+                                                {phase.label}
+                                            </span>
+                                        </div>
+                                        {idx < arr.length - 1 && (
+                                            <div className="flex-1 mx-2 h-0.5 bg-slate-100 relative">
+                                                <motion.div
+                                                    className="absolute inset-0 bg-green-500 origin-left"
+                                                    initial={{ scaleX: 0 }}
+                                                    animate={{ scaleX: isPast || isActive ? 1 : 0 }}
+                                                    transition={{ duration: 0.5 }}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <ScrollArea ref={scrollAreaRef} className="flex-1 w-full h-full">
+                <div className="pb-8 py-2">
+
 
                     {/* Avatar Guide Fixed Position - Removed duplicate from top, kept bottom one but ensuring only one renders */}
 
@@ -359,14 +381,14 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                                 <Trophy className="w-16 h-16 text-yellow-300 drop-shadow-md" />
                                             </div>
                                             <div>
-                                                <Badge variant="outline" className="mb-3 border-white/40 text-white bg-white/10 text-sm px-4 py-1">
-                                                    🚀 Desafío Final: Hito de Aprendizaje
+                                                <Badge variant="outline" className="mb-3 border-white/40 text-white bg-white/10 text-sm px-4 py-1 uppercase font-black tracking-widest">
+                                                    🚀 El Hito: Tu Consolidación Final
                                                 </Badge>
                                                 <h1 className="text-4xl font-black mb-4 tracking-tight">
                                                     {haData.fase || "Fase de Aprendizaje"}
                                                 </h1>
                                                 <div className="bg-white/10 rounded-xl p-4 max-w-2xl mx-auto border border-white/10">
-                                                    <p className="text-sm font-bold text-cyan-200 uppercase tracking-wider mb-1">Objetivo del Desafío</p>
+                                                    <p className="text-sm font-bold text-cyan-200 uppercase tracking-wider mb-1">Metas de Aprendizaje</p>
                                                     <p className="text-lg text-white leading-relaxed">
                                                         "{haData.objetivoSemana}"
                                                     </p>
@@ -398,8 +420,8 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                     className="space-y-6"
                                 >
                                     <div className="text-center mb-2">
-                                        <h2 className="text-3xl font-black text-slate-800">🎯 Contexto del Desafío</h2>
-                                        <p className="text-slate-500">Antes de empezar, asegúrate de tener claros los fundamentos.</p>
+                                        <h2 className="text-3xl font-black text-slate-800">🎯 Fase 1: Fundamentos</h2>
+                                        <p className="text-slate-500">Asegúrate de dominar estos pilares antes de demostrar tu talento.</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -439,7 +461,7 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                                         <div className="p-3 bg-white/80 rounded-xl shadow-sm group-hover:scale-110 transition-transform text-emerald-500">
                                                             <Target className="w-6 h-6" />
                                                         </div>
-                                                        Resultado Esperado
+                                                        Competencias que vas a adquirir
                                                     </CardTitle>
                                                 </CardHeader>
                                                 <CardContent className="p-6 pt-4 relative z-10">
@@ -466,8 +488,8 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                                             <ListTodo className="w-6 h-6" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-black text-slate-800 text-lg">🛠 Pasos para Completar</h3>
-                                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Sigue esta guía</p>
+                                                            <h3 className="font-black text-slate-800 text-lg">🛠 Tu Camino Resolutivo</h3>
+                                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Pasos Críticos</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -699,7 +721,7 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                                 </div>
                                                 <div className="space-y-6 flex-1">
                                                     <div>
-                                                        <Badge className="bg-indigo-600 text-white mb-4 px-4 py-1 rounded-full text-xs font-black uppercase tracking-tighter shadow-md">Reflexión Final</Badge>
+                                                        <Badge className="bg-indigo-600 text-white mb-4 px-4 py-1 rounded-full text-xs font-black uppercase tracking-tighter shadow-md">Consolidación de Aprendizaje</Badge>
                                                         <h4 className="font-black text-slate-800 text-3xl leading-tight">
                                                             {haData.preguntaReflexion}
                                                         </h4>

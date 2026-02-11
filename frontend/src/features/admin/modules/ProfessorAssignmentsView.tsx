@@ -179,14 +179,19 @@ export function ProfessorAssignmentsView() {
                                 key={mod.id}
                                 onClick={() => setSelectedModule(mod)}
                                 className={`w-full text-left p-4 rounded-xl transition-all border-2 ${selectedModule?.id === mod.id
-                                        ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-200"
-                                        : "bg-white text-slate-600 border-transparent hover:border-slate-100 hover:bg-slate-50"
+                                    ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-200"
+                                    : "bg-white text-slate-600 border-transparent hover:border-slate-100 hover:bg-slate-50"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
                                     <BookOpen className="w-4 h-4" />
                                     <div className="flex-1 min-w-0">
                                         <div className="font-bold truncate">{mod.nombreModulo}</div>
+                                        {mod.professorCount > 0 && (
+                                            <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${selectedModule?.id === mod.id ? 'text-purple-100' : 'text-purple-600'}`}>
+                                                {mod.professorCount} {mod.professorCount === 1 ? 'Docente' : 'Docentes'}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </button>

@@ -66,7 +66,7 @@ export class AdminService {
 
                 const studentCount = allAssignments.filter(a => a.estudianteId !== null).length;
 
-                // Multi-professor logic
+                // Multi-professor logic (Primary source)
                 const moduleProfessors = await this.db
                     .select({
                         id: schema.usuarios.id,
@@ -77,22 +77,16 @@ export class AdminService {
                     .innerJoin(schema.usuarios, eq(schema.moduloProfesores.profesorId, schema.usuarios.id))
                     .where(eq(schema.moduloProfesores.moduloId, mod.id));
 
-                let professorName = null;
-                if (mod.profesorId) {
-                    const [prof] = await this.db
-                        .select({ nombre: schema.usuarios.nombre })
-                        .from(schema.usuarios)
-                        .where(eq(schema.usuarios.id, mod.profesorId));
-                    professorName = prof?.nombre || null;
-                }
+                // Determine primary professor name for display
+                const professorName = moduleProfessors.length > 0 ? moduleProfessors[0].nombre : null;
 
                 return {
                     ...mod,
                     levelCount: levels.length,
                     studentCount: studentCount,
                     professorName: professorName,
-                    professors: moduleProfessors, // List of all assigned professors
-                    professorCount: moduleProfessors.length + (mod.profesorId ? 1 : 0),
+                    professors: moduleProfessors,
+                    professorCount: moduleProfessors.length,
                 };
             }),
         );

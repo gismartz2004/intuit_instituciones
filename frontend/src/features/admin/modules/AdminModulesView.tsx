@@ -61,9 +61,19 @@ export function AdminModulesView({
                     <span className="text-slate-500 font-bold">Estudiantes</span>
                     <span className="text-slate-800 font-black">{module.studentCount}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-bold">Profesores</span>
-                    <span className="text-slate-800 font-black">{module.professorCount}</span>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <span className="text-slate-500 font-bold">Docentes</span>
+                    <div className="flex flex-wrap gap-1">
+                      {module.professors && module.professors.length > 0 ? (
+                        module.professors.map((p, idx) => (
+                          <Badge key={idx} variant="secondary" className="bg-slate-100 text-slate-700 text-[10px] font-bold py-0 h-5">
+                            {p.nombre}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 italic text-[10px]">Sin asignar</span>
+                      )}
+                    </div>
                   </div>
 
                   <Button

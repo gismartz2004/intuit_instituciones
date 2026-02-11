@@ -64,7 +64,7 @@ export const IntroSplash = ({
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-6">
                         <Sparkles className="w-4 h-4 text-yellow-300" />
-                        <span className="text-sm font-medium tracking-wide text-blue-100">GUÍA DE APRENDIZAJE INTERACTIVA</span>
+                        <span className="text-sm font-medium tracking-wide text-blue-100">TU CAMINO DE APRENDIZAJE COMIENZA AQUÍ</span>
                     </div>
                     <h1 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight mb-4 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200 leading-tight">
                         {title}
@@ -148,9 +148,9 @@ export const ActivityIntro = ({
                 transition={{ delay: 0.3 }}
                 className="relative z-10 max-w-4xl"
             >
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-green-700 font-bold text-sm tracking-wider uppercase mb-6 border border-green-200">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-green-700 font-bold text-sm tracking-wider uppercase mb-6 border border-green-200 shadow-sm">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Desafío Autónomo
+                    Fase de Acción: El Desafío
                 </div>
 
                 <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-6 leading-tight tracking-tight">
@@ -207,7 +207,7 @@ export const HintDeck = ({
                         <div className="p-2 bg-indigo-100 rounded-lg">
                             <Sparkles className="w-5 h-5 text-indigo-600" />
                         </div>
-                        <span className="text-indigo-600 font-bold tracking-wide text-sm uppercase">Ayudas Progresivas</span>
+                        <span className="text-indigo-600 font-bold tracking-wide text-sm uppercase">Refuerzos para tu misión</span>
                     </div>
                     <h3 className="text-2xl font-bold text-slate-800">
                         ¿Necesitas una pista?
@@ -248,13 +248,13 @@ export const HintDeck = ({
                                                 </div>
                                             </div>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+                                        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-4 overflow-hidden border-0 bg-transparent shadow-none focus:outline-none m-auto flex items-center justify-center">
                                             <DialogHeader className="sr-only">
                                                 <DialogTitle>Imagen de Pista</DialogTitle>
                                             </DialogHeader>
                                             <img
-                                                src={hints[currentIndex].imagenUrl}
-                                                className="w-full h-full object-contain rounded-xl"
+                                                src={hints[currentIndex]?.imagenUrl}
+                                                className="max-w-[85vw] max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl"
                                                 alt="Pista Fullscreen"
                                             />
                                         </DialogContent>
@@ -372,7 +372,7 @@ export const ConceptDeck = ({
                             <BookOpen className="w-6 h-6 text-indigo-600" />
                         </div>
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700">
-                            Conceptos Clave
+                            Fase de Fundamentos: Conceptos Clave
                         </span>
                     </h3>
                     <p className="text-base text-slate-500 max-w-2xl leading-relaxed">
@@ -450,13 +450,13 @@ export const ConceptDeck = ({
                                                 </div>
                                             </div>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+                                        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-4 overflow-hidden border-0 bg-transparent shadow-none focus:outline-none m-auto flex items-center justify-center">
                                             <DialogHeader className="sr-only">
                                                 <DialogTitle>Concepto: {concepts[currentIndex].titulo}</DialogTitle>
                                             </DialogHeader>
                                             <img
                                                 src={concepts[currentIndex].imagenUrl}
-                                                className="w-full h-full object-contain rounded-xl"
+                                                className="max-w-[85vw] max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl"
                                                 alt={concepts[currentIndex].titulo}
                                             />
                                         </DialogContent>
@@ -543,7 +543,7 @@ export const MissionTimeline = ({
             <div className="w-1/4 shrink-0 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col">
                 <div className="p-4 bg-slate-50 border-b border-slate-100">
                     <h3 className="font-bold text-slate-800 text-md flex items-center gap-2">
-                        📍 Ruta de Misión
+                        📍 Tu Camino Resolutivo
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
                         Sigue estos pasos secuenciales para completar el desafío.
@@ -651,13 +651,13 @@ export const MissionTimeline = ({
                                                 </div>
                                             </div>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+                                        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-4 overflow-hidden border-0 bg-transparent shadow-none focus:outline-none m-auto flex items-center justify-center">
                                             <DialogHeader className="sr-only">
                                                 <DialogTitle>Imagen del Paso</DialogTitle>
                                             </DialogHeader>
                                             <img
                                                 src={steps[currentStepIndex].imagenUrl}
-                                                className="w-full h-full object-contain bg-white rounded-xl"
+                                                className="max-w-[85vw] max-h-[85vh] w-auto h-auto object-contain bg-white rounded-xl shadow-2xl"
                                                 alt="Paso Fullscreen"
                                             />
                                         </DialogContent>
