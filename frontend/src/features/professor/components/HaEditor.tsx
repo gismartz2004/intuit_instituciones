@@ -39,7 +39,7 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
         evidenciaTipos: [] as string[] // Checkbox list
     });
 
-    const [pasosGuiados, setPasosGuiados] = useState<{ paso: string; imagenUrl?: string }[]>([{ paso: "" }]);
+    const [pasosGuiados, setPasosGuiados] = useState<{ paso: string; descripcion?: string; imagenUrl?: string }[]>([{ paso: "", descripcion: "" }]);
 
     // Dynamic Sections State
     const [dynamicSections, setDynamicSections] = useState<DynamicSection[]>([]);
@@ -63,7 +63,7 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
 
                 const pasosGuiadosRaw = initialData.pasosGuiados
                     ? (typeof initialData.pasosGuiados === 'string' ? JSON.parse(initialData.pasosGuiados) : initialData.pasosGuiados)
-                    : [{ paso: "" }];
+                    : [{ paso: "", descripcion: "" }];
 
                 const seccionesDinamicasRaw = initialData.seccionesDinamicas
                     ? (typeof initialData.seccionesDinamicas === 'string' ? JSON.parse(initialData.seccionesDinamicas) : initialData.seccionesDinamicas)
@@ -282,19 +282,34 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                                                 newItems[index].paso = e.target.value;
                                                 setPasosGuiados(newItems);
                                             }}
-                                            placeholder={`Paso ${index + 1}`}
+                                            placeholder={`Paso ${index + 1}: Título o acción principal`}
                                         />
                                         <Button
                                             variant="outline"
-                                            size="icon"
+                                            size="sm"
                                             className={(item as any).imagenUrl ? "text-blue-600 border-blue-200" : "text-slate-400"}
                                             onClick={() => openPicker('step', index)}
                                         >
-                                            <ImageIcon className="w-4 h-4" />
+                                            <ImageIcon className="w-4 h-4 mr-2" />
+                                            {item.imagenUrl ? "Cambiar Imagen" : "Imagen"}
                                         </Button>
                                         <Button variant="ghost" size="icon" onClick={() => setPasosGuiados(pasosGuiados.filter((_, i) => i !== index))}>
                                             <Trash2 className="w-4 h-4 text-slate-400" />
                                         </Button>
+                                    </div>
+
+                                    <div className="ml-6 space-y-1.5">
+                                        <Label className="text-[9px] uppercase font-black tracking-widest text-slate-400">Descripción detallada del paso</Label>
+                                        <Textarea
+                                            value={item.descripcion}
+                                            onChange={(e) => {
+                                                const newItems = [...pasosGuiados];
+                                                newItems[index].descripcion = e.target.value;
+                                                setPasosGuiados(newItems);
+                                            }}
+                                            placeholder="Explica qué debe hacer el alumno..."
+                                            className="bg-white text-sm min-h-[60px]"
+                                        />
                                     </div>
                                     {item.imagenUrl && (
                                         <div className="relative w-40 aspect-video rounded border bg-white overflow-hidden ml-6 group shrink-0">
@@ -321,7 +336,7 @@ export default function HaEditor({ levelId, moduleId, initialData, onClose }: Ha
                                     )}
                                 </div>
                             ))}
-                            <Button size="sm" variant="outline" onClick={() => setPasosGuiados([...pasosGuiados, { paso: "" }])}>
+                            <Button size="sm" variant="outline" onClick={() => setPasosGuiados([...pasosGuiados, { paso: "", descripcion: "" }])}>
                                 <Plus className="w-4 h-4 mr-2" /> Agregar Paso
                             </Button>
                         </CardContent>

@@ -50,6 +50,13 @@
       "when": 1770431700797,
       "tag": "0006_add_profesor_id_to_modulos",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770848107350,
+      "tag": "0007_hard_venom",
+      "breakpoints": true
     }
   ]
 }

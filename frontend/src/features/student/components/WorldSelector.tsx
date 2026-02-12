@@ -23,7 +23,9 @@ import {
     Gamepad2,
     Music,
     MousePointer2,
-    Target
+    Target,
+    Code2,
+    Cpu
 } from "lucide-react";
 import { studentApi } from "../services/student.api";
 import { cn } from "@/lib/utils";
@@ -74,6 +76,75 @@ function EarthModel({ color, hovered }: { color: string; hovered: boolean }) {
         console.error("Failed to load Earth.glb, using fallback sphere:", error);
         return <EarthFallback color={color} hovered={hovered} />;
     }
+}
+
+function CsModel({ color, hovered }: { color: string; hovered: boolean }) {
+    return (
+        <group>
+            {/* Core Cube */}
+            <mesh>
+                <boxGeometry args={[6, 6, 6]} />
+                <meshStandardMaterial
+                    color={color}
+                    emissive={color}
+                    emissiveIntensity={hovered ? 0.8 : 0.4}
+                    transparent
+                    opacity={0.8}
+                    wireframe={!hovered}
+                />
+            </mesh>
+            {/* Inner Glitchy Cube */}
+            <mesh scale={0.7}>
+                <boxGeometry args={[6, 6, 6]} />
+                <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={hovered ? 1 : 0.5} />
+            </mesh>
+            {/* Spinning Rings/Data Segments */}
+            <group rotation={[Math.PI / 4, Math.PI / 4, 0]}>
+                <mesh>
+                    <torusGeometry args={[8, 0.1, 16, 100]} />
+                    <meshBasicMaterial color={color} transparent opacity={0.3} />
+                </mesh>
+            </group>
+        </group>
+    );
+}
+
+function MechatronicsModel({ color, hovered }: { color: string; hovered: boolean }) {
+    const gearRef = useRef<THREE.Group>(null!);
+    useFrame((state) => {
+        if (gearRef.current) {
+            gearRef.current.rotation.z += 0.01;
+            gearRef.current.rotation.x += 0.005;
+        }
+    });
+
+    return (
+        <group ref={gearRef}>
+            {/* Mechanical Core */}
+            <mesh>
+                <sphereGeometry args={[5, 16, 16]} />
+                <meshStandardMaterial
+                    color="#444444"
+                    metalness={1}
+                    roughness={0.2}
+                    emissive={color}
+                    emissiveIntensity={hovered ? 0.3 : 0.1}
+                />
+            </mesh>
+            {/* External Gear Teeth / Structure */}
+            {[0, 1, 2, 3].map((i) => (
+                <mesh key={i} rotation={[0, 0, (i * Math.PI) / 2]}>
+                    <boxGeometry args={[12, 1, 3]} />
+                    <meshStandardMaterial color="#666666" metalness={1} roughness={0.3} />
+                </mesh>
+            ))}
+            {/* Energy Ring */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[7, 0.2, 16, 100]} />
+                <meshStandardMaterial color={color} emissive={color} emissiveIntensity={hovered ? 1 : 0.5} />
+            </mesh>
+        </group>
+    );
 }
 
 /**
@@ -149,7 +220,7 @@ function CameraHandler({ activePosition }: { activePosition: [number, number, nu
     return null;
 }
 
-function Planet({ id, position, color, name, progress, onClick, index: idx, isActive }: any) {
+function Planet({ id, position, color, name, progress, onClick, index: idx, isActive, userSpecialization, especializacion }: any) {
     const groupRef = useRef<THREE.Group>(null!);
     const [hovered, setHovered] = useState(false);
 
@@ -195,10 +266,16 @@ function Planet({ id, position, color, name, progress, onClick, index: idx, isAc
                 />
             </mesh>
 
-            {/* Modelo Earth GLB */}
+            {/* Model Selection */}
             <group scale={isActive ? 1.4 : (hovered ? 1.15 : 1)} transition-all duration-500>
                 <Suspense fallback={<mesh><sphereGeometry args={[3, 16, 16]} /><meshStandardMaterial color={color} /></mesh>}>
-                    <EarthModel color={color} hovered={hovered || isActive} />
+                    {especializacion === 'cs' ? (
+                        <CsModel color={color} hovered={hovered || isActive} />
+                    ) : especializacion === 'mechatronics' ? (
+                        <MechatronicsModel color={color} hovered={hovered || isActive} />
+                    ) : (
+                        <EarthModel color={color} hovered={hovered || isActive} />
+                    )}
                 </Suspense>
 
                 {/* Aura de atmósfera sutil */}
@@ -252,9 +329,26 @@ function Planet({ id, position, color, name, progress, onClick, index: idx, isAc
                             <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Sector {idx + 1}</span>
                         </div>
 
-                        <h3 className="text-lg font-black text-white uppercase tracking-tight mb-4 leading-tight">
-                            {name}
-                        </h3>
+                        <div className="flex items-center gap-3 mb-4">
+                            {userSpecialization === "Ciencias Computacionales" && (
+                                <div className="p-2 bg-cyan-400/20 rounded-lg">
+                                    <Code2 className="w-5 h-5 text-cyan-400" />
+                                </div>
+                            )}
+                            {userSpecialization === "Mecatrónica" && (
+                                <div className="p-2 bg-orange-400/20 rounded-lg">
+                                    <Cpu className="w-5 h-5 text-orange-400" />
+                                </div>
+                            )}
+                            {userSpecialization === "Electrónica" && (
+                                <div className="p-2 bg-yellow-400/20 rounded-lg">
+                                    <Zap className="w-5 h-5 text-yellow-400" />
+                                </div>
+                            )}
+                            <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">
+                                {name}
+                            </h3>
+                        </div>
 
                         <div className="w-full space-y-3">
                             <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden p-[2px] border border-white/5">
@@ -290,7 +384,7 @@ function Planet({ id, position, color, name, progress, onClick, index: idx, isAc
     );
 }
 
-function Scene({ modules, activeId, setActiveId, onSelect, generalProgress }: any) {
+function Scene({ modules, activeId, setActiveId, onSelect, generalProgress, user }: any) {
     const planetPositions = useMemo(() => {
         const radius = 28;
         return modules.map((_: any, i: number) => {
@@ -347,6 +441,8 @@ function Scene({ modules, activeId, setActiveId, onSelect, generalProgress }: an
                         name={mod.nombreModulo}
                         progress={generalProgress?.moduleProgress?.find((p: any) => p.moduloId === mod.id)?.progressPercentage || 0}
                         isActive={activeId === mod.id}
+                        userSpecialization={user.especializacion}
+                        especializacion={mod.especializacion}
                         onClick={() => {
                             if (activeId === mod.id) onSelect(mod.id);
                             else setActiveId(mod.id);
@@ -495,6 +591,7 @@ export default function WorldSelector({ user }: WorldSelectorProps) {
                             setActiveId={setActiveId}
                             generalProgress={generalProgress}
                             onSelect={(id: any) => setLocation(`/dashboard/module/${id}`)}
+                            user={user}
                         />
                     </Suspense>
                 </Canvas>
@@ -527,6 +624,8 @@ interface WorldSelectorProps {
     user: {
         name: string;
         id: string;
+        role: string;
         avatar?: string;
+        especializacion?: string;
     };
 }

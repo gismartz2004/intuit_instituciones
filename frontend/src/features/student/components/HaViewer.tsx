@@ -25,6 +25,7 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
     const [currentSection, setCurrentSection] = useState<HaSection>('intro');
     const [evidenceFiles, setEvidenceFiles] = useState<{ type: string, file: File | null, url?: string }[]>([]);
     const [reflection, setReflection] = useState("");
+    const [expandedStepIndex, setExpandedStepIndex] = useState<number | null>(0); // Default first step open
 
     const getStudentId = () => {
         const userStr = localStorage.getItem('edu_user');
@@ -440,10 +441,19 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                                         Concepto Clave
                                                     </CardTitle>
                                                 </CardHeader>
-                                                <CardContent className="p-6 pt-4 relative z-10">
+                                                <CardContent className="p-6 pt-4 relative z-10 space-y-4">
                                                     <p className="text-slate-700 text-lg leading-relaxed whitespace-pre-line font-medium">
                                                         {haData.conceptoClave || "Sin concepto definido."}
                                                     </p>
+                                                    {haData.conceptoClaveImagen && (
+                                                        <div className="relative rounded-xl overflow-hidden border border-amber-100 bg-white/50 flex justify-center items-center max-h-[250px]">
+                                                            <img
+                                                                src={haData.conceptoClaveImagen}
+                                                                alt="Concepto Clave"
+                                                                className="max-w-full max-h-[250px] object-contain"
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </CardContent>
                                                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
                                             </Card>
@@ -495,20 +505,80 @@ export const HaViewer = forwardRef(({ levelId, onAddPoints, hasAttended }: HaVie
                                                 </div>
                                                 <CardContent className="p-6 bg-slate-50/30">
                                                     <div className="grid grid-cols-1 gap-3">
-                                                        {pasosGuiados.map((item: any, i: number) => (
-                                                            <motion.div
-                                                                key={i}
-                                                                initial={{ opacity: 0, x: -10 }}
-                                                                animate={{ opacity: 1, x: 0 }}
-                                                                transition={{ delay: 0.4 + (i * 0.1) }}
-                                                                className="flex items-center gap-4 p-4 rounded-xl bg-white shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all group"
-                                                            >
-                                                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
-                                                                    {i + 1}
-                                                                </div>
-                                                                <p className="text-slate-700 text-md font-medium">{item.paso}</p>
-                                                            </motion.div>
-                                                        ))}
+                                                        {pasosGuiados.map((item: any, i: number) => {
+                                                            const isExpanded = expandedStepIndex === i;
+                                                            return (
+                                                                <motion.div
+                                                                    key={i}
+                                                                    initial={{ opacity: 0, x: -10 }}
+                                                                    animate={{ opacity: 1, x: 0 }}
+                                                                    transition={{ delay: 0.4 + (i * 0.1) }}
+                                                                    className={cn(
+                                                                        "overflow-hidden rounded-2xl bg-white shadow-sm border transition-all duration-300",
+                                                                        isExpanded ? "ring-2 ring-blue-500/20 border-blue-200 shadow-md" : "border-slate-100 hover:border-blue-200"
+                                                                    )}
+                                                                >
+                                                                    {/* Step Header (Clickable) */}
+                                                                    <button
+                                                                        onClick={() => setExpandedStepIndex(isExpanded ? null : i)}
+                                                                        className="w-full flex items-center gap-4 p-5 text-left transition-colors"
+                                                                    >
+                                                                        <div className={cn(
+                                                                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-black shrink-0 transition-all duration-300 shadow-lg",
+                                                                            isExpanded ? "bg-blue-600 text-white shadow-blue-200 scale-110" : "bg-slate-100 text-slate-500 shadow-transparent"
+                                                                        )}>
+                                                                            {i + 1}
+                                                                        </div>
+                                                                        <p className={cn(
+                                                                            "text-lg font-black tracking-tight flex-1 transition-colors",
+                                                                            isExpanded ? "text-blue-600" : "text-slate-700"
+                                                                        )}>
+                                                                            {item.paso}
+                                                                        </p>
+                                                                        <motion.div
+                                                                            animate={{ rotate: isExpanded ? 90 : 0 }}
+                                                                            className="text-slate-300"
+                                                                        >
+                                                                            <ArrowRight className="w-5 h-5" />
+                                                                        </motion.div>
+                                                                    </button>
+
+                                                                    {/* Step Body (Expanded Content) */}
+                                                                    <AnimatePresence>
+                                                                        {isExpanded && (
+                                                                            <motion.div
+                                                                                initial={{ height: 0, opacity: 0 }}
+                                                                                animate={{ height: "auto", opacity: 1 }}
+                                                                                exit={{ height: 0, opacity: 0 }}
+                                                                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                                                            >
+                                                                                <div className="px-5 pb-6 pt-0 ml-14 space-y-4">
+                                                                                    {item.descripcion && (
+                                                                                        <p className="text-slate-600 leading-relaxed text-md font-medium border-l-2 border-blue-100 pl-4">
+                                                                                            {item.descripcion}
+                                                                                        </p>
+                                                                                    )}
+                                                                                    {item.imagenUrl && (
+                                                                                        <motion.div
+                                                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                                                            animate={{ opacity: 1, scale: 1 }}
+                                                                                            className="relative rounded-2xl overflow-hidden border border-slate-100 bg-slate-50/50 group flex justify-center items-center max-h-[350px]"
+                                                                                        >
+                                                                                            <img
+                                                                                                src={item.imagenUrl}
+                                                                                                alt={item.paso}
+                                                                                                className="max-w-full max-h-[350px] object-contain transition-transform duration-700 hover:scale-[1.02]"
+                                                                                            />
+                                                                                            <div className="absolute inset-0 bg-slate-900/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                                                                        </motion.div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </motion.div>
+                                                                        )}
+                                                                    </AnimatePresence>
+                                                                </motion.div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </CardContent>
                                             </Card>

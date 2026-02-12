@@ -17,6 +17,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PremiosModule } from './modules/premios/premios.module';
 import { AiModule } from './modules/ai/ai.module';
+import { SpecialistModule } from './modules/specialist/specialist.module';
+import { SpecialistProfessorModule } from './modules/specialist-professor/specialist-professor.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { AiModule } from './modules/ai/ai.module';
     NotificationsModule,
     PremiosModule,
     AiModule,
+    SpecialistModule,
+    SpecialistProfessorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

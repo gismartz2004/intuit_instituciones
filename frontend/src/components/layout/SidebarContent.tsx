@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import generatedImage from '@/assets/generated_images/arg_academy_logo.png';
 
-type Role = "student" | "admin" | "professor" | "superadmin";
+type Role = "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor";
 
 interface SidebarContentProps {
     currentRole: Role;

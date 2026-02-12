@@ -13,12 +13,13 @@ export interface LoginPayload {
 export interface LoginResponse {
   user: {
     id: number;
-    nombre: string;
+    nombre?: string;
     email: string;
-    roleId: number;
-    planId: number;
+    roleId?: number;
+    planId?: number;
     avatar?: string;
     onboardingCompleted?: boolean;
+    especializacion?: string;
   };
   access_token: string;
 }

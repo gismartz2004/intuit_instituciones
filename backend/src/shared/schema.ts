@@ -46,6 +46,7 @@ export const usuarios = pgTable('usuarios', {
   edad: integer('edad'),
   institucion: varchar('institucion', { length: 255 }),
   curso: varchar('curso', { length: 100 }),
+  especializacion: varchar('especializacion', { length: 100 }),
 });
 
 // 4. Tabla de Módulos
@@ -54,6 +55,8 @@ export const modulos = pgTable('modulos', {
   nombreModulo: varchar('nombre_modulo', { length: 100 }),
   duracionDias: integer('duracion_dias'),
   profesorId: integer('profesor_id').references(() => usuarios.id),
+  categoria: varchar('categoria', { length: 20 }).default('standard'), // 'standard' or 'specialization'
+  especializacion: varchar('especializacion', { length: 50 }), // 'cs', 'mechatronics'
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
@@ -272,6 +275,37 @@ export const plantillasPim = pgTable('plantillas_pim', {
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
+// 16.3 Plantillas BD (Bloque de Desarrollo)
+export const plantillasBd = pgTable('plantillas_bd', {
+  id: serial('id').primaryKey(),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+  titulo: varchar('titulo', { length: 255 }),
+  secciones: jsonb('secciones'),
+  impacto: jsonb('impacto'),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
+// 16.4 Plantillas IT (Iteración)
+export const plantillasIt = pgTable('plantillas_it', {
+  id: serial('id').primaryKey(),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+  titulo: varchar('titulo', { length: 255 }),
+  descripcion: text('descripcion'),
+  fases: jsonb('fases'),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
+// 16.5 Plantillas PIC (Proyecto de Innovación)
+export const plantillasPic = pgTable('plantillas_pic', {
+  id: serial('id').primaryKey(),
+  nivelId: integer('nivel_id').references(() => niveles.id),
+  titulo: varchar('titulo', { length: 255 }),
+  alcance: text('alcance'),
+  objetivos: jsonb('objetivos'),
+  entregables: jsonb('entregables'),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
+
 // 17. Logros (Achievements)
 export const logros = pgTable('logros', {
   id: serial('id').primaryKey(),
@@ -456,6 +490,9 @@ export const insertProgresoMisionSchema = createInsertSchema(progresoMisiones);
 export const insertPremioSchema = createInsertSchema(premios);
 export const insertAsistenciaSchema = createInsertSchema(asistencia);
 export const insertModuloProfesorSchema = createInsertSchema(moduloProfesores);
+export const insertPlantillaBdSchema = createInsertSchema(plantillasBd);
+export const insertPlantillaItSchema = createInsertSchema(plantillasIt);
+export const insertPlantillaPicSchema = createInsertSchema(plantillasPic);
 
 
 export type Logro = typeof logros.$inferSelect;
@@ -488,3 +525,10 @@ export type InsertAsistencia = z.infer<typeof insertAsistenciaSchema>;
 export type ModuloProfesor = typeof moduloProfesores.$inferSelect;
 export type InsertModuloProfesor = z.infer<typeof insertModuloProfesorSchema>;
 
+export type PlantillaBd = typeof plantillasBd.$inferSelect;
+export type InsertPlantillaBd = z.infer<typeof insertPlantillaBdSchema>;
+
+export type PlantillaIt = typeof plantillasIt.$inferSelect;
+export type InsertPlantillaIt = z.infer<typeof insertPlantillaItSchema>;
+
+export type PlantillaPic = typeof plantillasPic.$inferSelect;

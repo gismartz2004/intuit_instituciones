@@ -1,6 +1,6 @@
 import { SidebarContent } from "./SidebarContent";
 
-type Role = "student" | "admin" | "professor" | "superadmin";
+type Role = "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor";
 
 interface SidebarProps {
   currentRole: Role;

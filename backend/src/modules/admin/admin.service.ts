@@ -14,36 +14,49 @@ export class AdminService {
     ) { }
 
     /**
-     * Get all students in the system
+     * Get all students in the system (including specialists)
      */
     async getSystemStudents() {
-        return this.db
+        const students = await this.db
             .select({
                 id: schema.usuarios.id,
                 nombre: schema.usuarios.nombre,
                 email: schema.usuarios.email,
                 activo: schema.usuarios.activo,
                 planId: schema.usuarios.planId,
+                rol: schema.roles.nombreRol,
             })
             .from(schema.usuarios)
-            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
-            .where(eq(schema.roles.nombreRol, 'Estudiante'));
+            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id));
+
+        // Filter for student-type roles
+        return students.filter(s =>
+            s.rol === 'Estudiante' ||
+            s.rol === 'Especialista'
+        );
     }
 
     /**
-     * Get all professors in the system
+     * Get all professors in the system (including specialists)
      */
     async getSystemProfessors() {
-        return this.db
+        const professors = await this.db
             .select({
                 id: schema.usuarios.id,
                 nombre: schema.usuarios.nombre,
                 email: schema.usuarios.email,
                 activo: schema.usuarios.activo,
+                rol: schema.roles.nombreRol,
             })
             .from(schema.usuarios)
-            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id))
-            .where(eq(schema.roles.nombreRol, 'Profesor'));
+            .innerJoin(schema.roles, eq(schema.usuarios.roleId, schema.roles.id));
+
+        // Filter for professor-type roles
+        return professors.filter(p =>
+            p.rol === 'Profesor' ||
+            p.rol === 'Especialista' ||
+            p.rol === 'Profesor Especialista'
+        );
     }
 
     /**

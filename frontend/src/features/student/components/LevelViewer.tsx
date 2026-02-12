@@ -33,6 +33,9 @@ import HaViewer from "./HaViewer";
 import PimViewer from "./PimViewer";
 import EnhancedGamificationHud from "./EnhancedGamificationHud";
 import { GamificationState } from "@/types/gamification";
+import BdViewer from "@/features/specialist/components/BD/BdViewer";
+import ItViewer from "@/features/specialist/components/IT/ItViewer";
+import PicViewer from "@/features/specialist/components/PIC/PicViewer";
 
 interface Content {
   id: number;
@@ -47,9 +50,34 @@ interface Content {
 export default function LevelViewer() {
   const [match, params] = useRoute("/level/:levelId");
   const [, setLocation] = useLocation();
+
+  // Role-based redirection logic
+  useEffect(() => {
+    const userStr = localStorage.getItem('edu_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === "specialist" || user.role === "specialist_professor") {
+          // If specialists land here, they should be redirected to their technical content
+          // Specialists are now unified in LevelViewer, no redirection needed
+          // setLocation(`/specialist/bd/${levelId}`);
+        }
+      } catch (e) {
+        console.error("Error parsing user for redirection:", e);
+      }
+    }
+  }, [setLocation, match, params]);
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false); // Set to false initially as we don't fetch contents here anymore
-  const [viewMode, setViewMode] = useState<"rag" | "ha" | "pim">("rag");
+  const [loading, setLoading] = useState(false);
+
+  // Get user role for conditional logic
+  const user = (() => {
+    const userStr = localStorage.getItem('edu_user');
+    try { return userStr ? JSON.parse(userStr) : null; } catch { return null; }
+  })();
+  const isSpecialist = user?.role === "specialist" || user?.role === "specialist_professor";
+
+  const [viewMode, setViewMode] = useState<string>(isSpecialist ? "bd" : "rag");
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to collapsed for hover effect on desktop
 
@@ -66,11 +94,7 @@ export default function LevelViewer() {
   const [attendance, setAttendance] = useState<{ asistio: boolean; recuperada?: boolean; fecha: string | null } | null>(null);
 
   // Detailed Level Progress Status
-  const [detailedStatus, setDetailedStatus] = useState<{
-    rag: { status: 'completed' | 'pending' | 'missing' },
-    ha: { status: 'completed' | 'pending' },
-    pim: { status: 'completed' | 'pending' }
-  } | null>(null);
+  const [detailedStatus, setDetailedStatus] = useState<any | null>(null);
 
   const handleAddPoints = (amount: number, reason: string) => {
     setGameState(prev => ({
@@ -120,6 +144,17 @@ export default function LevelViewer() {
         ]);
         setAttendance(attendanceData);
         setDetailedStatus(statusData);
+
+        // Auto-select first available mode if current one is not in statusData
+        if (statusData) {
+          const availableModes = Object.entries(statusData)
+            .filter(([key, val]) => key !== 'attendance' && val !== null)
+            .map(([key]) => key);
+
+          if (availableModes.length > 0 && !statusData[viewMode]) {
+            setViewMode(availableModes[0]);
+          }
+        }
       } catch (error) {
         console.error("Error fetching attendance or status:", error);
       }
@@ -145,6 +180,9 @@ export default function LevelViewer() {
   const ragRef = useRef<any>(null);
   const haRef = useRef<any>(null);
   const pimRef = useRef<any>(null);
+  const bdRef = useRef<any>(null);
+  const itRef = useRef<any>(null);
+  const picRef = useRef<any>(null);
 
   const [moduleLevels, setModuleLevels] = useState<any[]>([]);
   const [currentLevelData, setCurrentLevelData] = useState<any>(null);
@@ -176,27 +214,25 @@ export default function LevelViewer() {
   }, [levelId]);
 
   const handlePrev = () => {
-    if (viewMode === 'rag' && ragRef.current) {
-      const result = ragRef.current.goPrev();
+    const modeRefs: Record<string, React.RefObject<any>> = {
+      rag: ragRef,
+      ha: haRef,
+      pim: pimRef,
+      bd: bdRef,
+      it: itRef,
+      pic: picRef
+    };
+
+    if (modeRefs[viewMode]?.current) {
+      const result = modeRefs[viewMode].current.goPrev();
       if (result?.handled) return;
     }
 
-    if (viewMode === 'ha' && haRef.current) {
-      const result = haRef.current.goPrev();
-      if (result?.handled) return;
-    }
-
-    if (viewMode === 'pim' && pimRef.current) {
-      const result = pimRef.current.goPrev();
-      if (result?.handled) return;
-    }
-
-    // Navigating between modes
-    if (viewMode === 'pim') {
-      setViewMode('ha');
-    } else if (viewMode === 'ha') {
-      setViewMode('rag');
-    } else if (viewMode === 'rag') {
+    // Navigating between available modes in reverse
+    const currentIndexInMenu = menuItems.findIndex(m => m.id === viewMode);
+    if (currentIndexInMenu > 0) {
+      setViewMode(menuItems[currentIndexInMenu - 1].id);
+    } else {
       // Option: Go to previous level if available
       const currentIndex = moduleLevels.findIndex(l => l.id === levelId);
       if (currentIndex > 0) {
@@ -206,27 +242,25 @@ export default function LevelViewer() {
   };
 
   const handleNext = () => {
-    if (viewMode === 'rag' && ragRef.current) {
-      const result = ragRef.current.goNext();
+    const modeRefs: Record<string, React.RefObject<any>> = {
+      rag: ragRef,
+      ha: haRef,
+      pim: pimRef,
+      bd: bdRef,
+      it: itRef,
+      pic: picRef
+    };
+
+    if (modeRefs[viewMode]?.current) {
+      const result = modeRefs[viewMode].current.goNext();
       if (result?.handled) return;
     }
 
-    if (viewMode === 'ha' && haRef.current) {
-      const result = haRef.current.goNext();
-      if (result?.handled) return;
-    }
-
-    if (viewMode === 'pim' && pimRef.current) {
-      const result = pimRef.current.goNext();
-      if (result?.handled) return;
-    }
-
-    // Navigating between modes
-    if (viewMode === 'rag') {
-      setViewMode('ha');
-    } else if (viewMode === 'ha') {
-      setViewMode('pim');
-    } else if (viewMode === 'pim') {
+    // Navigating between available modes
+    const currentIndexInMenu = menuItems.findIndex(m => m.id === viewMode);
+    if (currentIndexInMenu < menuItems.length - 1) {
+      setViewMode(menuItems[currentIndexInMenu + 1].id);
+    } else {
       // Option: Go to next level if available and unlocked
       const currentIndex = moduleLevels.findIndex(l => l.id === levelId);
       if (currentIndex < moduleLevels.length - 1) {
@@ -240,20 +274,28 @@ export default function LevelViewer() {
     }
   };
 
-  const getRagLabel = () => {
-    return 'Guía RAG';
-  };
-
   const menuItems = [
-    { id: 'rag', label: getRagLabel(), shortLabel: 'RAG', color: 'text-cyan-400' },
+    { id: 'rag', label: 'Guía RAG', shortLabel: 'RAG', color: 'text-cyan-400' },
     { id: 'ha', label: 'Hito HA', shortLabel: 'HA', color: 'text-purple-400' },
     { id: 'pim', label: 'Proyecto PIM', shortLabel: 'PIM', color: 'text-indigo-400' },
-  ];
+    { id: 'bd', label: 'Bloque Desarrollo', shortLabel: 'BD', color: 'text-cyan-500' },
+    { id: 'it', label: 'Iteración', shortLabel: 'IT', color: 'text-violet-500' },
+    { id: 'pic', label: 'Innovación', shortLabel: 'PIC', color: 'text-emerald-500' },
+  ].filter(item => {
+    if (isSpecialist) {
+      // Specialists see their specific technical options
+      return ['bd', 'it', 'pic'].includes(item.id);
+    }
+    return detailedStatus && detailedStatus[item.id] !== null;
+  });
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50">Cargando...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex overflow-hidden font-sans">
+    <div className={cn(
+      "min-h-screen flex overflow-hidden font-sans transition-colors duration-500",
+      isSpecialist ? "bg-[#020617]" : "bg-slate-50"
+    )}>
 
       {/* SIDEBAR - Ultra Modern Fixed with Hover */}
       <motion.aside
@@ -427,22 +469,38 @@ export default function LevelViewer() {
       {/* MAIN CONTENT AREA */}
       <main
         className={cn(
-          "flex-1 flex flex-col h-screen overflow-hidden relative bg-slate-50 transition-all duration-500",
-          !isMobile && (isSidebarOpen ? "pl-[300px]" : "pl-[88px]")
+          "flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-500",
+          !isMobile && (isSidebarOpen ? "pl-[300px]" : "pl-[88px]"),
+          isSpecialist ? "bg-[#020617]" : "bg-slate-50"
         )}
       >
 
         {/* Top Bar for Gamification HUD */}
-        <header className="h-24 flex-shrink-0 px-24 flex items-center justify-between bg-white border-b border-slate-200 z-30 shadow-sm relative">
+        <header className={cn(
+          "h-24 flex-shrink-0 px-24 flex items-center justify-between border-b z-30 shadow-sm relative transition-colors duration-500",
+          isSpecialist ? "bg-[#0a0f1d] border-white/5" : "bg-white border-slate-200"
+        )}>
           <div className="flex items-center gap-8">
-            <div className="flex flex-col">
-              <Badge variant="outline" className="w-fit bg-slate-50 text-slate-500 border-slate-200 px-2 py-0.5 text-[10px] mb-1 font-black uppercase">
-                Misión {levelId}
-              </Badge>
-              <h2 className="font-black text-slate-800 text-xl tracking-tight">
-                {menuItems.find(i => i.id === viewMode)?.label || "Módulo"}
-              </h2>
-            </div>
+            <h2 className={cn(
+              "font-black text-xl tracking-tight uppercase italic",
+              isSpecialist ? "text-white" : "text-slate-800"
+            )}>
+              {menuItems.find(i => i.id === viewMode)?.label || "Módulo"}
+            </h2>
+
+            {isSpecialist && (
+              <div className="flex items-center gap-6 ml-6 pl-6 border-l border-white/10">
+                <div className="text-right">
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Paso Actual</p>
+                  <p className="text-lg font-black text-white italic">
+                    {viewMode === 'bd' ? (bdRef.current?.getCurrentStep?.() || 1) :
+                      viewMode === 'it' ? (itRef.current?.getCurrentStep?.() || 1) :
+                        (picRef.current?.getCurrentStep?.() || 1)} / {viewMode === 'bd' ? 12 : 10}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {attendance?.asistio && (
               <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
                 <Target className="w-3 h-3 mr-1" /> ASISTENCIA REGISTRADA
@@ -462,8 +520,10 @@ export default function LevelViewer() {
           <EnhancedGamificationHud state={gameState} className="self-start mt-4" />
         </header>
 
-        {/* Main Content Fixed Area */}
-        <div className="flex-1 overflow-hidden relative text-slate-900 w-full flex bg-slate-50/50 h-[calc(100vh-96px)]">
+        <div className={cn(
+          "flex-1 overflow-hidden relative w-full flex h-[calc(100vh-96px)] transition-colors duration-500",
+          isSpecialist ? "bg-[#020617]" : "bg-slate-50/50"
+        )}>
           {/* Left Navigation Button */}
           <div className="hidden md:flex items-center px-4 z-40">
             <Button
@@ -490,6 +550,9 @@ export default function LevelViewer() {
                 {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
                 {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
                 {viewMode === 'pim' && <PimViewer ref={pimRef} levelId={levelId} />}
+                {viewMode === 'bd' && <BdViewer ref={bdRef} levelId={levelId} />}
+                {viewMode === 'it' && <ItViewer ref={itRef} levelId={levelId} />}
+                {viewMode === 'pic' && <PicViewer ref={picRef} levelId={levelId} />}
               </motion.div>
             </AnimatePresence>
           </div>

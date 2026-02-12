@@ -546,7 +546,7 @@ export function UserManagementView() {
                         </Button>
                       </div>
                     </TableCell>
-                    </TableRow>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -773,6 +773,8 @@ export function UserManagementView() {
                   <SelectContent>
                     <SelectItem value="3">Estudiante</SelectItem>
                     <SelectItem value="2">Profesor</SelectItem>
+                    <SelectItem value="4">Especialista</SelectItem>
+                    <SelectItem value="5">Profesor Especialización</SelectItem>
                     <SelectItem value="1">Administrador</SelectItem>
                   </SelectContent>
                 </Select>
@@ -889,6 +891,8 @@ export function UserManagementView() {
                   <SelectContent>
                     <SelectItem value="3">Estudiante</SelectItem>
                     <SelectItem value="2">Profesor</SelectItem>
+                    <SelectItem value="4">Especialista</SelectItem>
+                    <SelectItem value="5">Profesor Especialización</SelectItem>
                     <SelectItem value="1">Administrador</SelectItem>
                   </SelectContent>
                 </Select>

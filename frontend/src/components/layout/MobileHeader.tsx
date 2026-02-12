@@ -6,10 +6,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { SidebarContent } from "./SidebarContent";
+import { SpecialistSidebarContent } from "@/features/specialist/components/SpecialistSidebarContent";
 import generatedImage from '@/assets/generated_images/arg_academy_logo.png';
 import { useState } from "react";
 
-type Role = "student" | "admin" | "professor" | "superadmin";
+type Role = "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor";
 
 interface MobileHeaderProps {
     currentRole: Role;
@@ -37,15 +38,26 @@ export function MobileHeader({ currentRole, onLogout, userPlanId = 1 }: MobileHe
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-72">
-                    <SidebarContent
-                        currentRole={currentRole}
-                        onLogout={() => {
-                            onLogout();
-                            setIsOpen(false);
-                        }}
-                        userPlanId={userPlanId}
-                        onClose={() => setIsOpen(false)}
-                    />
+                    {currentRole === "specialist" || currentRole === "specialist_professor" ? (
+                        <SpecialistSidebarContent
+                            currentRole={currentRole as any}
+                            onLogout={() => {
+                                onLogout();
+                                setIsOpen(false);
+                            }}
+                            onClose={() => setIsOpen(false)}
+                        />
+                    ) : (
+                        <SidebarContent
+                            currentRole={currentRole}
+                            onLogout={() => {
+                                onLogout();
+                                setIsOpen(false);
+                            }}
+                            userPlanId={userPlanId}
+                            onClose={() => setIsOpen(false)}
+                        />
+                    )}
                 </SheetContent>
             </Sheet>
         </div>

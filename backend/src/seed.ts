@@ -20,7 +20,9 @@ async function main() {
     const rolesData = [
         { id: 1, nombreRol: 'Admin' },
         { id: 2, nombreRol: 'Profesor' },
-        { id: 3, nombreRol: 'Estudiante' }
+        { id: 3, nombreRol: 'Estudiante' },
+        { id: 4, nombreRol: 'Especialista' },
+        { id: 5, nombreRol: 'Profesor Especialización' }
     ];
 
     for (const role of rolesData) {
@@ -42,27 +44,99 @@ async function main() {
     // 3. Seed Admin User
     console.log('Seeding Admin User...');
     const adminEmail = 'admin@edu.com';
-    const adminUser = {
-        nombre: 'Administrador Principal',
-        email: adminEmail,
-        password: 'admin', // En producción usar hash
-        roleId: 1,
-        planId: 3,
-        activo: true
-    };
+    const existingAdmin = await db.select().from(schema.usuarios).where(eq(schema.usuarios.email, adminEmail)).limit(1);
 
-    // Check if exists
-    const existingUser = await db.select().from(schema.usuarios).where(eq(schema.usuarios.email, adminEmail));
+    if (existingAdmin.length === 0) {
+        await db.insert(schema.usuarios).values({
+            nombre: 'Administrador Principal',
+            email: adminEmail,
+            password: 'admin',
+            roleId: 1,
+            planId: 3,
+            activo: true
+        }).execute();
+    }
 
-    if (existingUser.length === 0) {
-        await db.insert(schema.usuarios).values(adminUser).execute();
-        console.log(`User ${adminEmail} created.`);
+    // 4. Seed Specialist Professor
+    console.log('Seeding Specialist Professor...');
+    const specProfEmail = 'profe_tech@edu.com';
+    const existingProf = await db.select().from(schema.usuarios).where(eq(schema.usuarios.email, specProfEmail)).limit(1);
+    let profId;
+
+    if (existingProf.length === 0) {
+        const result = await db.insert(schema.usuarios).values({
+            nombre: 'Ing. Cyber Arge',
+            email: specProfEmail,
+            password: 'admin',
+            roleId: 5, // Profesor Especialización
+            planId: 3,
+            activo: true
+        }).returning({ id: schema.usuarios.id }).execute();
+        profId = result[0].id;
     } else {
-        console.log(`User ${adminEmail} already exists. Updating password/role...`);
-        await db.update(schema.usuarios)
-            .set({ password: 'admin', roleId: 1, activo: true })
-            .where(eq(schema.usuarios.email, adminEmail))
-            .execute();
+        profId = existingProf[0].id;
+    }
+
+    // 5. Seed Specialist Student
+    console.log('Seeding Specialist Student...');
+    const specStudentEmail = 'specialist@edu.com';
+    const existingStudent = await db.select().from(schema.usuarios).where(eq(schema.usuarios.email, specStudentEmail)).limit(1);
+    let studentId;
+
+    if (existingStudent.length === 0) {
+        const result = await db.insert(schema.usuarios).values({
+            nombre: 'Neo Specialist',
+            email: specStudentEmail,
+            password: 'admin',
+            roleId: 4, // Especialista
+            planId: 3,
+            activo: true
+        }).returning({ id: schema.usuarios.id }).execute();
+        studentId = result[0].id;
+    } else {
+        studentId = existingStudent[0].id;
+    }
+
+    // 6. Seed Specialized Module
+    console.log('Seeding Specialized Module...');
+    const existingMod = await db.select().from(schema.modulos).where(eq(schema.modulos.nombreModulo, 'Electrónica Pro')).limit(1);
+    let modId;
+
+    if (existingMod.length === 0) {
+        const modResult = await db.insert(schema.modulos).values({
+            nombreModulo: 'Electrónica Pro',
+            duracionDias: 30,
+            profesorId: profId,
+            categoria: 'specialization'
+        }).returning({ id: schema.modulos.id }).execute();
+        modId = modResult[0].id;
+
+        // Assign to student
+        await db.insert(schema.asignaciones).values({
+            estudianteId: studentId,
+            profesorId: profId,
+            moduloId: modId
+        }).execute();
+
+        // Seed levels
+        const levels = [
+            { moduloId: modId, tituloNivel: 'Lab 1: Circuitos Base', orden: 1 },
+            { moduloId: modId, tituloNivel: 'Lab 2: Microcontroladores', orden: 2 },
+            { moduloId: modId, tituloNivel: 'Hito Tech: Proyecto IoT', orden: 3 }
+        ];
+
+        for (const lvl of levels) {
+            const lvlResult = await db.insert(schema.niveles).values(lvl).returning({ id: schema.niveles.id }).execute();
+            const levelId = lvlResult[0].id;
+
+            // Unlock for student
+            await db.insert(schema.progresoNiveles).values({
+                estudianteId: studentId,
+                nivelId: levelId,
+                porcentajeCompletado: 0,
+                completado: false
+            }).execute();
+        }
     }
 
     console.log('Seeding complete.');

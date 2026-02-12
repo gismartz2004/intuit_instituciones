@@ -287,28 +287,45 @@ export class StudentService {
             haCompleted = haSubmissions.length > 0;
         }
 
-        // 4. PIM Completion (Future-proofing)
+        // 4. PIM Completion
         const pims = await this.db.select()
             .from(schema.plantillasPim)
             .where(eq(schema.plantillasPim.nivelId, levelId));
         let pimCompleted = false;
-        // PIM logic can be added here once defined
+        // PIM logic... (minimal for now)
+
+        // 5. BD, IT, PIC Completion (Specialist Track style)
+        const bds = await this.db.select().from(schema.plantillasBd).where(eq(schema.plantillasBd.nivelId, levelId));
+        const its = await this.db.select().from(schema.plantillasIt).where(eq(schema.plantillasIt.nivelId, levelId));
+        const pics = await this.db.select().from(schema.plantillasPic).where(eq(schema.plantillasPic.nivelId, levelId));
 
         return {
             attendance,
-            rag: {
+            rag: rags.length > 0 ? {
                 completed: ragCompleted,
                 pending: ragPendingDeliverables,
                 status: ragCompleted ? 'completed' : (hasAttended ? 'completed' : (ragPendingDeliverables ? 'pending' : 'missing'))
-            },
-            ha: {
+            } : null,
+            ha: has.length > 0 ? {
                 completed: haCompleted,
                 status: haCompleted ? 'completed' : 'pending'
-            },
-            pim: {
+            } : null,
+            pim: pims.length > 0 ? {
                 completed: pimCompleted,
                 status: pimCompleted ? 'completed' : 'pending'
-            }
+            } : null,
+            bd: bds.length > 0 ? {
+                completed: false, // Placeholder
+                status: 'pending'
+            } : null,
+            it: its.length > 0 ? {
+                completed: false, // Placeholder
+                status: 'pending'
+            } : null,
+            pic: pics.length > 0 ? {
+                completed: false, // Placeholder
+                status: 'pending'
+            } : null
         };
     }
 
@@ -447,7 +464,8 @@ export class StudentService {
 
         let previousLevelCompleted = true; // Level 1 is always unlocked by progress
 
-        return levels.map((level, index) => {
+        const results = [];
+        for (const level of levels) {
             const levelProgress = progress.find(p => p.nivelId === level.id);
             const isCompleted = !!levelProgress?.completado;
 
@@ -489,7 +507,30 @@ export class StudentService {
             // Update for next iteration
             previousLevelCompleted = isCompleted;
 
-            return {
+            // 3. Activity Type Detection (BD, IT, PIC, RAG, HA)
+            // Using separate parallel queries for better performance
+            const [bdRes, itRes, picRes, ragRes, haRes] = await Promise.all([
+                this.db.select({ id: schema.plantillasBd.id }).from(schema.plantillasBd).where(eq(schema.plantillasBd.nivelId, level.id)).limit(1),
+                this.db.select({ id: schema.plantillasIt.id }).from(schema.plantillasIt).where(eq(schema.plantillasIt.nivelId, level.id)).limit(1),
+                this.db.select({ id: schema.plantillasPic.id }).from(schema.plantillasPic).where(eq(schema.plantillasPic.nivelId, level.id)).limit(1),
+                this.db.select({ id: schema.plantillasRag.id }).from(schema.plantillasRag).where(eq(schema.plantillasRag.nivelId, level.id)).limit(1),
+                this.db.select({ id: schema.plantillasHa.id }).from(schema.plantillasHa).where(eq(schema.plantillasHa.nivelId, level.id)).limit(1),
+            ]);
+
+            const bd = bdRes[0];
+            const it = itRes[0];
+            const pic = picRes[0];
+            const rag = ragRes[0];
+            const ha = haRes[0];
+
+            let tipoActividad = 'TRADITIONAL';
+            if (bd) tipoActividad = 'BD';
+            else if (it) tipoActividad = 'IT';
+            else if (pic) tipoActividad = 'PIC';
+            else if (rag) tipoActividad = 'RAG';
+            else if (ha) tipoActividad = 'HA';
+
+            results.push({
                 ...level,
                 porcentajeCompletado: levelProgress?.porcentajeCompletado || 0,
                 completado: isCompleted,
@@ -499,9 +540,12 @@ export class StudentService {
                 isStuck,
                 isManuallyBlocked,
                 daysPassed,
-                daysRequired
-            };
-        });
+                daysRequired,
+                tipoActividad // Added activity type
+            });
+        }
+
+        return results;
     }
 
     async getAvailableMissions(studentId: number) {
