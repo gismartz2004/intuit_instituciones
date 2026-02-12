@@ -1,0 +1,323 @@
+{
+    "categories": [
+        {
+            "id": "login-access",
+            "name": "Inicio de Sesión y Acceso",
+            "icon": "Lock",
+            "questions": [
+                {
+                    "id": "forgot-password",
+                    "question": "¿Olvidé mi contraseña, cómo la recupero?",
+                    "keywords": [
+                        "contraseña",
+                        "olvidé",
+                        "recuperar",
+                        "password",
+                        "restablecer"
+                    ],
+                    "answer": "Para recuperar tu contraseña:\n\n1. Ve a la página de inicio de sesión\n2. Haz clic en 'Olvidé mi contraseña' (próximamente)\n3. Ingresa tu correo electrónico registrado\n4. Recibirás un enlace de recuperación en tu email\n5. Sigue las instrucciones del correo para crear una nueva contraseña\n\n**Nota:** Si no recibes el correo, revisa tu carpeta de spam o contacta al administrador del sistema.",
+                    "relatedQuestions": [
+                        "login-error",
+                        "change-password"
+                    ]
+                },
+                {
+                    "id": "login-error",
+                    "question": "No puedo iniciar sesión, ¿qué hago?",
+                    "keywords": [
+                        "no puedo",
+                        "iniciar",
+                        "sesión",
+                        "error",
+                        "login",
+                        "acceso"
+                    ],
+                    "answer": "Si tienes problemas para iniciar sesión:\n\n1. **Verifica tus credenciales**: Asegúrate de escribir correctamente tu email y contraseña\n2. **Revisa las mayúsculas**: La contraseña distingue entre mayúsculas y minúsculas\n3. **Limpia el caché**: Borra el caché de tu navegador\n4. **Prueba otro navegador**: Intenta con Chrome, Firefox o Edge\n5. **Contacta soporte**: Si el problema persiste, contacta al administrador\n\n**Email de soporte:** soporte@geniosbot.com",
+                    "relatedQuestions": [
+                        "forgot-password",
+                        "browser-support"
+                    ]
+                },
+                {
+                    "id": "change-password",
+                    "question": "¿Cómo cambio mi contraseña?",
+                    "keywords": [
+                        "cambiar",
+                        "contraseña",
+                        "modificar",
+                        "actualizar"
+                    ],
+                    "answer": "Para cambiar tu contraseña:\n\n1. Inicia sesión en tu cuenta\n2. Ve a tu perfil (icono de usuario en la esquina superior derecha)\n3. Selecciona 'Configuración' o 'Mi Perfil'\n4. Busca la sección 'Seguridad'\n5. Haz clic en 'Cambiar contraseña'\n6. Ingresa tu contraseña actual y la nueva contraseña\n7. Confirma los cambios\n\n**Recomendación:** Usa una contraseña segura con al menos 8 caracteres, incluyendo letras, números y símbolos.",
+                    "relatedQuestions": [
+                        "forgot-password",
+                        "account-security"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "navigation",
+            "name": "Navegación del Sistema",
+            "icon": "Compass",
+            "questions": [
+                {
+                    "id": "how-to-navigate",
+                    "question": "¿Cómo navego por el sistema?",
+                    "keywords": [
+                        "navegar",
+                        "usar",
+                        "cómo funciona",
+                        "menú",
+                        "interfaz"
+                    ],
+                    "answer": "**Navegación del Sistema:**\n\n**Para Padres:**\n- **Dashboard Principal**: Vista general del progreso de tu hijo/a\n- **Menú Lateral**: Acceso rápido a todas las secciones\n- **Perfil**: Configuración de cuenta y notificaciones\n\n**Secciones principales:**\n1. **Dashboard**: Resumen de actividades y logros\n2. **Progreso**: Avances en niveles y módulos\n3. **Calificaciones**: Notas y evaluaciones\n4. **Misiones**: Tareas y actividades pendientes\n5. **Leaderboard**: Ranking y competencias\n\n**Tip:** Usa el buscador en la parte superior para encontrar rápidamente lo que necesitas.",
+                    "relatedQuestions": [
+                        "view-progress",
+                        "dashboard-features"
+                    ]
+                },
+                {
+                    "id": "dashboard-features",
+                    "question": "¿Qué puedo ver en el dashboard?",
+                    "keywords": [
+                        "dashboard",
+                        "panel",
+                        "inicio",
+                        "ver",
+                        "información"
+                    ],
+                    "answer": "En el **Dashboard** puedes ver:\n\n📊 **Estadísticas Generales:**\n- Nivel actual del estudiante\n- XP acumulado y racha de días\n- Progreso en el plan de estudios\n\n🎯 **Actividades Recientes:**\n- Últimas misiones completadas\n- Módulos en progreso\n- Próximas evaluaciones\n\n🏆 **Logros y Gamificación:**\n- Badges obtenidos\n- Posición en el ranking\n- Recompensas desbloqueadas\n\n📈 **Gráficos de Rendimiento:**\n- Evolución del aprendizaje\n- Áreas de fortaleza y mejora",
+                    "relatedQuestions": [
+                        "view-progress",
+                        "how-to-navigate"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "student-progress",
+            "name": "Progreso del Estudiante",
+            "icon": "TrendingUp",
+            "questions": [
+                {
+                    "id": "view-progress",
+                    "question": "¿Cómo veo el progreso de mi hijo/a?",
+                    "keywords": [
+                        "progreso",
+                        "avance",
+                        "ver",
+                        "hijo",
+                        "estudiante",
+                        "calificaciones"
+                    ],
+                    "answer": "Para ver el progreso de tu hijo/a:\n\n1. **Inicia sesión** con tu cuenta de padre/madre\n2. Ve al **Dashboard principal**\n3. Encontrarás:\n   - **Barra de progreso general**: Muestra el % completado del plan\n   - **Niveles completados**: Visualización de módulos terminados\n   - **Gráficos de rendimiento**: Evolución en el tiempo\n\n**Secciones detalladas:**\n- **Progreso por Módulo**: Click en cada nivel para ver detalles\n- **Calificaciones**: Notas de evaluaciones y quizzes\n- **Tiempo de estudio**: Horas dedicadas a cada materia\n- **Actividades pendientes**: Tareas por completar\n\n**Tip:** Puedes exportar reportes en PDF para tener un registro histórico.",
+                    "relatedQuestions": [
+                        "grades-system",
+                        "activity-reports"
+                    ]
+                },
+                {
+                    "id": "grades-system",
+                    "question": "¿Cómo funciona el sistema de calificaciones?",
+                    "keywords": [
+                        "calificaciones",
+                        "notas",
+                        "evaluación",
+                        "puntuación",
+                        "sistema"
+                    ],
+                    "answer": "**Sistema de Calificaciones:**\n\n📝 **Tipos de Evaluación:**\n1. **Quizzes**: Evaluaciones cortas (10-15 preguntas)\n2. **Exámenes**: Evaluaciones completas de módulo\n3. **Proyectos**: Trabajos prácticos y evidencias\n4. **Participación**: Actividad en clase y foros\n\n🎯 **Escala de Calificación:**\n- **90-100**: Excelente (A)\n- **80-89**: Muy Bueno (B)\n- **70-79**: Bueno (C)\n- **60-69**: Suficiente (D)\n- **0-59**: Insuficiente (F)\n\n💯 **Cálculo de Nota Final:**\n- Quizzes: 30%\n- Exámenes: 40%\n- Proyectos: 20%\n- Participación: 10%\n\n**Nota:** Cada módulo puede tener ponderaciones específicas.",
+                    "relatedQuestions": [
+                        "view-progress",
+                        "activity-reports"
+                    ]
+                },
+                {
+                    "id": "activity-reports",
+                    "question": "¿Puedo obtener reportes de actividad?",
+                    "keywords": [
+                        "reportes",
+                        "informes",
+                        "actividad",
+                        "exportar",
+                        "pdf"
+                    ],
+                    "answer": "**Sí, puedes generar reportes detallados:**\n\n📊 **Tipos de Reportes:**\n1. **Reporte Semanal**: Actividades de los últimos 7 días\n2. **Reporte Mensual**: Resumen del mes completo\n3. **Reporte por Módulo**: Progreso específico en cada materia\n4. **Reporte Anual**: Evolución durante el año escolar\n\n**Cómo generar un reporte:**\n1. Ve a la sección 'Progreso'\n2. Click en 'Generar Reporte'\n3. Selecciona el tipo y período\n4. Click en 'Descargar PDF' o 'Enviar por Email'\n\n📧 **Reportes Automáticos:**\nPuedes configurar reportes automáticos semanales o mensuales que se envían a tu email.\n\n**Configuración:** Perfil → Notificaciones → Reportes Automáticos",
+                    "relatedQuestions": [
+                        "view-progress",
+                        "email-notifications"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "technical-support",
+            "name": "Soporte Técnico",
+            "icon": "Wrench",
+            "questions": [
+                {
+                    "id": "browser-support",
+                    "question": "¿Qué navegadores son compatibles?",
+                    "keywords": [
+                        "navegador",
+                        "compatible",
+                        "browser",
+                        "chrome",
+                        "firefox"
+                    ],
+                    "answer": "**Navegadores Compatibles:**\n\n✅ **Recomendados (mejor rendimiento):**\n- Google Chrome (versión 90+)\n- Microsoft Edge (versión 90+)\n- Firefox (versión 88+)\n- Safari (versión 14+)\n\n⚠️ **Compatibles con limitaciones:**\n- Opera (versión 76+)\n- Brave (versión 1.24+)\n\n❌ **No compatibles:**\n- Internet Explorer (cualquier versión)\n- Navegadores muy antiguos\n\n**Recomendaciones:**\n- Mantén tu navegador actualizado\n- Habilita JavaScript\n- Permite cookies del sitio\n- Usa resolución mínima de 1280x720\n\n**Dispositivos móviles:** Compatible con iOS 13+ y Android 8+",
+                    "relatedQuestions": [
+                        "technical-issues",
+                        "slow-performance"
+                    ]
+                },
+                {
+                    "id": "technical-issues",
+                    "question": "Tengo problemas técnicos, ¿qué hago?",
+                    "keywords": [
+                        "problema",
+                        "error",
+                        "técnico",
+                        "no funciona",
+                        "falla"
+                    ],
+                    "answer": "**Solución de Problemas Técnicos:**\n\n🔧 **Pasos básicos:**\n1. **Recarga la página**: Presiona F5 o Ctrl+R\n2. **Limpia el caché**: Ctrl+Shift+Delete\n3. **Prueba modo incógnito**: Ctrl+Shift+N\n4. **Actualiza el navegador**: Verifica que esté actualizado\n5. **Reinicia el dispositivo**: A veces es la solución más simple\n\n📱 **Problemas comunes:**\n- **Página en blanco**: Limpia caché y cookies\n- **Botones no responden**: Desactiva extensiones del navegador\n- **Carga lenta**: Verifica tu conexión a internet\n- **Error 404/500**: Reporta al soporte técnico\n\n📧 **Contacto de Soporte:**\n- Email: soporte@geniosbot.com\n- WhatsApp: +593 99 123 4567\n- Horario: Lunes a Viernes, 8:00 - 18:00\n\n**Tip:** Toma captura de pantalla del error para enviarlo a soporte.",
+                    "relatedQuestions": [
+                        "browser-support",
+                        "slow-performance"
+                    ]
+                },
+                {
+                    "id": "slow-performance",
+                    "question": "El sistema va muy lento, ¿cómo lo soluciono?",
+                    "keywords": [
+                        "lento",
+                        "rendimiento",
+                        "velocidad",
+                        "carga",
+                        "lag"
+                    ],
+                    "answer": "**Mejora el Rendimiento:**\n\n⚡ **Optimización del Navegador:**\n1. Cierra pestañas innecesarias\n2. Desactiva extensiones que no uses\n3. Limpia caché y cookies regularmente\n4. Actualiza a la última versión\n\n🌐 **Conexión a Internet:**\n- Velocidad mínima recomendada: 5 Mbps\n- Usa conexión por cable si es posible\n- Reinicia tu router\n- Cierra aplicaciones que consuman ancho de banda\n\n💻 **Dispositivo:**\n- Cierra programas en segundo plano\n- Libera espacio en disco (mínimo 10GB libre)\n- Actualiza drivers de video\n- RAM recomendada: 4GB mínimo\n\n🎮 **Configuración del Sistema:**\n- Reduce la calidad de video en las clases\n- Desactiva animaciones si es necesario\n- Usa modo de bajo consumo en laptops\n\n**Si el problema persiste:** Contacta a soporte técnico.",
+                    "relatedQuestions": [
+                        "technical-issues",
+                        "browser-support"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "account-management",
+            "name": "Gestión de Cuenta",
+            "icon": "User",
+            "questions": [
+                {
+                    "id": "update-profile",
+                    "question": "¿Cómo actualizo mi información de perfil?",
+                    "keywords": [
+                        "actualizar",
+                        "perfil",
+                        "información",
+                        "datos",
+                        "editar"
+                    ],
+                    "answer": "**Actualizar tu Perfil:**\n\n1. **Accede a tu perfil:**\n   - Click en el icono de usuario (esquina superior derecha)\n   - Selecciona 'Mi Perfil' o 'Configuración'\n\n2. **Información editable:**\n   - Nombre completo\n   - Email de contacto\n   - Teléfono\n   - Foto de perfil\n   - Preferencias de notificación\n\n3. **Guarda los cambios:**\n   - Click en 'Guardar' o 'Actualizar'\n   - Recibirás confirmación por email\n\n⚠️ **Nota importante:**\n- El email principal no se puede cambiar (es tu ID de usuario)\n- Para cambiar email principal, contacta al administrador\n- La foto debe ser menor a 5MB (JPG, PNG)\n\n**Privacidad:** Tu información está protegida y no se comparte con terceros.",
+                    "relatedQuestions": [
+                        "email-notifications",
+                        "account-security"
+                    ]
+                },
+                {
+                    "id": "email-notifications",
+                    "question": "¿Cómo configuro las notificaciones por email?",
+                    "keywords": [
+                        "notificaciones",
+                        "email",
+                        "correo",
+                        "alertas",
+                        "configurar"
+                    ],
+                    "answer": "**Configurar Notificaciones:**\n\n📧 **Tipos de Notificaciones:**\n1. **Progreso del estudiante**\n   - Niveles completados\n   - Nuevos logros\n   - Calificaciones publicadas\n\n2. **Actividades pendientes**\n   - Tareas por entregar\n   - Exámenes próximos\n   - Recordatorios de clase\n\n3. **Reportes automáticos**\n   - Reporte semanal\n   - Reporte mensual\n   - Alertas de bajo rendimiento\n\n**Cómo configurar:**\n1. Ve a Perfil → Configuración → Notificaciones\n2. Activa/desactiva cada tipo según prefieras\n3. Selecciona la frecuencia (inmediata, diaria, semanal)\n4. Guarda los cambios\n\n**Tip:** Puedes agregar emails adicionales para recibir copias de las notificaciones.",
+                    "relatedQuestions": [
+                        "update-profile",
+                        "activity-reports"
+                    ]
+                },
+                {
+                    "id": "account-security",
+                    "question": "¿Cómo mantengo mi cuenta segura?",
+                    "keywords": [
+                        "seguridad",
+                        "proteger",
+                        "cuenta",
+                        "privacidad",
+                        "hackeo"
+                    ],
+                    "answer": "**Seguridad de tu Cuenta:**\n\n🔐 **Mejores Prácticas:**\n1. **Contraseña fuerte:**\n   - Mínimo 8 caracteres\n   - Combina letras, números y símbolos\n   - No uses información personal\n   - Cámbiala cada 3-6 meses\n\n2. **Protege tus credenciales:**\n   - No compartas tu contraseña\n   - No uses la misma contraseña en otros sitios\n   - Cierra sesión en computadoras públicas\n\n3. **Verifica actividad:**\n   - Revisa el historial de inicio de sesión\n   - Reporta actividad sospechosa\n   - Activa notificaciones de inicio de sesión\n\n4. **Autenticación de dos factores (próximamente):**\n   - Código por SMS\n   - App de autenticación\n\n⚠️ **Si detectas acceso no autorizado:**\n1. Cambia tu contraseña inmediatamente\n2. Contacta a soporte: soporte@geniosbot.com\n3. Revisa tu email de recuperación",
+                    "relatedQuestions": [
+                        "change-password",
+                        "forgot-password"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "general",
+            "name": "Preguntas Generales",
+            "icon": "HelpCircle",
+            "questions": [
+                {
+                    "id": "what-is-system",
+                    "question": "¿Qué es Genios Bot Academy?",
+                    "keywords": [
+                        "qué es",
+                        "genios bot",
+                        "academy",
+                        "plataforma",
+                        "sistema"
+                    ],
+                    "answer": "**Genios Bot Academy** es una plataforma educativa gamificada de última generación para el aprendizaje de tecnología, programación y robótica.\n\n🎯 **Características principales:**\n- **Aprendizaje Gamificado**: Sistema de niveles, XP y recompensas\n- **Contenido Interactivo**: Videos, quizzes y proyectos prácticos\n- **Seguimiento en Tiempo Real**: Monitoreo del progreso estudiantil\n- **Especialidades**: Base de Datos, Infraestructura TI, Programación\n\n👨‍🎓 **Para Estudiantes:**\n- Rutas de aprendizaje personalizadas\n- Competencias y rankings\n- Certificaciones al completar módulos\n\n👨‍👩‍👧 **Para Padres:**\n- Dashboard de seguimiento\n- Reportes automáticos\n- Comunicación directa con profesores\n\n**Misión:** Formar la próxima generación de profesionales tecnológicos con habilidades del siglo XXI.",
+                    "relatedQuestions": [
+                        "how-to-navigate",
+                        "contact-support"
+                    ]
+                },
+                {
+                    "id": "contact-support",
+                    "question": "¿Cómo contacto al soporte o administrador?",
+                    "keywords": [
+                        "contacto",
+                        "soporte",
+                        "ayuda",
+                        "administrador",
+                        "support"
+                    ],
+                    "answer": "**Canales de Soporte:**\n\n📧 **Email:**\n- Soporte técnico: soporte@geniosbot.com\n- Administración: admin@geniosbot.com\n- Consultas generales: info@geniosbot.com\n\n📱 **WhatsApp:**\n- +593 99 123 4567\n- Horario: Lunes a Viernes, 8:00 - 18:00\n\n🌐 **Redes Sociales:**\n- Facebook: @GeniosBotAcademy\n- Instagram: @geniosbot_academy\n- Twitter: @GeniosBotEdu\n\n🏢 **Oficina:**\n- Dirección: Av. Principal 123, Quito, Ecuador\n- Horario de atención: Lunes a Viernes, 9:00 - 17:00\n\n**Tiempo de respuesta:**\n- Email: 24-48 horas\n- WhatsApp: 2-4 horas (horario laboral)\n- Urgencias: Llamar directamente\n\n**Tip:** Para soporte técnico, incluye capturas de pantalla del problema.",
+                    "relatedQuestions": [
+                        "technical-issues",
+                        "what-is-system"
+                    ]
+                }
+            ]
+        }
+    ],
+    "welcomeMessage": "¡Hola! 👋 Soy el **Asistente Virtual de Genios Bot Academy**.\n\nEstoy aquí para ayudarte con cualquier pregunta sobre la plataforma. Puedes preguntarme sobre:\n\n🔐 Inicio de sesión y contraseñas\n🧭 Cómo navegar por el sistema\n📊 Progreso de tu hijo/a\n🔧 Problemas técnicos\n👤 Gestión de tu cuenta\n\n**¿En qué puedo ayudarte hoy?**",
+    "defaultResponse": "Lo siento, no encontré una respuesta específica para tu pregunta. 😔\n\nPero no te preocupes, puedes:\n\n1. **Reformular tu pregunta** con otras palabras\n2. **Explorar las categorías** de preguntas frecuentes arriba\n3. **Contactar directamente** a nuestro equipo de soporte:\n   - 📧 Email: soporte@geniosbot.com\n   - 📱 WhatsApp: +593 99 123 4567\n\n¿Hay algo más en lo que pueda ayudarte?",
+    "quickActions": [
+        {
+            "label": "🔑 Olvidé mi contraseña",
+            "questionId": "forgot-password"
+        },
+        {
+            "label": "📊 Ver progreso de mi hijo/a",
+            "questionId": "view-progress"
+        },
+        {
+            "label": "🔧 Tengo un problema técnico",
+            "questionId": "technical-issues"
+        },
+        {
+            "label": "📧 Contactar soporte",
+            "questionId": "contact-support"
+        }
+    ]
+}

@@ -22,6 +22,7 @@ import { GamerRaffle, MissionsHub } from "@/features/gamification";
 import { Toaster } from "@/components/ui/toaster";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { notificationService } from "@/services/notification.service";
+import AsistenteWeb from "@/pages/AsistenteWeb";
 
 function App() {
   const [user, setUser] = useState<{ role: "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor"; name: string; id: string; plan?: string; especializacion?: string } | null>(() => {
@@ -59,8 +60,8 @@ function App() {
     setLocation("/login");
   };
 
-  // If not logged in and not on login page, redirect to login
-  if (!user && location !== "/login") {
+  // If not logged in and not on login page or asistente-web, redirect to login
+  if (!user && location !== "/login" && location !== "/asistente-web" && location !== "/ayuda") {
     return <Redirect to="/login" />;
   }
 
@@ -104,6 +105,14 @@ function App() {
         showNav ? "md:ml-[280px] pt-14 md:pt-0 pb-24 md:pb-0" : ""
       )}>
         <Switch>
+          {/* Public Routes - No login required */}
+          <Route path="/asistente-web">
+            <AsistenteWeb />
+          </Route>
+          <Route path="/ayuda">
+            <AsistenteWeb />
+          </Route>
+
           <Route path="/login">
             {user ? <Redirect to="/" /> : <Login onLogin={handleLogin} />}
           </Route>
