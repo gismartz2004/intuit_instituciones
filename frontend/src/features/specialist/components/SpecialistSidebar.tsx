@@ -9,7 +9,7 @@ interface SpecialistSidebarProps {
 
 export function SpecialistSidebar({ currentRole, onLogout }: SpecialistSidebarProps) {
     return (
-        <div className="hidden md:flex flex-col w-[280px] h-screen bg-[#0a0f1d] fixed left-0 top-0 z-50 border-r border-cyan-500/10 shadow-2xl">
+        <div className="hidden md:flex flex-col w-[280px] h-screen bg-white fixed left-0 top-0 z-50 border-r border-slate-100 shadow-xl">
             <SpecialistSidebarContent
                 currentRole={currentRole}
                 onLogout={onLogout}

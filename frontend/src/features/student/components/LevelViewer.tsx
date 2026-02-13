@@ -23,7 +23,9 @@ import {
   ChevronRight,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -80,6 +82,7 @@ export default function LevelViewer() {
   const [viewMode, setViewMode] = useState<string>(isSpecialist ? "bd" : "rag");
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to collapsed for hover effect on desktop
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Gamification State
   const [gameState, setGameState] = useState<GamificationState>({
@@ -278,9 +281,9 @@ export default function LevelViewer() {
     { id: 'rag', label: 'Guía RAG', shortLabel: 'RAG', color: 'text-cyan-400' },
     { id: 'ha', label: 'Hito HA', shortLabel: 'HA', color: 'text-purple-400' },
     { id: 'pim', label: 'Proyecto PIM', shortLabel: 'PIM', color: 'text-indigo-400' },
-    { id: 'bd', label: 'Bloque Desarrollo', shortLabel: 'BD', color: 'text-cyan-500' },
+    { id: 'bd', label: 'Bloque Desarrollo', shortLabel: 'BD', color: 'text-violet-500' },
     { id: 'it', label: 'Iteración', shortLabel: 'IT', color: 'text-violet-500' },
-    { id: 'pic', label: 'Innovación', shortLabel: 'PIC', color: 'text-emerald-500' },
+    { id: 'pic', label: 'Innovación', shortLabel: 'PIC', color: 'text-violet-500' },
   ].filter(item => {
     if (isSpecialist) {
       // Specialists see their specific technical options
@@ -293,8 +296,7 @@ export default function LevelViewer() {
 
   return (
     <div className={cn(
-      "min-h-screen flex overflow-hidden font-sans transition-colors duration-500",
-      isSpecialist ? "bg-[#020617]" : "bg-slate-50"
+      "min-h-screen flex overflow-hidden font-sans transition-colors duration-500 bg-slate-50"
     )}>
 
       {/* SIDEBAR - Ultra Modern Fixed with Hover */}
@@ -303,19 +305,20 @@ export default function LevelViewer() {
         onMouseEnter={() => !isMobile && setIsSidebarOpen(true)}
         onMouseLeave={() => !isMobile && setIsSidebarOpen(false)}
         animate={{
-          width: isSidebarOpen ? (isMobile ? '100%' : 300) : (isMobile ? 0 : 88),
-          x: isMobile && !isSidebarOpen ? -300 : 0
+          width: isFullscreen ? 0 : (isSidebarOpen ? (isMobile ? '100%' : 300) : (isMobile ? 0 : 88)),
+          x: (isFullscreen || (isMobile && !isSidebarOpen)) ? -300 : 0,
+          opacity: isFullscreen ? 0 : 1
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
-          "bg-slate-950/95 backdrop-blur-2xl text-white flex flex-col z-[999] border-r border-white/5 fixed inset-y-0 left-0 shadow-2xl transition-transform duration-300 overflow-hidden",
+          "bg-white text-slate-600 flex flex-col z-[999] border-r border-slate-200 fixed inset-y-0 left-0 shadow-2xl transition-transform duration-300 overflow-hidden",
           !isSidebarOpen && !isMobile && "items-center"
         )}
       >
         {/* Mobile Close Button - Only visible when open on mobile */}
         {isMobile && isSidebarOpen && (
           <div className="p-4 flex justify-end">
-            <Button variant="ghost" size="icon" className="text-white/50 hover:text-white hover:bg-white/10" onClick={() => setIsSidebarOpen(false)}>
+            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-800 hover:bg-slate-100" onClick={() => setIsSidebarOpen(false)}>
               <X className="w-6 h-6" />
             </Button>
           </div>
@@ -330,15 +333,15 @@ export default function LevelViewer() {
 
               // Color Mapping
               const statusColors = {
-                completed: 'text-green-400',
-                pending: 'text-yellow-400',
-                missing: 'text-red-400'
+                completed: 'text-emerald-600',
+                pending: 'text-amber-500',
+                missing: 'text-red-500'
               };
 
               const statusGlows = {
-                completed: 'drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]',
-                pending: 'drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]',
-                missing: 'drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
+                completed: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]',
+                pending: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]',
+                missing: 'drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]'
               };
 
               const StatusIcon = status === 'completed' ? CheckCircle : (status === 'missing' ? X : Clock);
@@ -353,18 +356,14 @@ export default function LevelViewer() {
                   className={cn(
                     "w-full flex items-center justify-center gap-4 px-4 py-5 rounded-2xl transition-all duration-500 relative group overflow-hidden",
                     isSelected
-                      ? "text-white"
-                      : "text-slate-500 hover:text-slate-200"
+                      ? "text-violet-700 bg-violet-50 shadow-sm border border-violet-100"
+                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                   )}
                 >
                   {isSelected && (
                     <motion.div
                       layoutId="navHighlight"
-                      className={cn(
-                        "absolute inset-0 bg-gradient-to-r to-transparent border-l-2 z-0",
-                        status === 'completed' ? "from-green-500/20 border-green-400" :
-                          (status === 'missing' ? "from-red-500/20 border-red-400" : "from-yellow-500/20 border-yellow-400")
-                      )}
+                      className="absolute inset-0 bg-violet-50 border-l-4 border-violet-600 z-0"
                       initial={false}
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
@@ -384,12 +383,12 @@ export default function LevelViewer() {
                         >
                           <span className={cn(
                             "text-[10px] font-black tracking-tighter transition-all duration-300",
-                            isSelected ? statusColors[status] : "text-slate-500"
+                            isSelected ? "text-violet-700" : "text-slate-500"
                           )}>
                             {item.shortLabel}
                           </span>
                           {status === 'completed' && !isSelected && (
-                            <div className="absolute -top-1 -right-2 w-2 h-2 bg-green-500 rounded-full border border-slate-950" />
+                            <div className="absolute -top-1 -right-2 w-2 h-2 bg-emerald-500 rounded-full border border-white" />
                           )}
                         </motion.div>
                       ) : (
@@ -403,8 +402,8 @@ export default function LevelViewer() {
                           <div className={cn(
                             "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all duration-500",
                             isSelected
-                              ? cn(statusColors[status], "border-current bg-white/5", statusGlows[status])
-                              : "text-slate-500 border-white/10 group-hover:border-white/20"
+                              ? "text-violet-600 border-violet-200 bg-white shadow-sm"
+                              : "text-slate-400 border-slate-200 bg-slate-50 group-hover:border-slate-300"
                           )}>
                             {item.shortLabel}
                           </div>
@@ -416,7 +415,7 @@ export default function LevelViewer() {
                           </span>
                           <StatusIcon className={cn(
                             "w-4 h-4 ml-auto",
-                            status === 'completed' ? "text-green-400" : (status === 'missing' ? "text-red-400 animate-pulse" : "text-yellow-400")
+                            status === 'completed' ? "text-emerald-500" : (status === 'missing' ? "text-red-400" : "text-amber-400")
                           )} />
                         </motion.div>
                       )}
@@ -429,11 +428,11 @@ export default function LevelViewer() {
         </nav>
 
         {/* Exit Button */}
-        <div className="p-6 border-t border-white/5 bg-black/20">
+        <div className="p-6 border-t border-slate-100 bg-slate-50/50">
           <button
             onClick={() => setLocation('/dashboard')}
             className={cn(
-              "w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group ring-1 ring-transparent hover:ring-red-500/20",
+              "w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-100 border border-transparent transition-all duration-300 group",
               (!isSidebarOpen && !isMobile) && "justify-center"
             )}
           >
@@ -451,78 +450,79 @@ export default function LevelViewer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[55]"
           />
         )}
       </AnimatePresence>
 
       {/* MOBILE TRIGGER */}
-      {isMobile && !isSidebarOpen && (
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="fixed left-4 top-4 bg-slate-900 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-xl z-[70] md:hidden"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      )}
+      {
+        isMobile && !isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="fixed left-4 top-4 bg-white text-slate-800 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg border border-slate-100 z-[70] md:hidden"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        )
+      }
 
       {/* MAIN CONTENT AREA */}
       <main
         className={cn(
-          "flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-500",
-          !isMobile && (isSidebarOpen ? "pl-[300px]" : "pl-[88px]"),
-          isSpecialist ? "bg-[#020617]" : "bg-slate-50"
+          "flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-500 bg-slate-50",
+          !isMobile && !isFullscreen && (isSidebarOpen ? "pl-[300px]" : "pl-[88px]"),
+          isFullscreen && "pl-0"
         )}
       >
 
-        {/* Top Bar for Gamification HUD */}
-        <header className={cn(
-          "h-24 flex-shrink-0 px-24 flex items-center justify-between border-b z-30 shadow-sm relative transition-colors duration-500",
-          isSpecialist ? "bg-[#0a0f1d] border-white/5" : "bg-white border-slate-200"
-        )}>
-          <div className="flex items-center gap-8">
-            <h2 className={cn(
-              "font-black text-xl tracking-tight uppercase italic",
-              isSpecialist ? "text-white" : "text-slate-800"
-            )}>
-              {menuItems.find(i => i.id === viewMode)?.label || "Módulo"}
-            </h2>
+        {!isFullscreen && (
+          <header className={cn(
+            "h-24 flex-shrink-0 px-24 flex items-center justify-between border-b z-30 shadow-sm relative transition-colors duration-500 bg-white border-slate-200"
+          )}>
+            <div className="flex items-center gap-8">
+              <h2 className={cn(
+                "font-black text-xl tracking-tight uppercase italic text-slate-800"
+              )}>
+                {menuItems.find(i => i.id === viewMode)?.label || "Módulo"}
+              </h2>
 
-            {isSpecialist && (
-              <div className="flex items-center gap-6 ml-6 pl-6 border-l border-white/10">
-                <div className="text-right">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Paso Actual</p>
-                  <p className="text-lg font-black text-white italic">
-                    {viewMode === 'bd' ? (bdRef.current?.getCurrentStep?.() || 1) :
-                      viewMode === 'it' ? (itRef.current?.getCurrentStep?.() || 1) :
-                        (picRef.current?.getCurrentStep?.() || 1)} / {viewMode === 'bd' ? 12 : 10}
-                  </p>
+              {isSpecialist && (
+                <div className="flex items-center gap-6 ml-6 pl-6 border-l border-slate-200">
+                  <div className="text-right">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Paso Actual</p>
+                    <p className="text-lg font-black text-slate-800 italic">
+                      {viewMode === 'bd' ? (bdRef.current?.getCurrentStep?.() || 1) :
+                        viewMode === 'it' ? (itRef.current?.getCurrentStep?.() || 1) :
+                          (picRef.current?.getCurrentStep?.() || 1)} / {viewMode === 'bd' ? 12 : 10}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {attendance?.asistio && (
-              <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
-                <Target className="w-3 h-3 mr-1" /> ASISTENCIA REGISTRADA
-              </Badge>
-            )}
-            {attendance?.recuperada && (
-              <Badge className="bg-blue-500 text-white border-0 shadow-lg shadow-blue-200 ml-4 px-3 py-1 animate-pulse">
-                <Target className="w-3 h-3 mr-1" /> ASISTENCIA RECUPERADA
-              </Badge>
-            )}
-            {!attendance?.asistio && !attendance?.recuperada && attendance && (
-              <Badge variant="destructive" className="ml-4 animate-bounce px-3 py-1">
-                <X className="w-3 h-3 mr-1" /> CLASE NO ASISTIDA
-              </Badge>
-            )}
-          </div>
-          <EnhancedGamificationHud state={gameState} className="self-start mt-4" />
-        </header>
+              {attendance?.asistio && (
+                <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
+                  <Target className="w-3 h-3 mr-1" /> ASISTENCIA REGISTRADA
+                </Badge>
+              )}
+              {attendance?.recuperada && (
+                <Badge className="bg-blue-500 text-white border-0 shadow-lg shadow-blue-200 ml-4 px-3 py-1 animate-pulse">
+                  <Target className="w-3 h-3 mr-1" /> ASISTENCIA RECUPERADA
+                </Badge>
+              )}
+              {!attendance?.asistio && !attendance?.recuperada && attendance && (
+                <Badge variant="destructive" className="ml-4 animate-bounce px-3 py-1">
+                  <X className="w-3 h-3 mr-1" /> CLASE NO ASISTIDA
+                </Badge>
+              )}
+            </div>
+            <EnhancedGamificationHud state={gameState} className="self-start mt-4" />
+          </header>
+        )}
 
         <div className={cn(
-          "flex-1 overflow-hidden relative w-full flex h-[calc(100vh-96px)] transition-colors duration-500",
-          isSpecialist ? "bg-[#020617]" : "bg-slate-50/50"
+          "flex-1 overflow-hidden relative w-full flex transition-colors duration-500 bg-slate-50/50",
+          isFullscreen ? "h-screen" : "h-[calc(100vh-96px)]"
         )}>
           {/* Left Navigation Button */}
           <div className="hidden md:flex items-center px-4 z-40">
@@ -537,7 +537,10 @@ export default function LevelViewer() {
           </div>
 
           {/* Main Focused Content Area */}
-          <div className="flex-1 w-full max-w-6xl mx-auto px-4 relative py-2 overflow-hidden flex flex-col">
+          <div className={cn(
+            "flex-1 w-full mx-auto relative overflow-hidden flex flex-col",
+            isFullscreen ? "max-w-none px-0 py-0" : "max-w-7xl px-4 py-2"
+          )}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${levelId}-${viewMode}`}
@@ -550,9 +553,9 @@ export default function LevelViewer() {
                 {viewMode === 'rag' && <RagViewer ref={ragRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
                 {viewMode === 'ha' && <HaViewer ref={haRef} levelId={levelId} onAddPoints={handleAddPoints} hasAttended={attendance?.asistio || attendance?.recuperada} />}
                 {viewMode === 'pim' && <PimViewer ref={pimRef} levelId={levelId} />}
-                {viewMode === 'bd' && <BdViewer ref={bdRef} levelId={levelId} />}
-                {viewMode === 'it' && <ItViewer ref={itRef} levelId={levelId} />}
-                {viewMode === 'pic' && <PicViewer ref={picRef} levelId={levelId} />}
+                {viewMode === 'bd' && <BdViewer ref={bdRef} levelId={levelId} isFullscreen={isFullscreen} />}
+                {viewMode === 'it' && <ItViewer ref={itRef} levelId={levelId} isFullscreen={isFullscreen} />}
+                {viewMode === 'pic' && <PicViewer ref={picRef} levelId={levelId} isFullscreen={isFullscreen} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -569,6 +572,42 @@ export default function LevelViewer() {
             </Button>
           </div>
         </div>
+
+        {/* Floating Fullscreen Toggle Button - Only for Specialist Viewers */}
+        {['bd', 'it', 'pic'].includes(viewMode) && (
+          <motion.div
+            initial={{ scale: 0, y: 20 }}
+            animate={{
+              scale: 1,
+              y: [0, -10, 0],
+            }}
+            transition={{
+              scale: { duration: 0.3 },
+              y: {
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+            className="fixed bottom-8 right-8 z-[1000]"
+          >
+            <Button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className={cn(
+                "w-16 h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center p-0",
+                isFullscreen
+                  ? "bg-slate-800 hover:bg-slate-900 text-white"
+                  : "bg-violet-600 hover:bg-violet-700 text-white ring-4 ring-violet-200"
+              )}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="w-8 h-8" />
+              ) : (
+                <Maximize2 className="w-8 h-8" />
+              )}
+            </Button>
+          </motion.div>
+        )}
       </main>
     </div>
   );

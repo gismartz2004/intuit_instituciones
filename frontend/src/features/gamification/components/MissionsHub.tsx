@@ -7,8 +7,9 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Trophy, Star, Target, Zap, Gift, Shield, CheckCircle2, Lock } from "lucide-react";
+import { Trophy, Star, Target, Zap, Gift, Shield, CheckCircle2, Lock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function MissionsHub() {
     const [loading, setLoading] = useState(true);
@@ -86,98 +87,149 @@ export default function MissionsHub() {
     }
 
     return (
-        <div className="container mx-auto p-4 md:p-8 space-y-8 pb-24">
+        <div className="container mx-auto p-4 md:p-8 space-y-8 pb-24 max-w-6xl">
             {/* Header with Stats */}
-            <div className="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="text-center md:text-left">
-                        <h1 className="text-4xl font-black mb-2 flex items-center gap-3 justify-center md:justify-start">
-                            <Trophy className="w-10 h-10 text-yellow-400" /> Centro de Misiones
+            <div className="relative p-8 md:p-12 bg-white border border-violet-100 rounded-[3rem] shadow-xl overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Trophy className="w-64 h-64 text-violet-600 transform rotate-12 -mr-12 -mt-12" />
+                </div>
+
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="text-center md:text-left space-y-4">
+                        <Badge className="bg-violet-100 text-violet-600 border-violet-200 uppercase tracking-widest font-black mb-2">Gamificación</Badge>
+                        <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tighter uppercase italic">
+                            Centro de <span className="text-violet-600">Misiones</span>
                         </h1>
-                        <p className="text-indigo-200 text-lg">Completa desafíos para ganar XP y subir de nivel.</p>
+                        <p className="text-slate-500 text-lg font-medium max-w-md">Completa desafíos, reclama recompensas y demuestra que estás listo para subir de nivel.</p>
                     </div>
 
                     <div className="flex gap-4">
-                        <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
-                            <CardContent className="p-4 text-center">
-                                <p className="text-sm text-indigo-200 uppercase tracking-wider font-bold">Nivel Actual</p>
-                                <p className="text-3xl font-black">{stats?.nivelActual || 1}</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
-                            <CardContent className="p-4 text-center">
-                                <p className="text-sm text-indigo-200 uppercase tracking-wider font-bold">XP Total</p>
-                                <p className="text-3xl font-black text-yellow-300">{stats?.totalPoints || 0}</p>
-                            </CardContent>
-                        </Card>
+                        <div className="p-6 bg-slate-50 border border-slate-100 rounded-3xl text-center min-w-[120px] shadow-sm">
+                            <p className="text-xs text-slate-400 uppercase tracking-widest font-black mb-2">Nivel Actual</p>
+                            <p className="text-4xl font-black text-slate-800">{stats?.nivelActual || 1}</p>
+                        </div>
+                        <div className="p-6 bg-violet-600 text-white rounded-3xl text-center min-w-[150px] shadow-lg shadow-violet-200">
+                            <p className="text-xs text-violet-200 uppercase tracking-widest font-black mb-2">XP Total</p>
+                            <p className="text-4xl font-black">{stats?.totalPoints || 0}</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <Tabs defaultValue="daily" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6 mx-auto md:mx-0">
-                    <TabsTrigger value="daily">Diarias</TabsTrigger>
-                    <TabsTrigger value="campaign">Campaña</TabsTrigger>
+                <TabsList className="bg-slate-100 p-1 rounded-2xl w-full max-w-md mx-auto md:mx-0 mb-8">
+                    <TabsTrigger
+                        value="daily"
+                        className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-600 data-[state=active]:shadow-sm font-bold w-1/2 py-3"
+                    >
+                        Misiones Diarias
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="campaign"
+                        className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-600 data-[state=active]:shadow-sm font-bold w-1/2 py-3"
+                    >
+                        Campaña Principal
+                    </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="daily" className="space-y-4">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Zap className="w-6 h-6 text-orange-500" /> Misiones Diarias
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TabsContent value="daily" className="space-y-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-amber-100 rounded-xl">
+                            <Zap className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 italic uppercase">Logros Diarios</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {dailyMissions.length === 0 ? (
-                            <p className="text-slate-500 col-span-2">No hay misiones diarias disponibles</p>
+                            <div className="col-span-2 text-center py-12 bg-white rounded-3xl border border-dashed border-slate-200">
+                                <p className="text-slate-400 font-medium">No hay misiones diarias disponibles por ahora.</p>
+                            </div>
                         ) : (
                             dailyMissions.map((mission, idx) => (
                                 <motion.div
                                     key={mission.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: idx * 0.1 }}
                                 >
-                                    <Card className={`border-l-4 ${mission.completada ? 'border-l-green-500 bg-green-50/50' : 'border-l-slate-300'}`}>
-                                        <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                            <div className="flex-1">
-                                                <h3 className="font-bold text-lg text-slate-800">{mission.titulo}</h3>
-                                                <p className="text-slate-600 text-sm">{mission.descripcion}</p>
+                                    <div className={cn(
+                                        "relative p-6 rounded-[2rem] border transition-all duration-300 group hover:shadow-lg",
+                                        mission.completada
+                                            ? "bg-emerald-50 border-emerald-100"
+                                            : "bg-white border-slate-100 hover:border-violet-100"
+                                    )}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-3 flex-1">
+                                                <div className="flex items-center gap-3">
+                                                    <Badge variant="outline" className={cn(
+                                                        "border-none",
+                                                        mission.completada ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
+                                                    )}>
+                                                        {mission.completada ? "Completada" : "En Progreso"}
+                                                    </Badge>
+                                                    <h3 className="font-bold text-slate-800 text-lg line-clamp-1">{mission.titulo}</h3>
+                                                </div>
+                                                <p className="text-slate-500 text-sm leading-relaxed">{mission.descripcion}</p>
+
                                                 {mission.objetivoValor > 1 && (
-                                                    <div className="mt-2">
-                                                        <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2" />
-                                                        <p className="text-xs text-slate-500 mt-1">{mission.progresoActual} / {mission.objetivoValor}</p>
+                                                    <div className="space-y-2 pt-2">
+                                                        <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                            <span>Progreso</span>
+                                                            <span>{mission.progresoActual} / {mission.objetivoValor}</span>
+                                                        </div>
+                                                        <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2 bg-slate-100" />
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">+{mission.xpRecompensa} XP</Badge>
-                                                {mission.recompensaReclamada ? (
-                                                    <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" /> Reclamado</Badge>
-                                                ) : mission.completada ? (
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleClaimReward(mission.id)}
-                                                        disabled={claiming === mission.id}
-                                                    >
-                                                        {claiming === mission.id ? 'Reclamando...' : 'Reclamar'}
-                                                    </Button>
-                                                ) : (
-                                                    <Badge variant="outline">En progreso</Badge>
-                                                )}
+
+                                            <div className="flex flex-col items-end gap-3 min-w-[100px]">
+                                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-none px-3 py-1 text-xs font-black uppercase tracking-wider">
+                                                    +{mission.xpRecompensa} XP
+                                                </Badge>
+
+                                                <div className="mt-2">
+                                                    {mission.recompensaReclamada ? (
+                                                        <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold uppercase tracking-wider">
+                                                            <CheckCircle2 className="w-4 h-4" /> Reclamado
+                                                        </div>
+                                                    ) : mission.completada ? (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleClaimReward(mission.id)}
+                                                            disabled={claiming === mission.id}
+                                                            className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200"
+                                                        >
+                                                            {claiming === mission.id ? '...' : 'Reclamar'}
+                                                        </Button>
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                                            <Lock className="w-4 h-4 text-slate-300" />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </CardContent>
-                                    </Card>
+                                        </div>
+                                    </div>
                                 </motion.div>
                             ))
                         )}
                     </div>
                 </TabsContent>
 
-                <TabsContent value="campaign" className="space-y-4">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Target className="w-6 h-6 text-indigo-500" /> Misiones de Campaña
-                    </h2>
+                <TabsContent value="campaign" className="space-y-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-violet-100 rounded-xl">
+                            <Target className="w-5 h-5 text-violet-600" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 italic uppercase">Campaña Principal</h2>
+                    </div>
+
                     <div className="grid grid-cols-1 gap-4">
                         {campaignMissions.length === 0 ? (
-                            <p className="text-slate-500">No hay misiones de campaña disponibles</p>
+                            <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-200">
+                                <p className="text-slate-400 font-medium">No hay misiones de campaña activas.</p>
+                            </div>
                         ) : (
                             campaignMissions.map((mission, idx) => (
                                 <motion.div
@@ -186,49 +238,56 @@ export default function MissionsHub() {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.1 }}
                                 >
-                                    <Card className={`overflow-hidden transition-all ${mission.completada ? 'opacity-70 bg-slate-50' : 'hover:shadow-md'}`}>
-                                        <div className="flex flex-col md:flex-row">
-                                            <div className={`w-full md:w-24 flex items-center justify-center p-6 ${mission.completada ? 'bg-slate-200' : 'bg-indigo-100'}`}>
-                                                {mission.completada ? <CheckCircle2 className="w-10 h-10 text-slate-400" /> : <Target className="w-10 h-10 text-indigo-600" />}
-                                            </div>
-                                            <CardContent className="p-6 flex-1 flex justify-between items-center">
-                                                <div className="flex-1">
-                                                    <h3 className={`font-bold text-xl ${mission.completada ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{mission.titulo}</h3>
-                                                    <p className="text-slate-600 mb-2">{mission.descripcion}</p>
-                                                    {mission.objetivoValor > 1 && (
-                                                        <div className="mt-2 max-w-md">
-                                                            <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2" />
-                                                            <p className="text-xs text-slate-500 mt-1">{mission.progresoActual} / {mission.objetivoValor}</p>
-                                                        </div>
-                                                    )}
-                                                    <div className="flex gap-2 mt-2">
-                                                        <Badge variant="outline" className="border-indigo-200 text-indigo-700">Recompensa: {mission.xpRecompensa} XP</Badge>
+                                    <div className={cn(
+                                        "group bg-white rounded-[2rem] border border-slate-100 p-1 flex flex-col md:flex-row gap-4 hover:border-violet-100 hover:shadow-xl transition-all duration-300",
+                                        mission.completada && "opacity-80 bg-slate-50"
+                                    )}>
+                                        <div className={cn(
+                                            "w-full md:w-24 rounded-[1.8rem] flex items-center justify-center p-6 shrink-0 transition-colors",
+                                            mission.completada ? "bg-slate-100 text-slate-400" : "bg-violet-50 text-violet-600 group-hover:bg-violet-100"
+                                        )}>
+                                            {mission.completada ? <CheckCircle2 className="w-8 h-8" /> : <Target className="w-8 h-8" />}
+                                        </div>
+
+                                        <div className="flex-1 p-4 md:py-6 md:pr-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                            <div className="space-y-2 flex-1">
+                                                <h3 className={cn(
+                                                    "font-bold text-xl",
+                                                    mission.completada ? "text-slate-500 line-through decoration-2" : "text-slate-800"
+                                                )}>{mission.titulo}</h3>
+                                                <p className="text-slate-500 leading-relaxed font-medium">{mission.descripcion}</p>
+
+                                                {mission.objetivoValor > 1 && (
+                                                    <div className="max-w-xs mt-3">
+                                                        <Progress value={(mission.progresoActual / mission.objetivoValor) * 100} className="h-2 bg-slate-100" />
                                                     </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-4 self-end md:self-center">
+                                                <div className="text-right hidden md:block">
+                                                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Recompensa</p>
+                                                    <p className="text-violet-600 font-black text-lg">+{mission.xpRecompensa} XP</p>
                                                 </div>
 
-                                                <div>
-                                                    {mission.recompensaReclamada ? (
-                                                        <Button disabled variant="ghost">Reclamado</Button>
-                                                    ) : mission.completada ? (
-                                                        <Button
-                                                            className="bg-indigo-600 hover:bg-indigo-700"
-                                                            onClick={() => handleClaimReward(mission.id)}
-                                                            disabled={claiming === mission.id}
-                                                        >
-                                                            {claiming === mission.id ? 'Reclamando...' : 'Reclamar'}
-                                                        </Button>
-                                                    ) : (
-                                                        <Badge variant="outline">En progreso</Badge>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </div>
-                                        {!mission.completada && mission.objetivoValor > 1 && (
-                                            <div className="h-1 w-full bg-indigo-100">
-                                                <div className="h-full bg-indigo-500" style={{ width: `${(mission.progresoActual / mission.objetivoValor) * 100}%` }} />
+                                                {mission.recompensaReclamada ? (
+                                                    <Button disabled variant="ghost" className="text-emerald-600 font-bold uppercase tracking-wider text-xs">
+                                                        Reclamado
+                                                    </Button>
+                                                ) : mission.completada ? (
+                                                    <Button
+                                                        className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200 px-8"
+                                                        onClick={() => handleClaimReward(mission.id)}
+                                                        disabled={claiming === mission.id}
+                                                    >
+                                                        {claiming === mission.id ? '...' : 'RECLAMAR XP'}
+                                                    </Button>
+                                                ) : (
+                                                    <Badge variant="outline" className="border-slate-200 text-slate-400 px-4 py-2">En Progreso</Badge>
+                                                )}
                                             </div>
-                                        )}
-                                    </Card>
+                                        </div>
+                                    </div>
                                 </motion.div>
                             ))
                         )}
@@ -237,25 +296,33 @@ export default function MissionsHub() {
             </Tabs>
 
             {/* Rewards Shop Teaser */}
-            <div className="mt-12">
-                <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    <Gift className="w-6 h-6 text-pink-500" /> Recompensas Desbloqueables
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="mt-16 pt-8 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                        <Gift className="w-6 h-6 text-pink-500" />
+                        <span className="italic uppercase">Recompensas</span>
+                    </h2>
+                    <Button variant="link" className="text-violet-600 font-bold">Ver Todo <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {[1, 2, 3, 4].map((i) => (
-                        <Card key={i} className="group relative overflow-hidden border-dashed border-2">
-                            <div className="absolute inset-0 bg-slate-100/80 backdrop-blur-[1px] z-10 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity">
-                                <Lock className="w-8 h-8 text-slate-400" />
+                        <div key={i} className="group relative bg-white border border-slate-200 rounded-[2rem] p-6 text-center hover:shadow-xl hover:border-violet-100 hover:-translate-y-1 transition-all duration-300">
+                            <div className="absolute top-4 right-4">
+                                <Lock className="w-4 h-4 text-slate-300 group-hover:text-violet-400 transition-colors" />
                             </div>
-                            <CardContent className="p-6 text-center">
-                                <Shield className="w-12 h-12 mx-auto text-purple-400 mb-2" />
-                                <p className="font-bold text-slate-700">Skin Exclusiva</p>
-                                <p className="text-xs text-slate-500">Nivel {i * 5} requerido</p>
-                            </CardContent>
-                        </Card>
+                            <div className="w-16 h-16 bg-slate-50 rounded-2xl mx-auto mb-4 flex items-center justify-center group-hover:bg-violet-50 transition-colors">
+                                <Shield className="w-8 h-8 text-slate-300 group-hover:text-violet-500 transition-colors" />
+                            </div>
+                            <p className="font-bold text-slate-700 mb-1 group-hover:text-violet-700">Skin Legendaria</p>
+                            <span className="inline-block px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-full group-hover:bg-violet-100 group-hover:text-violet-600 transition-colors">
+                                Nivel {i * 5}
+                            </span>
+                        </div>
                     ))}
                 </div>
             </div>
         </div>
     );
+
 }

@@ -27,7 +27,7 @@ export function MobileHeader({ currentRole, onLogout, userPlanId = 1 }: MobileHe
                 <img src={generatedImage} alt="Logo" className="h-8 w-8 object-contain p-1 rounded-lg bg-slate-50 border border-slate-100" />
                 <div>
                     <h1 className="text-lg font-black text-slate-800 leading-none tracking-tight italic">ARG</h1>
-                    <span className="text-[10px] font-bold text-blue-600 tracking-widest uppercase">Academy</span>
+                    <span className="text-[10px] font-bold text-violet-600 tracking-widest uppercase">Academy</span>
                 </div>
             </div>
 

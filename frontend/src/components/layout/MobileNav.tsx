@@ -78,10 +78,10 @@ export function MobileNav({ currentRole, onLogout, userPlanId = 1 }: MobileNavPr
               <div
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-1 rounded-2xl transition-all",
-                  isActive ? "text-[#0047AB]" : "text-slate-400"
+                  isActive ? "text-violet-600 bg-violet-50" : "text-slate-400"
                 )}
               >
-                <link.icon className={cn("h-6 w-6", isActive ? "fill-[#0047AB]/10" : "")} />
+                <link.icon className={cn("h-6 w-6", isActive ? "fill-violet-600/10" : "")} />
                 <span className="text-[10px] font-bold uppercase tracking-wider">
                   {link.label}
                 </span>
@@ -122,6 +122,6 @@ export function MobileNav({ currentRole, onLogout, userPlanId = 1 }: MobileNavPr
           </SheetContent>
         </Sheet>
       </div>
-    </div>
+    </div >
   );
 }

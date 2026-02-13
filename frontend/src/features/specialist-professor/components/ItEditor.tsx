@@ -93,10 +93,23 @@ export default function ItEditor() {
             setLoading(true);
             const data = await specialistProfessorApi.getItTemplate(parseInt(levelId));
             if (data) {
-                setTemplate(data);
+                // Merge with default template to ensure all arrays exist
+                setTemplate((prev: any) => ({
+                    ...prev,
+                    ...data,
+                    // Explicitly ensure arrays are not undefined
+                    objetivosDocente: data.objetivosDocente || [],
+                    insumosRequeridos: data.insumosRequeridos || [],
+                    criteriosEvidencia: data.criteriosEvidencia || [],
+                    criteriosValidacion: data.criteriosValidacion || [],
+                    competenciasTecnicas: data.competenciasTecnicas || [],
+                    competenciasDigitales: data.competenciasDigitales || [],
+                    competenciasTransversales: data.competenciasTransversales || []
+                }));
             }
         } catch (error) {
             console.error("Error loading IT template", error);
+            toast({ title: "Error", description: "No se pudo cargar la plantilla", variant: "destructive" });
         } finally {
             setLoading(false);
         }

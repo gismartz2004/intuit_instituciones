@@ -127,12 +127,7 @@ export default function SpecialistProfessorDashboard({ user }: SpecialistProfess
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
-                    </Dialog>
-                    <Link href="/specialist-professor/bd/new">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 h-12 px-6 rounded-xl font-bold gap-2">
-                            <PlusCircle className="w-5 h-5" /> Nuevo Proyecto Tech
-                        </Button>
-                    </Link>
+                    </Dialog>             
                 </div>
             </header>
 

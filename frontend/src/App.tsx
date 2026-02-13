@@ -67,8 +67,10 @@ function App() {
 
   const isManagementRoute = location.startsWith("/admin") || location.startsWith("/superadmin");
   const isLevelRoute = location.startsWith("/level");
-  const isSpecialistRoute = location.startsWith("/specialist");
-  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute && !isLevelRoute && !isSpecialistRoute;
+  // Fix: Hide nav for specialist content views AND specialist professor editors (which have their own sidebar)
+  // Keep nav for dashboards like /specialist-teach
+  const isSpecialistContentRoute = location.startsWith("/specialist/") || location.startsWith("/specialist-professor/");
+  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute && !isLevelRoute && !isSpecialistContentRoute;
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">

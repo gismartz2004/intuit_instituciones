@@ -132,10 +132,17 @@ export default function SpecialistCourseEditor() {
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-2">
                         {levels.map((lvl) => (
-                            <button
+                            <div
                                 key={lvl.id}
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => setSelectedLevelId(lvl.id)}
-                                className={`w-full text-left p-4 rounded-2xl transition-all border ${selectedLevelId === lvl.id
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        setSelectedLevelId(lvl.id);
+                                    }
+                                }}
+                                className={`w-full text-left p-4 rounded-2xl transition-all border cursor-pointer ${selectedLevelId === lvl.id
                                     ? 'bg-slate-900 border-slate-900 shadow-lg shadow-slate-200'
                                     : 'bg-white border-slate-100 hover:border-slate-300 text-slate-600'
                                     }`}
@@ -164,7 +171,7 @@ export default function SpecialistCourseEditor() {
                                         <Trash2 className="w-4 h-4" />
                                     </Button>
                                 </div>
-                            </button>
+                            </div>
                         ))}
                     </div>
                 </div>

@@ -73,6 +73,40 @@ export class SpecialistProfessorService {
     // Template BD
     async saveBdTemplate(levelId: number, data: any) {
         const { id, ...payload } = data;
+
+        // Map frontend data to database schema
+        const storageData = {
+            titulo: payload.nombreModulo || 'BD Template',
+            nivelId: levelId,
+            impacto: {
+                competenciasTecnicas: payload.competenciasTecnicas || [],
+                competenciasDigitales: payload.competenciasDigitales || [],
+                competenciasTransversales: payload.competenciasTransversales || []
+            },
+            secciones: {
+                // Identificación
+                semana: payload.semana,
+                ciclo: payload.ciclo,
+                nivelEducativo: payload.nivelEducativo,
+                nivelBloom: payload.nivelBloom,
+                duracion: payload.duracion,
+                // Resto de secciones
+                proposito: payload.proposito,
+                definicionSistema: payload.definicionSistema,
+                componentes: payload.componentes,
+                definicionEsquema: payload.definicionEsquema,
+                ejemplo: payload.ejemplo,
+                preguntaGuia: payload.preguntaGuia,
+                tituloReto: payload.tituloReto,
+                tituloEnvio: payload.tituloEnvio,
+                mensajeEnvio: payload.mensajeEnvio,
+                mostrarPreview: payload.mostrarPreview,
+                checklist: payload.checklist,
+                mensajeMotivacional: payload.mensajeMotivacional,
+                preguntaReflexion: payload.preguntaReflexion
+            }
+        };
+
         const existing = await this.db
             .select()
             .from(schema.plantillasBd)
@@ -82,30 +116,59 @@ export class SpecialistProfessorService {
         if (existing) {
             const [updated] = await this.db
                 .update(schema.plantillasBd)
-                .set(payload)
+                .set({
+                    titulo: storageData.titulo,
+                    impacto: storageData.impacto,
+                    secciones: storageData.secciones
+                })
                 .where(eq(schema.plantillasBd.id, existing.id))
                 .returning();
             return updated;
         } else {
             const [inserted] = await this.db
                 .insert(schema.plantillasBd)
-                .values({ ...payload, nivelId: levelId })
+                .values(storageData)
                 .returning();
             return inserted;
         }
     }
 
     async getBdTemplate(levelId: number) {
-        return await this.db
+        const record = await this.db
             .select()
             .from(schema.plantillasBd)
             .where(eq(schema.plantillasBd.nivelId, levelId))
             .then(res => res[0] || null);
+
+        if (!record) return null;
+
+        // Reconstruct the flat object for the frontend
+        const impacto = record.impacto as any || {};
+        const secciones = record.secciones as any || {};
+
+        return {
+            id: record.id,
+            nombreModulo: record.titulo,
+            ...impacto,
+            ...secciones
+        };
     }
 
     // Template IT
+    // Template IT
     async saveItTemplate(levelId: number, data: any) {
         const { id, ...payload } = data;
+
+        // Prepare data for storage
+        // Since schema only has titulo, descripcion, fases (jsonb)
+        // We map specific fields to columns and store the rest (or everything) in phases
+        const storageData = {
+            titulo: payload.codigo || 'IT Template',
+            descripcion: payload.conceptoClave || '',
+            fases: payload, // Store the entire object structure in the JSONB column
+            nivelId: levelId
+        };
+
         const existing = await this.db
             .select()
             .from(schema.plantillasIt)
@@ -115,25 +178,38 @@ export class SpecialistProfessorService {
         if (existing) {
             const [updated] = await this.db
                 .update(schema.plantillasIt)
-                .set(payload)
+                .set({
+                    titulo: storageData.titulo,
+                    descripcion: storageData.descripcion,
+                    fases: storageData.fases
+                })
                 .where(eq(schema.plantillasIt.id, existing.id))
                 .returning();
             return updated;
         } else {
             const [inserted] = await this.db
                 .insert(schema.plantillasIt)
-                .values({ ...payload, nivelId: levelId })
+                .values(storageData)
                 .returning();
             return inserted;
         }
     }
 
     async getItTemplate(levelId: number) {
-        return await this.db
+        const record = await this.db
             .select()
             .from(schema.plantillasIt)
             .where(eq(schema.plantillasIt.nivelId, levelId))
             .then(res => res[0] || null);
+
+        if (!record) return null;
+
+        // Return the JSON content merged with the ID
+        // We rely on the 'fases' column to hold the full template structure
+        return {
+            id: record.id,
+            ...(record.fases as any || {})
+        };
     }
 
     // Template PIC
