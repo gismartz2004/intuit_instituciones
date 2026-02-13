@@ -1,4 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Target,
@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocation, useRoute } from "wouter";
 import specialistProfessorApi from "@/features/specialist-professor/services/specialistProfessor.api";
+import SpecialistGuide from "../SpecialistGuide";
 
 interface ItStep {
     id: number;
@@ -47,6 +48,15 @@ const ItViewer = forwardRef(({ levelId: propLevelId, isFullscreen }: { levelId?:
     const [currentStep, setCurrentStep] = useState(1);
     const [itTemplate, setItTemplate] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+    const [isGuideVisible, setIsGuideVisible] = useState(true);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+        }
+    }, [currentStep]);
 
     const [formData, setFormData] = useState({
         variablePrincipal: "",
@@ -475,105 +485,183 @@ const ItViewer = forwardRef(({ levelId: propLevelId, isFullscreen }: { levelId?:
     };
 
     return (
-        <div className={cn(
-            "w-full bg-slate-50 flex overflow-hidden transition-all duration-500 font-sans",
-            isFullscreen
-                ? "h-screen rounded-0 border-0"
-                : "h-[calc(100vh-140px)] rounded-[2.5rem] border border-slate-200 shadow-sm"
-        )}>
-            {/* MAIN CONTENT AREA - 75% */}
-            <div className="flex-[3] bg-white h-full overflow-y-auto custom-scrollbar relative">
-                <div className={cn(
-                    "mx-auto min-h-full transition-all duration-500",
-                    isFullscreen ? "max-w-none p-8 md:p-12" : "p-12 md:p-20 max-w-5xl"
-                )}>
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentStep}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {renderStepContent()}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
+        <div className="relative w-full h-full">
+            <div className={cn(
+                "w-full bg-slate-50 flex overflow-hidden transition-all duration-500 font-sans",
+                isFullscreen
+                    ? "h-screen rounded-0 border-0"
+                    : "h-full min-h-screen rounded-none border-0 shadow-none",
+                isGuideVisible && "blur-xl scale-[0.98] pointer-events-none"
+            )}>
+                {/* MAIN CONTENT AREA - Dynamic Width based on sidebar state */}
+                <div
+                    ref={scrollContainerRef}
+                    className="flex-1 bg-white h-full overflow-y-auto custom-scrollbar relative"
+                >
 
-                {/* Breadcrumb */}
-                <div className="absolute top-8 left-8 flex items-center gap-2">
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Iteración IT</span>
-                    <span className="text-slate-200">/</span>
-                    <span className="text-[10px] font-black text-violet-500 uppercase tracking-widest">Paso {currentStep}</span>
-                </div>
-            </div>
-
-            {/* SIDEBAR PLAYLIST - 25% */}
-            <div className="hidden lg:flex flex-1 flex-col bg-slate-50 border-l border-slate-200 h-full overflow-hidden">
-                <div className="p-8 border-b border-slate-200 bg-white">
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Pasos de Integración</h3>
-                    <div className="flex items-center justify-between">
-                        <p className="text-lg font-black italic text-slate-800 tracking-tight">Curva de Código</p>
-                        <Badge className="bg-violet-600 text-[10px] px-2">{currentStep}/10</Badge>
-                    </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                    {steps.map((step) => {
-                        const isActive = currentStep === step.id;
-                        const isCompleted = currentStep > step.id;
-                        return (
-                            <button
-                                key={step.id}
-                                onClick={() => setCurrentStep(step.id)}
-                                className={cn(
-                                    "w-full flex items-center gap-4 p-4 rounded-2xl transition-all group relative",
-                                    isActive
-                                        ? "bg-white shadow-lg shadow-slate-200/50 border border-slate-200"
-                                        : "hover:bg-slate-100 border border-transparent"
-                                )}
+                    <div className={cn(
+                        "mx-auto min-h-full transition-all duration-500",
+                        isFullscreen ? "max-w-none p-8 md:p-12" : "p-12 md:p-20 max-w-5xl"
+                    )}>
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={currentStep}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.3 }}
                             >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="sidebarHighlightIT"
-                                        className="absolute left-1 w-1 h-8 bg-violet-600 rounded-full"
-                                    />
-                                )}
+                                {renderStepContent()}
+                            </motion.div>
+                        </AnimatePresence>
 
-                                <div className={cn(
-                                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
-                                    isActive ? "bg-violet-600 text-white shadow-lg shadow-violet-200" :
-                                        isCompleted ? "bg-emerald-100 text-emerald-600" : "bg-slate-200 text-slate-400"
-                                )}>
-                                    {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : isActive ? <PlayCircle className="w-5 h-5 animate-pulse" /> : <span className="text-xs font-black">{step.id}</span>}
-                                </div>
+                        {/* Navigation Buttons */}
+                        <div className="mt-16 pt-8 border-t border-slate-100 flex items-center justify-between pb-12">
+                            <Button
+                                variant="ghost"
+                                onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
+                                disabled={currentStep === 1}
+                                className="flex items-center gap-3 px-6 py-6 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all font-black uppercase text-[10px] tracking-widest"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Regresar
+                            </Button>
 
-                                <div className="text-left overflow-hidden">
-                                    <p className={cn(
-                                        "text-xs font-black tracking-tight truncate",
-                                        isActive ? "text-slate-900" : "text-slate-500"
-                                    )}>
-                                        {step.title}
-                                    </p>
-                                    <p className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-widest">{step.description}</p>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
+                            <div className="flex items-center gap-2">
+                                {steps.map(s => (
+                                    <div key={s.id} className={cn(
+                                        "w-1.5 h-1.5 rounded-full transition-all",
+                                        currentStep === s.id ? "bg-slate-800 w-6" : s.id < currentStep ? "bg-slate-300" : "bg-slate-200"
+                                    )} />
+                                ))}
+                            </div>
 
-                {/* IT Motivator Overlay */}
-                <div className="p-6 bg-white border-t border-slate-200">
-                    <div className="p-4 bg-violet-50 rounded-2xl flex items-start gap-4">
-                        <div className="p-2 bg-white rounded-lg shadow-sm">
-                            <Sparkles className="w-4 h-4 text-violet-600" />
+                            <Button
+                                onClick={() => currentStep < 10 && setCurrentStep(currentStep + 1)}
+                                disabled={currentStep === 10}
+                                className="bg-slate-800 hover:bg-slate-900 text-white flex items-center gap-3 px-8 py-6 rounded-2xl shadow-xl shadow-slate-200 transition-all font-black uppercase text-[10px] tracking-widest"
+                            >
+                                {currentStep === 10 ? "Finalizar" : "Continuar"}
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
                         </div>
-                        <p className="text-[10px] font-bold text-violet-700 leading-tight">
-                            "Integración técnica: Estás uniendo los puntos para crear inteligencia funcional."
-                        </p>
+                    </div>
+
+                    {/* Breadcrumb */}
+                    <div className="absolute top-8 left-8 flex items-center gap-2">
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Iteración IT</span>
+                        <span className="text-slate-200">/</span>
+                        <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Paso {currentStep}</span>
                     </div>
                 </div>
+
+                {/* SIDEBAR PLAYLIST - Collapsible on Hover */}
+                <motion.div
+                    onMouseEnter={() => setIsPlaylistOpen(true)}
+                    onMouseLeave={() => setIsPlaylistOpen(false)}
+                    initial={false}
+                    animate={{
+                        width: isPlaylistOpen ? "320px" : "64px"
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="hidden lg:flex flex-col bg-slate-50 border-l border-slate-200 h-full overflow-hidden relative z-50 shadow-xl"
+                >
+                    <div className={cn(
+                        "p-8 border-b border-slate-200 bg-white transition-opacity duration-300",
+                        isPlaylistOpen ? "opacity-100" : "opacity-0 invisible h-0 p-0"
+                    )}>
+                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Pasos de Integración</h3>
+                        <div className="flex items-center justify-between">
+                            <p className="text-lg font-black italic text-slate-800 tracking-tight">Curva de Código</p>
+                            <Badge className="bg-slate-800 text-[10px] px-2">{currentStep}/10</Badge>
+                        </div>
+                    </div>
+
+                    {/* Minimized Trigger Area - Icons */}
+                    {!isPlaylistOpen && (
+                        <div className="absolute inset-y-0 left-0 w-full flex flex-col items-center py-8 gap-8 pointer-events-none">
+                            <Terminal className="w-6 h-6 text-slate-400" />
+                            <div className="flex flex-col gap-1 items-center">
+                                {steps.map(s => (
+                                    <div key={s.id} className={cn(
+                                        "w-1 h-1 rounded-full",
+                                        currentStep === s.id ? "bg-slate-800 h-4" : "bg-slate-300"
+                                    )} />
+                                ))}
+                            </div>
+                            <span className="[writing-mode:vertical-lr] text-[10px] font-black uppercase tracking-widest text-slate-400 rotate-180">
+                                Ruta de Aprendizaje
+                            </span>
+                        </div>
+                    )}
+
+                    <div className={cn(
+                        "flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar transition-opacity duration-300",
+                        isPlaylistOpen ? "opacity-100" : "opacity-0 invisible"
+                    )}>
+                        {steps.map((step) => {
+                            const isActive = currentStep === step.id;
+                            const isCompleted = currentStep > step.id;
+                            return (
+                                <button
+                                    key={step.id}
+                                    onClick={() => setCurrentStep(step.id)}
+                                    className={cn(
+                                        "w-full flex items-center gap-4 p-4 rounded-2xl transition-all group relative",
+                                        isActive
+                                            ? "bg-white shadow-lg shadow-slate-200/50 border border-slate-200"
+                                            : "hover:bg-slate-100 border border-transparent"
+                                    )}
+                                >
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="sidebarHighlightIT"
+                                            className="absolute left-1 w-1 h-8 bg-slate-800 rounded-full"
+                                        />
+                                    )}
+
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
+                                        isActive ? "bg-slate-800 text-white shadow-lg shadow-slate-200" :
+                                            isCompleted ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-400"
+                                    )}>
+                                        {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : isActive ? <PlayCircle className="w-5 h-5 animate-pulse" /> : <span className="text-xs font-black">{step.id}</span>}
+                                    </div>
+
+                                    <div className="text-left overflow-hidden">
+                                        <p className={cn(
+                                            "text-xs font-black tracking-tight truncate",
+                                            isActive ? "text-slate-900" : "text-slate-500"
+                                        )}>
+                                            {step.title}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-widest">{step.description}</p>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Footer Motivation - Only visible when open */}
+                    <div className={cn(
+                        "p-6 bg-white border-t border-slate-200 transition-opacity duration-300",
+                        isPlaylistOpen ? "opacity-100" : "opacity-0 invisible h-0 p-0"
+                    )}>
+                        <div className="p-4 bg-violet-50 rounded-2xl flex items-start gap-4">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                                <Sparkles className="w-4 h-4 text-violet-600" />
+                            </div>
+                            <p className="text-[10px] font-bold text-violet-700 leading-tight">
+                                "Integración técnica: Estás uniendo los puntos para crear inteligencia funcional."
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
+            <SpecialistGuide
+                viewMode="it"
+                onClose={() => setIsGuideVisible(false)}
+            />
         </div>
     );
 });

@@ -324,6 +324,16 @@ export default function LevelViewer() {
           </div>
         )}
 
+        {/* Gamification HUD - Integrated in Sidebar for Specialists or when expanded for everyone */}
+        {(isSpecialist || isSidebarOpen) && (
+          <div className={cn(
+            "pt-10 px-4 transition-all duration-500 overflow-hidden",
+            (isSidebarOpen || isMobile) ? "opacity-100 max-h-48" : "opacity-0 max-h-0"
+          )}>
+            <EnhancedGamificationHud state={gameState} />
+          </div>
+        )}
+
         {/* Navigation - Centered & Refined */}
         <nav className="flex-1 flex flex-col justify-center px-4 space-y-4 overflow-y-auto relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none]">
           <div className="space-y-4">
@@ -442,6 +452,7 @@ export default function LevelViewer() {
         </div>
       </motion.aside>
 
+
       {/* OVERLAY FOR MOBILE SIDEBAR */}
       <AnimatePresence>
         {isMobile && isSidebarOpen && (
@@ -476,7 +487,7 @@ export default function LevelViewer() {
         )}
       >
 
-        {!isFullscreen && (
+        {!isFullscreen && !isSpecialist && (
           <header className={cn(
             "h-24 flex-shrink-0 px-24 flex items-center justify-between border-b z-30 shadow-sm relative transition-colors duration-500 bg-white border-slate-200"
           )}>
@@ -486,19 +497,6 @@ export default function LevelViewer() {
               )}>
                 {menuItems.find(i => i.id === viewMode)?.label || "Módulo"}
               </h2>
-
-              {isSpecialist && (
-                <div className="flex items-center gap-6 ml-6 pl-6 border-l border-slate-200">
-                  <div className="text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Paso Actual</p>
-                    <p className="text-lg font-black text-slate-800 italic">
-                      {viewMode === 'bd' ? (bdRef.current?.getCurrentStep?.() || 1) :
-                        viewMode === 'it' ? (itRef.current?.getCurrentStep?.() || 1) :
-                          (picRef.current?.getCurrentStep?.() || 1)} / {viewMode === 'bd' ? 12 : 10}
-                    </p>
-                  </div>
-                </div>
-              )}
 
               {attendance?.asistio && (
                 <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
@@ -520,27 +518,33 @@ export default function LevelViewer() {
           </header>
         )}
 
+
         <div className={cn(
           "flex-1 overflow-hidden relative w-full flex transition-colors duration-500 bg-slate-50/50",
-          isFullscreen ? "h-screen" : "h-[calc(100vh-96px)]"
+          (isFullscreen || isSpecialist) ? "h-screen" : "h-[calc(100vh-96px)]"
         )}>
+
           {/* Left Navigation Button */}
-          <div className="hidden md:flex items-center px-4 z-40">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePrev}
-              className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </Button>
-          </div>
+          {!isSpecialist && (
+            <div className="hidden md:flex items-center px-4 z-40">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrev}
+                className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </Button>
+            </div>
+          )}
+
 
           {/* Main Focused Content Area */}
           <div className={cn(
             "flex-1 w-full mx-auto relative overflow-hidden flex flex-col",
-            isFullscreen ? "max-w-none px-0 py-0" : "max-w-7xl px-4 py-2"
+            (isFullscreen || isSpecialist) ? "max-w-none px-0 py-0" : "max-w-7xl px-4 py-2"
           )}>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${levelId}-${viewMode}`}
@@ -561,53 +565,20 @@ export default function LevelViewer() {
           </div>
 
           {/* Right Navigation Button */}
-          <div className="hidden md:flex items-center px-4 z-40">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNext}
-              className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </Button>
-          </div>
-        </div>
+          {!isSpecialist && (
+            <div className="hidden md:flex items-center px-4 z-40">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </Button>
+            </div>
+          )}
 
-        {/* Floating Fullscreen Toggle Button - Only for Specialist Viewers */}
-        {['bd', 'it', 'pic'].includes(viewMode) && (
-          <motion.div
-            initial={{ scale: 0, y: 20 }}
-            animate={{
-              scale: 1,
-              y: [0, -10, 0],
-            }}
-            transition={{
-              scale: { duration: 0.3 },
-              y: {
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }
-            }}
-            className="fixed bottom-8 right-8 z-[1000]"
-          >
-            <Button
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className={cn(
-                "w-16 h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center p-0",
-                isFullscreen
-                  ? "bg-slate-800 hover:bg-slate-900 text-white"
-                  : "bg-violet-600 hover:bg-violet-700 text-white ring-4 ring-violet-200"
-              )}
-            >
-              {isFullscreen ? (
-                <Minimize2 className="w-8 h-8" />
-              ) : (
-                <Maximize2 className="w-8 h-8" />
-              )}
-            </Button>
-          </motion.div>
-        )}
+        </div>
       </main>
     </div>
   );

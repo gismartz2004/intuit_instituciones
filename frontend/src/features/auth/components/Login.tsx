@@ -129,202 +129,164 @@ export default function Login({ onLogin }: LoginProps) {
       </div>
 
       {/* --- LOGIN INTERFACE --- */}
-      <div className="relative z-10 w-full max-w-[1200px] px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="relative z-10 w-full max-w-[1100px] px-6 flex items-center justify-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-0 bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] overflow-hidden">
 
-        {/* Left Side: Tech Branding & Stats */}
-        <div className="hidden lg:block space-y-12">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl">
-                <Cpu className="w-8 h-8 text-cyan-400" />
-              </div>
-              <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 px-4 py-1 uppercase tracking-[0.2em] font-black text-[10px] bg-cyan-400/5">
-                Core Systems Online
-              </Badge>
-            </div>
+          {/* Left Side: Branding (Info & Stats) */}
+          <div className="hidden lg:flex flex-col justify-between p-12 md:p-16 bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/5 relative overflow-hidden text-left border-r border-white/5">
+            {/* Background Glows for Left Pane */}
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-cyan-500/10 blur-[100px] rounded-full" />
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full" />
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter italic leading-none mb-6 text-white">
-              GENIOS <span className="text-cyan-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">BOT</span>
-              <br />
-              <span className="text-slate-700">ACADEMY v4.0</span>
-            </h1>
-
-            <p className="text-slate-400 text-lg lg:text-xl font-medium max-w-lg leading-relaxed border-l-2 border-cyan-500/30 pl-8">
-              Protocolo de acceso al mejor ecosistema de alto rendimiento para el desarrollo de talento tecnológico avanzado.
-            </p>
-          </motion.div>
-
-          {/* Micro Stats Grid */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="grid grid-cols-2 gap-4 max-w-md"
-          >
-            {[
-              { label: 'Network status', value: 'Encrypted', icon: ShieldCheck, color: 'text-emerald-500' },
-              { label: 'Active nodes', value: '1,420+', icon: Network, color: 'text-cyan-500' },
-              { label: 'Uptime core', value: '99.98%', icon: Activity, iconColor: 'text-purple-500' },
-              { label: 'Data rate', value: '8.4 Gb/s', icon: Globe, iconColor: 'text-blue-500' }
-            ].map((stat, i) => (
-              <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-white/10 transition-colors group">
-                <stat.icon className={cn("w-5 h-5 mb-2 opacity-50 group-hover:opacity-100 transition-opacity", stat.color || stat.iconColor)} />
-                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{stat.label}</p>
-                <p className="text-base font-black text-white">{stat.value}</p>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Right Side: Identity Verification Panel */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative"
-        >
-          {/* Futuristic Card Container */}
-          <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-
-            {/* Corner Accents */}
-            <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-cyan-500/20 rounded-tl-[2rem] md:rounded-tl-[3rem]" />
-            <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-cyan-500/20 rounded-br-[2rem] md:rounded-br-[3rem]" />
-
-            {/* Header / Identity Icon */}
-            <div className="text-center mb-8 md:mb-12">
+            <div className="relative z-10 space-y-10">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-cyan-600 to-blue-800 rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-2xl relative group/icon"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
               >
-                <Fingerprint className="w-8 h-8 md:w-10 md:h-10 text-white group-hover/icon:scale-110 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-cyan-400/20 rounded-2xl blur-xl opacity-0 group-hover/icon:opacity-100 transition-opacity duration-700" />
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+                    <Cpu className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 px-3 py-0.5 uppercase tracking-[0.2em] font-black text-[9px] bg-cyan-400/5">
+                    Core Systems Online
+                  </Badge>
+                </div>
+
+                <h1 className="text-5xl lg:text-6xl font-black tracking-tighter italic leading-none mb-8 text-white">
+                  GENIOS <span className="text-cyan-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">BOT</span>
+                  <br />
+                  <span className="text-slate-600 text-3xl">ACADEMY v4.0</span>
+                </h1>
+
+                <p className="text-slate-400 text-base font-medium max-w-sm leading-relaxed border-l border-cyan-500/30 pl-6">
+                  Acceso al ecosistema líder para el desarrollo de talento tecnológico y robótica gamificada.
+                </p>
               </motion.div>
-              <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest italic text-white flex items-center justify-center gap-3">
-                <Terminal className="w-4 h-4 md:w-5 md:h-5 text-cyan-500" /> Identity Sync
-              </h2>
-              <div className="mt-2 text-slate-500 font-bold uppercase text-[8px] md:text-[9px] tracking-[0.3em]">Ingrese credenciales de acceso</div>
+
+              {/* Stats Grid */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="grid grid-cols-2 gap-4"
+              >
+                {[
+                  { label: 'Status', value: 'Encrypted', icon: ShieldCheck, color: 'text-emerald-500' },
+                  { label: 'Network', value: 'ARG_NET', icon: Network, color: 'text-cyan-500' },
+                  { label: 'Uptime', value: '99.98%', icon: Activity, color: 'text-purple-500' },
+                  { label: 'Nodes', value: '1,420+', icon: Globe, color: 'text-blue-500' }
+                ].map((stat, i) => (
+                  <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-white/10 transition-colors group">
+                    <stat.icon className={cn("w-4 h-4 mb-2 opacity-40 group-hover:opacity-100 transition-opacity", stat.color)} />
+                    <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest">{stat.label}</p>
+                    <p className="text-sm font-black text-white">{stat.value}</p>
+                  </div>
+                ))}
+              </motion.div>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-8">
-              {/* Credential: Email */}
-              <div className="space-y-3 group/field">
-                <div className="flex justify-between items-center px-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-focus-within/field:text-cyan-500 transition-colors">Credential ID / Email</label>
-                  <AtSign className="w-3 h-3 text-slate-700 group-focus-within/field:text-cyan-500" />
-                </div>
-                <div className="relative">
-                  <Input
-                    placeholder="NAME@PROTOCOL.SYS"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="h-12 md:h-14 bg-slate-950/50 border-white/10 text-white placeholder:text-slate-700 focus:bg-slate-950 focus:border-cyan-500/50 focus:ring-4 focus:ring-cyan-500/5 transition-all duration-500 rounded-xl px-5 font-mono text-xs md:text-sm tracking-wider"
-                    required
-                  />
-                  {/* Subtle input scan line animation on focus */}
-                  <div className="absolute inset-0 pointer-events-none border border-transparent group-focus-within/field:border-cyan-500/20 rounded-2xl overflow-hidden">
-                    <motion.div
-                      animate={{ y: ['-100%', '100%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      className="w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent hidden group-focus-within/field:block"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Credential: Keyphrase */}
-              <div className="space-y-3 group/field">
-                <div className="flex justify-between items-center px-1 md:px-2">
-                  <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 group-focus-within/field:text-purple-500 transition-colors">Access Keyphrase</label>
-                  <Lock className="w-2.5 h-2.5 md:w-3 md:h-3 text-slate-700 group-focus-within/field:text-purple-500" />
-                </div>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 md:h-14 bg-slate-950/50 border-white/10 text-white placeholder:text-slate-700 focus:bg-slate-950 focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all duration-500 rounded-xl px-5 font-mono text-xs md:text-sm tracking-widest"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                  {/* Subtle input scan line animation on focus */}
-                  <div className="absolute inset-0 pointer-events-none border border-transparent group-focus-within/field:border-purple-500/20 rounded-2xl overflow-hidden">
-                    <motion.div
-                      animate={{ y: ['-100%', '100%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      className="w-full h-1 bg-gradient-to-r from-transparent via-purple-500/20 to-transparent hidden group-focus-within/field:block"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Action: Initialize Link */}
-              <div className="pt-6">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-20 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white border-0 rounded-[2rem] font-black italic tracking-tighter text-xl shadow-2xl shadow-cyan-900/20 transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group/btn"
-                >
-                  <AnimatePresence mode="wait">
-                    {loading ? (
-                      <motion.div
-                        key="loading"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-center gap-4"
-                      >
-                        <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        AUTENTICANDO...
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="idle"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-center gap-4"
-                      >
-                        INGRESAR <Rocket className="w-6 h-6 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Button Glitch Effect Overlay */}
-                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none" />
-                </Button>
-              </div>
-            </form>
-
-            {/* Footer / Meta Data */}
-            <div className="mt-8 md:mt-12 flex items-center justify-between px-2">
-              <div className="flex items-center gap-2">
-                <Database className="w-2.5 h-2.5 md:w-3 md:h-3 text-slate-700" />
-                <span className="text-[7px] md:text-[8px] font-bold text-slate-700 uppercase tracking-widest">Host: ARG_NET_ALPHA</span>
-              </div>
-              <div className="text-[7px] md:text-[8px] font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
-                Encrypted Tunnel <Lock className="w-2 h-2" />
-              </div>
+            {/* Micro Footer for Left Pane */}
+            <div className="relative z-10 pt-10 flex items-center gap-3">
+              <Database className="w-3 h-3 text-slate-700" />
+              <span className="text-[7px] font-bold text-slate-700 uppercase tracking-[0.3em]">Protocol Alpha Secured</span>
             </div>
           </div>
 
-          {/* Exterior Decoration */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none -z-10" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none -z-10" />
-        </motion.div>
+          {/* Right Side: Identity Verification Panel */}
+          <div className="p-8 md:p-14 lg:p-16 flex flex-col justify-center bg-slate-900/20">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-md mx-auto"
+            >
+              {/* Header / Identity Icon */}
+              <div className="text-center mb-10">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="w-16 h-16 bg-gradient-to-br from-cyan-600 to-blue-800 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl relative group/icon"
+                >
+                  <Fingerprint className="w-8 h-8 text-white group-hover/icon:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-cyan-400/20 rounded-2xl blur-xl opacity-0 group-hover/icon:opacity-100 transition-opacity duration-700" />
+                </motion.div>
+                <h2 className="text-2xl font-black uppercase tracking-widest italic text-white flex items-center justify-center gap-3">
+                  <Terminal className="w-5 h-5 text-cyan-500" /> Identity Sync
+                </h2>
+                <div className="mt-2 text-slate-500 font-bold uppercase text-[9px] tracking-[0.3rem]">Auth Protocol Required</div>
+              </div>
+
+              <form onSubmit={handleLogin} className="space-y-6">
+                {/* Credential: Email */}
+                <div className="space-y-3 group/field">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-focus-within/field:text-cyan-500 transition-colors">Credential ID</label>
+                    <AtSign className="w-3 h-3 text-slate-800 group-focus-within/field:text-cyan-500" />
+                  </div>
+                  <div className="relative">
+                    <Input
+                      placeholder="NAME@PROTOCOL.SYS"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="h-14 bg-slate-950/40 border-white/10 text-white placeholder:text-slate-800 focus:bg-slate-950/80 focus:border-cyan-500/50 focus:ring-4 focus:ring-cyan-500/5 transition-all duration-500 rounded-xl px-5 font-mono text-sm tracking-wider"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Credential: Keyphrase */}
+                <div className="space-y-3 group/field">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-focus-within/field:text-purple-500 transition-colors">Access Phrase</label>
+                    <Lock className="w-3 h-3 text-slate-800 group-focus-within/field:text-purple-500" />
+                  </div>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-14 bg-slate-950/40 border-white/10 text-white placeholder:text-slate-800 focus:bg-slate-950/80 focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/5 transition-all duration-500 rounded-xl px-5 font-mono text-sm tracking-widest"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-700 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <div className="pt-6">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-16 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white border-0 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-2xl shadow-cyan-900/20 transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group/btn"
+                  >
+                    <AnimatePresence mode="wait">
+                      {loading ? (
+                        <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3">
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          SYNCING...
+                        </motion.div>
+                      ) : (
+                        <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3">
+                          INITIALIZE ENTRY <Rocket className="w-5 h-5 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* --- FOOTER CREDITS --- */}

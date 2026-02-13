@@ -21,22 +21,23 @@ export default function EnhancedGamificationHud({ state, className }: EnhancedGa
 
     return (
         <div
-            className={cn("transition-all duration-300 relative h-12 w-48", className)}
+            className={cn("transition-all duration-300 relative ", className)}
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
         >
-            <div className="absolute top-0 right-0 z-50">
+            <div className="relative z-50">
                 <motion.div
                     initial={false}
-                    animate={{ width: isExpanded ? '300px' : '200px' }}
-                    className="relative"
+                    animate={{ width: isExpanded ? '260px' : '100%' }}
+                    className="relative mx-auto"
                 >
                     <Card
                         className={cn(
-                            "bg-white/95 backdrop-blur-md shadow-2xl border-2 border-purple-200 overflow-hidden transition-all",
-                            !isExpanded && "cursor-pointer hover:scale-105"
+                            "bg-white/95 backdrop-blur-md shadow-2xl border-2 border-slate-100 overflow-hidden transition-all",
+                            !isExpanded && "cursor-pointer hover:scale-[1.02]"
                         )}
                     >
+
                         <CardContent className="p-0">
                             {/* Header / Minimized State */}
                             <div className={cn(
