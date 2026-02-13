@@ -153,13 +153,13 @@ function App() {
           <Route path="/teach/grading" component={GradingDashboard} />
           <Route path="/teach/module/:id" component={CourseEditor} />
           <Route path="/specialist/bd/:id">
-            {(params: any) => params ? <BdViewer id={params.id} /> : null}
+            {(params: any) => params ? <BdViewer levelId={Number(params.id)} /> : null}
           </Route>
           <Route path="/specialist/it/:id">
-            {(params: any) => params ? <ItViewer id={params.id} /> : null}
+            {(params: any) => params ? <ItViewer levelId={Number(params.id)} /> : null}
           </Route>
           <Route path="/specialist/pic/:id">
-            {(params: any) => params ? <PicViewer id={params.id} /> : null}
+            {(params: any) => params ? <PicViewer levelId={Number(params.id)} /> : null}
           </Route>
           <Route path="/specialist-teach">
             <SpecialistProfessorDashboard user={user!} />
