@@ -104,7 +104,7 @@ function App() {
 
       <main className={cn(
         "flex-1 min-h-screen bg-slate-50/50",
-        showNav ? "md:ml-[280px] pt-14 md:pt-0 pb-24 md:pb-0" : ""
+        showNav ? "md:ml-70 pt-14 md:pt-0 pb-24 md:pb-0" : ""
       )}>
         <Switch>
           {/* Public Routes - No login required */}

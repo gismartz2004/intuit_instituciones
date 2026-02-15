@@ -83,7 +83,7 @@ export default function SpecialistDashboard({ user }: SpecialistDashboardProps) 
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] text-white selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-[#ffffff] text-black selection:bg-cyan-500/30">
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 {user.especializacion === "Ciencias Computacionales" ? (
@@ -104,11 +104,11 @@ export default function SpecialistDashboard({ user }: SpecialistDashboardProps) 
                     </svg>
                 ) : null}
                 <div className={cn(
-                    "absolute top-0 left-1/4 w-[500px] h-[500px] blur-[120px] rounded-full",
+                    "absolute top-0 left-1/4 w-125 h-125 blur-[120px] rounded-full",
                     user.especializacion === "Mecatrónica" ? "bg-orange-600/10" :
                         user.especializacion === "Electrónica" ? "bg-yellow-600/10" : "bg-cyan-600/10"
                 )} />
-                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full" />
+                <div className="absolute bottom-0 right-1/4 w-125 h-125 bg-purple-600/10 blur-[120px] rounded-full" />
             </div>
 
             <AnimatePresence mode="wait">
@@ -147,7 +147,7 @@ export default function SpecialistDashboard({ user }: SpecialistDashboardProps) 
                                         onClick={() => handleSelectModule(mod)}
                                         className="relative group cursor-pointer"
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-purple-600/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="absolute inset-0 bg-linear-to-br from-cyan-500/20 to-purple-600/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] h-full flex flex-col items-center text-center overflow-hidden">
                                             {/* Tech Symbol (< />) */}
                                             <div className="w-24 h-24 bg-slate-800 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-cyan-500 transition-colors duration-500 shadow-2xl relative">
