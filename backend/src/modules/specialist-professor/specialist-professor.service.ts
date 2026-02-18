@@ -2,7 +2,7 @@ import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, or, sql } from 'drizzle-orm';
 
 @Injectable()
 export class SpecialistProfessorService {
@@ -11,13 +11,24 @@ export class SpecialistProfessorService {
     ) { }
 
     async getModulesByProfessor(professorId: number) {
+        // Select all specialization modules where:
+        // 1. A multi-professor assignment exists and it matches this professor
+        // 2. OR: No multi-professor assignments exist for the module AND this professor is the record's main professorId
         return await this.db
             .select()
             .from(schema.modulos)
             .where(
                 and(
-                    eq(schema.modulos.profesorId, professorId),
-                    eq(schema.modulos.categoria, 'specialization')
+                    eq(schema.modulos.categoria, 'specialization'),
+                    or(
+                        // Case 1: Assigned via the newer join table
+                        sql`EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id} AND mp.profesor_id = ${professorId})`,
+                        // Case 2: Legacy fallback (only if join table is completely empty for this module)
+                        and(
+                            eq(schema.modulos.profesorId, professorId),
+                            sql`NOT EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id})`
+                        )
+                    )
                 )
             );
     }

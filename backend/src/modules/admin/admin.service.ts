@@ -227,17 +227,30 @@ export class AdminService {
     /**
      * Assign a professor to all students in a module
      */
-    async assignProfessorToModule(moduleId: number, professorId: number) {
+    /**
+     * Assign a professor to all students in a module
+     */
+    async assignProfessorToModule(moduleId: number, professorId: number | null) {
+        // Update the module's primary professor
         await this.db
             .update(schema.modulos)
             .set({ profesorId: professorId })
             .where(eq(schema.modulos.id, moduleId));
 
-        // Also sync existing assignments for this module
+        // Sync student-level assignments
         await this.db
             .update(schema.asignaciones)
             .set({ profesorId: professorId })
             .where(eq(schema.asignaciones.moduloId, moduleId));
+
+        // If a professor is being assigned (not null), also ensure they are in modulo_profesores
+        if (professorId) {
+            await this.addProfessorToModule(moduleId, professorId);
+        } else {
+            // If setting to null, we might want to keep the join table as is, 
+            // but the UI typically wants a full unassign when selecting "Sin profesor"
+            // For now, only the old primary assignment is cleared.
+        }
 
         return { success: true };
     }
@@ -518,12 +531,32 @@ export class AdminService {
      * Remove a professor from a module
      */
     async unassignProfessorFromModule(moduleId: number, professorId: number) {
+        // 1. Remove from join table
         await this.db
             .delete(schema.moduloProfesores)
             .where(and(
                 eq(schema.moduloProfesores.moduloId, moduleId),
                 eq(schema.moduloProfesores.profesorId, professorId)
             ));
+
+        // 2. Clear from modulos if primary
+        await this.db
+            .update(schema.modulos)
+            .set({ profesorId: null })
+            .where(and(
+                eq(schema.modulos.id, moduleId),
+                eq(schema.modulos.profesorId, professorId)
+            ));
+
+        // 3. Clear from asignaciones for this module
+        await this.db
+            .update(schema.asignaciones)
+            .set({ profesorId: null })
+            .where(and(
+                eq(schema.asignaciones.moduloId, moduleId),
+                eq(schema.asignaciones.profesorId, professorId)
+            ));
+
         return { success: true };
     }
 }

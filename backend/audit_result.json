@@ -1,0 +1,67 @@
+{
+  "user": {
+    "id": 6,
+    "nombre": "Sebastian Muñoz",
+    "email": "s.muñoz@geniosbot.org"
+  },
+  "moduloProfesores": [
+    {
+      "id": 5,
+      "moduloId": 17,
+      "profesorId": 6,
+      "fechaAsignacion": "2026-02-10T20:20:51.690Z"
+    },
+    {
+      "id": 6,
+      "moduloId": 15,
+      "profesorId": 6,
+      "fechaAsignacion": "2026-02-10T20:20:51.895Z"
+    },
+    {
+      "id": 8,
+      "moduloId": 4,
+      "profesorId": 6,
+      "fechaAsignacion": "2026-02-10T20:20:52.355Z"
+    },
+    {
+      "id": 9,
+      "moduloId": 2,
+      "profesorId": 6,
+      "fechaAsignacion": "2026-02-10T20:20:52.557Z"
+    },
+    {
+      "id": 11,
+      "moduloId": 11,
+      "profesorId": 6,
+      "fechaAsignacion": "2026-02-13T16:14:21.418Z"
+    }
+  ],
+  "modulosOwning": [
+    {
+      "id": 18,
+      "nombre": "Aplicaciones Moviles JR"
+    }
+  ],
+  "asignacionesModuleIds": [
+    2,
+    4,
+    13,
+    15,
+    17,
+    18
+  ],
+  "checkModulesStatus": [
+    {
+      "moduleId": 13,
+      "professorCount": 0,
+      "professors": []
+    },
+    {
+      "moduleId": 18,
+      "professorCount": 1,
+      "professors": [
+        12
+      ]
+    }
+  ]
+}

@@ -18,21 +18,25 @@ export class ProfessorService {
     private readonly storageService: StorageService,
     private readonly studentService: StudentService,
   ) { }
-
   async getModulesByProfessor(professorId: number) {
-    // Select modules where the professor is either the owner OR assigned to students
-    const modulesSubquery = this.db
-      .select({ id: schema.asignaciones.moduloId })
-      .from(schema.asignaciones)
-      .where(eq(schema.asignaciones.profesorId, professorId));
-
+    // Select all modules where:
+    // 1. A multi-professor assignment exists and it matches this professor
+    // 2. OR: No multi-professor assignments exist for the module AND this professor is the record's main professorId
     const assignedModules = await this.db
       .select()
       .from(schema.modulos)
       .where(
         or(
-          eq(schema.modulos.profesorId, professorId),
-          sql`${schema.modulos.id} IN (${modulesSubquery})`
+          // Case 1: Assigned via the newer join table
+          sql`EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id} AND mp.profesor_id = ${professorId})`,
+          // Case 2: Legacy fallback (only if join table is completely empty for this module)
+          and(
+            eq(schema.modulos.profesorId, professorId),
+            sql`NOT EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id})`
+          ),
+          // Case 3: Assigned to specific students in this module 
+          // (Usually restricted by multi-professor list, but kept for student-specific oversight)
+          sql`EXISTS (SELECT 1 FROM ${schema.asignaciones} a WHERE a.modulo_id = ${schema.modulos.id} AND a.profesor_id = ${professorId})`
         )
       );
 
