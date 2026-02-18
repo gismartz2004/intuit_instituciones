@@ -339,7 +339,7 @@ export default function CourseEditor() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-8">
                 {/* Left: Levels List */}
                 <Card>
                     <CardHeader>
@@ -477,11 +477,11 @@ export default function CourseEditor() {
                                                 </Tabs>
                                             </div>
 
-                                            <div className="flex justify-between items-center mt-2">
-                                                <p className="text-sm text-slate-500">
+                                            <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
+                                                <p className="text-sm text-slate-500 font-medium">
                                                     {level.contents?.length || 0} contenido(s)
                                                 </p>
-                                                <div className="flex gap-2">
+                                                <div className="flex flex-wrap gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
