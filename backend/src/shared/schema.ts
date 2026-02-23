@@ -66,7 +66,6 @@ export const modulos = pgTable('modulos', {
   duracionDias: integer('duracion_dias'),
   profesorId: integer('profesor_id').references(() => usuarios.id),
   categoria: varchar('categoria', { length: 20 }).default('standard'), // 'standard' or 'specialization'
-  generadoPorIA: boolean('generado_por_ia').default(false),
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
@@ -87,8 +86,6 @@ export const niveles = pgTable('niveles', {
   orden: integer('orden'),
   bloqueadoManual: boolean('bloqueado_manual'), // Nullable by default, no fixed default here
   diasParaDesbloquear: integer('dias_para_desbloquear').default(7), // Default to 1 week
-  descripcion: text('descripcion'),
-  objetivos: jsonb('objetivos'), // Array of learning objectives
 });
 
 // 7. Contenidos
@@ -250,14 +247,6 @@ export const pimTemplates = pgTable('pim_templates', {
   modulos: jsonb('modulos'), // Almacena la estructura de módulos como JSON
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
   fechaActualizacion: timestamp('fecha_actualizacion').defaultNow(),
-});
-
-// 25. PIC Templates (Proyectos de Innovación y Creatividad)
-export const picTemplates = pgTable('pic_templates', {
-  id: serial('id').primaryKey(),
-  levelId: integer('level_id').references(() => niveles.id).unique().notNull(),
-  templateData: jsonb('template_data'), // Almacena toda la plantilla como un único objeto JSON
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
 // 24. Premios (Prizes for Raffle)

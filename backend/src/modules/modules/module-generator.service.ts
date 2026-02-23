@@ -134,7 +134,6 @@ export class ModuleGeneratorService {
           duracionDias: generatedModule.duracionDias,
           profesorId: request.profesorId,
           categoria: 'standard',
-          generadoPorIA: true,
         })
         .returning();
 
@@ -146,8 +145,6 @@ export class ModuleGeneratorService {
           .values({
             moduloId: newModule.id,
             tituloNivel: nivelData.titulo,
-            descripcion: nivelData.descripcion,
-            objetivos: nivelData.objetivos,
             orden: i + 1,
           })
           .returning();

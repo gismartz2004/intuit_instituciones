@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { insertUsuarioSchema } from 'src/shared/schema';
+import { insertUsuarioSchema } from '../../shared/schema';
 
 @Controller('usuarios')
 export class UsersController {

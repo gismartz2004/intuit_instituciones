@@ -131,8 +131,6 @@ Requisitos:
           .values({
             moduloId: newModule.id,
             tituloNivel: nivelData.titulo,
-            descripcion: nivelData.descripcion,
-            objetivos: nivelData.objetivos as any,
             orden: nivelIdx + 1,
           })
           .returning();

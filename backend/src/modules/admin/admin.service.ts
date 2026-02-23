@@ -168,20 +168,21 @@ export class AdminService {
 
         const levelsWithContent = await Promise.all(
             levels.map(async (level) => {
-                const ragTemplates = await this.db
-                    .select()
-                    .from(schema.plantillasRag)
-                    .where(eq(schema.plantillasRag.nivelId, level.id));
+                // TODO: Refactor this logic to work with the new schema
+                // const ragTemplates = await this.db
+                //     .select()
+                //     .from(schema.plantillasRag)
+                //     .where(eq(schema.plantillasRag.nivelId, level.id));
 
-                const haTemplates = await this.db
-                    .select()
-                    .from(schema.plantillasHa)
-                    .where(eq(schema.plantillasHa.nivelId, level.id));
+                // const haTemplates = await this.db
+                //     .select()
+                //     .from(schema.plantillasHa)
+                //     .where(eq(schema.plantillasHa.nivelId, level.id));
 
                 const pimTemplates = await this.db
                     .select()
-                    .from(schema.plantillasPim)
-                    .where(eq(schema.plantillasPim.nivelId, level.id));
+                    .from(schema.pimTemplates)
+                    .where(eq(schema.pimTemplates.levelId, level.id));
 
                 const contents = await this.db
                     .select()
@@ -195,8 +196,8 @@ export class AdminService {
 
                 return {
                     ...level,
-                    rag: ragTemplates,
-                    ha: haTemplates,
+                    rag: [],
+                    ha: [],
                     pim: pimTemplates,
                     contents,
                     activities,
@@ -519,8 +520,9 @@ export class AdminService {
             // 1. Delete progress and submissions
             await this.db.delete(schema.asignaciones).where(eq(schema.asignaciones.estudianteId, userId));
             await this.db.delete(schema.progresoNiveles).where(eq(schema.progresoNiveles.estudianteId, userId));
-            await this.db.delete(schema.entregasHa).where(eq(schema.entregasHa.estudianteId, userId));
-            await this.db.delete(schema.entregasRag).where(eq(schema.entregasRag.estudianteId, userId));
+            // TODO: Refactor this logic to work with the new schema
+            // await this.db.delete(schema.entregasHa).where(eq(schema.entregasHa.estudianteId, userId));
+            // await this.db.delete(schema.entregasRag).where(eq(schema.entregasRag.estudianteId, userId));
             await this.db.delete(schema.entregas).where(eq(schema.entregas.estudianteId, userId));
             await this.db.delete(schema.asistencia).where(eq(schema.asistencia.estudianteId, userId));
 

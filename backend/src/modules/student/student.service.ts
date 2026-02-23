@@ -147,68 +147,7 @@ export class StudentService {
             ).length;
         }
 
-        // 2. RAG Guides (RAG Templates associated with this level)
-        const rags = await this.db.select()
-            .from(schema.plantillasRag)
-            .where(eq(schema.plantillasRag.nivelId, levelId));
-
-        for (const rag of rags) {
-            totalTasks += 1;
-
-            if (hasAttended) {
-                completedTasks += 1;
-                continue;
-            }
-
-            const ragSubmissions = await this.db.select()
-                .from(schema.entregasRag)
-                .where(and(
-                    eq(schema.entregasRag.estudianteId, studentId),
-                    eq(schema.entregasRag.plantillaRagId, rag.id)
-                ));
-
-            // Safe parsing of pasosGuiados
-            let pasos: any[] = [];
-            try {
-                const rawPasos = rag.pasosGuiados;
-                pasos = typeof rawPasos === 'string' ? JSON.parse(rawPasos) : (Array.isArray(rawPasos) ? rawPasos : []);
-            } catch (e) {
-                pasos = [];
-            }
-
-            if (pasos.length === 0) {
-                completedTasks += 1;
-                continue;
-            }
-
-            const submittedIndices = new Set(ragSubmissions.map(s => s.pasoIndice));
-            const allRequiredSubmitted = pasos.every((p, idx) =>
-                !p.requiereEntregable || submittedIndices.has(idx)
-            );
-
-            if (allRequiredSubmitted) {
-                completedTasks += 1;
-            }
-        }
-
-        // 3. HA Guides (HA Templates associated with this level)
-        const has = await this.db.select()
-            .from(schema.plantillasHa)
-            .where(eq(schema.plantillasHa.nivelId, levelId));
-
-        for (const ha of has) {
-            totalTasks += 1;
-            const haSubmissions = await this.db.select()
-                .from(schema.entregasHa)
-                .where(and(
-                    eq(schema.entregasHa.estudianteId, studentId),
-                    eq(schema.entregasHa.plantillaHaId, ha.id)
-                ));
-
-            if (haSubmissions.length > 0) {
-                completedTasks += 1;
-            }
-        }
+        // TODO: Refactor this logic to work with the new schema
 
         if (totalTasks === 0) {
             return { porcentajeCompletado: 100, completado: true };
@@ -239,96 +178,19 @@ export class StudentService {
     async getDetailedLevelStatus(studentId: number, levelId: number) {
         // 1. Attendance Check
         const attendance = await this.getAttendanceStatus(studentId, levelId);
-        const hasAttended = attendance.asistio || attendance.recuperada;
-
-        // 2. RAG Completion
-        const rags = await this.db.select()
-            .from(schema.plantillasRag)
-            .where(eq(schema.plantillasRag.nivelId, levelId));
-
-        let ragCompleted = hasAttended; // If attended, RAG is practically done for progress
-        let ragPendingDeliverables = false;
-
-        if (!ragCompleted && rags.length > 0) {
-            const ragSubmissions = await this.db.select()
-                .from(schema.entregasRag)
-                .where(and(
-                    eq(schema.entregasRag.estudianteId, studentId),
-                    eq(schema.entregasRag.plantillaRagId, rags[0].id) // Assuming one RAG per level for simplicity
-                ));
-
-            // Parse steps
-            let pasos: any[] = [];
-            try {
-                const rawPasos = rags[0].pasosGuiados;
-                pasos = typeof rawPasos === 'string' ? JSON.parse(rawPasos) : (Array.isArray(rawPasos) ? rawPasos : []);
-            } catch (e) {
-                pasos = [];
-            }
-
-            if (pasos.length === 0) {
-                ragCompleted = true;
-            } else {
-                const submittedIndices = new Set(ragSubmissions.map(s => s.pasoIndice));
-                ragCompleted = pasos.every((p, idx) => !p.requiereEntregable || submittedIndices.has(idx));
-                ragPendingDeliverables = pasos.some((p, idx) => p.requiereEntregable && !submittedIndices.has(idx));
-            }
-        }
-
-        // 3. HA Completion
-        const has = await this.db.select()
-            .from(schema.plantillasHa)
-            .where(eq(schema.plantillasHa.nivelId, levelId));
-
-        let haCompleted = false;
-        if (has.length > 0) {
-            const haSubmissions = await this.db.select()
-                .from(schema.entregasHa)
-                .where(and(
-                    eq(schema.entregasHa.estudianteId, studentId),
-                    eq(schema.entregasHa.plantillaHaId, has[0].id)
-                ));
-            haCompleted = haSubmissions.length > 0;
-        }
-
-        // 4. PIM Completion
+        
         const pims = await this.db.select()
-            .from(schema.plantillasPim)
-            .where(eq(schema.plantillasPim.nivelId, levelId));
+            .from(schema.pimTemplates)
+            .where(eq(schema.pimTemplates.levelId, levelId));
         let pimCompleted = false;
-        // PIM logic... (minimal for now)
-
-        // 5. BD, IT, PIC Completion (Specialist Track style)
-        const bds = await this.db.select().from(schema.plantillasBd).where(eq(schema.plantillasBd.nivelId, levelId));
-        const its = await this.db.select().from(schema.plantillasIt).where(eq(schema.plantillasIt.nivelId, levelId));
-        const pics = await this.db.select().from(schema.plantillasPic).where(eq(schema.plantillasPic.nivelId, levelId));
 
         return {
             attendance,
-            rag: rags.length > 0 ? {
-                completed: ragCompleted,
-                pending: ragPendingDeliverables,
-                status: ragCompleted ? 'completed' : (hasAttended ? 'completed' : (ragPendingDeliverables ? 'pending' : 'missing'))
-            } : null,
-            ha: has.length > 0 ? {
-                completed: haCompleted,
-                status: haCompleted ? 'completed' : 'pending'
-            } : null,
+            rag: null,
+            ha: null,
             pim: pims.length > 0 ? {
                 completed: pimCompleted,
                 status: pimCompleted ? 'completed' : 'pending'
-            } : null,
-            bd: bds.length > 0 ? {
-                completed: false, // Placeholder
-                status: 'pending'
-            } : null,
-            it: its.length > 0 ? {
-                completed: false, // Placeholder
-                status: 'pending'
-            } : null,
-            pic: pics.length > 0 ? {
-                completed: false, // Placeholder
-                status: 'pending'
             } : null
         };
     }
@@ -511,28 +373,9 @@ export class StudentService {
             // Update for next iteration
             previousLevelCompleted = isCompleted;
 
-            // 3. Activity Type Detection (BD, IT, PIC, RAG, HA)
-            // Using separate parallel queries for better performance
-            const [bdRes, itRes, picRes, ragRes, haRes] = await Promise.all([
-                this.db.select({ id: schema.plantillasBd.id }).from(schema.plantillasBd).where(eq(schema.plantillasBd.nivelId, level.id)).limit(1),
-                this.db.select({ id: schema.plantillasIt.id }).from(schema.plantillasIt).where(eq(schema.plantillasIt.nivelId, level.id)).limit(1),
-                this.db.select({ id: schema.plantillasPic.id }).from(schema.plantillasPic).where(eq(schema.plantillasPic.nivelId, level.id)).limit(1),
-                this.db.select({ id: schema.plantillasRag.id }).from(schema.plantillasRag).where(eq(schema.plantillasRag.nivelId, level.id)).limit(1),
-                this.db.select({ id: schema.plantillasHa.id }).from(schema.plantillasHa).where(eq(schema.plantillasHa.nivelId, level.id)).limit(1),
-            ]);
-
-            const bd = bdRes[0];
-            const it = itRes[0];
-            const pic = picRes[0];
-            const rag = ragRes[0];
-            const ha = haRes[0];
-
+            // TODO: Refactor this logic to work with the new schema
+            // 3. Activity Type Detection (BD, IT, RAG, HA)
             let tipoActividad = 'TRADITIONAL';
-            if (bd) tipoActividad = 'BD';
-            else if (it) tipoActividad = 'IT';
-            else if (pic) tipoActividad = 'PIC';
-            else if (rag) tipoActividad = 'RAG';
-            else if (ha) tipoActividad = 'HA';
 
             results.push({
                 ...level,
@@ -562,39 +405,15 @@ export class StudentService {
 
         const moduleIds = assignments.map(a => a.moduleId).filter((id): id is number => id !== null);
 
-        // Fetch all levels for these modules
-        const allLevels = await this.db.select()
-            .from(schema.niveles)
-            .where(and(
-                // In a real scenario, use 'inArray' if available or multiple queries
-                // For simplicity, we assume one module or we loop. Let's filter in memory if needed or use raw query.
-                // Or better, let's just get all levels and filter by module ID match.
-            ))
-            .orderBy(asc(schema.niveles.orden));
-
         // Actually, let's just iterate modules
         let missions = [];
 
         for (const modId of moduleIds) {
             const levelsInfos = await this.getStudentLevelProgress(studentId, modId);
 
-            // Get RAG/HA templates info for details
             for (const level of levelsInfos) {
-                // Fetch Rag info
-                const rag = await this.db.select({ id: schema.plantillasRag.id, nombre: schema.plantillasRag.nombreActividad, hito: schema.plantillasRag.hitoAprendizaje })
-                    .from(schema.plantillasRag)
-                    .where(eq(schema.plantillasRag.nivelId, level.id))
-                    .limit(1);
-
-                // Fetch HA info if RAG not found or secondary
-                const ha = await this.db.select({ id: schema.plantillasHa.id, fase: schema.plantillasHa.fase })
-                    .from(schema.plantillasHa)
-                    .where(eq(schema.plantillasHa.nivelId, level.id))
-                    .limit(1);
-
-                const missionName = rag[0]?.hito || ha[0]?.fase || `Nivel ${level.orden}`;
-                const description = rag[0]?.nombre || "Completar las actividades del nivel.";
-
+                const missionName = `Nivel ${level.orden}`;
+                const description = "Completar las actividades del nivel.";
                 missions.push({
                     id: level.id,
                     title: missionName,
@@ -602,7 +421,7 @@ export class StudentService {
                     status: level.completado ? 'completed' : (level.isUnlocked ? 'active' : 'locked'),
                     xp: 500, // Fixed for now, could be dynamic
                     location: `Zona ${level.orden}`, // Or actual zone name if we had it
-                    type: rag.length > 0 ? 'RAG' : 'HA'
+                    type: 'TRADITIONAL'
                 });
             }
         }
@@ -697,188 +516,23 @@ export class StudentService {
     // =========== FILE UPLOADS ===========
     // =========== SUBMISSIONS (URL BASED) ===========
     async submitHaEvidence(data: { studentId: number; plantillaHaId: number; archivosUrls: string[]; comentarioEstudiante: string }) {
-        const { studentId, plantillaHaId, archivosUrls, comentarioEstudiante } = data;
-
-        // Check if already submitted
-        const existing = await this.db.select()
-            .from(schema.entregasHa)
-            .where(and(
-                eq(schema.entregasHa.estudianteId, studentId),
-                eq(schema.entregasHa.plantillaHaId, plantillaHaId)
-            ))
-            .limit(1);
-
-        if (existing.length > 0) {
-            console.log(`Student ${studentId} is updating HA evidence for template ${plantillaHaId}`);
-            // Allow update by deleting old one
-            await this.db.delete(schema.entregasHa)
-                .where(and(
-                    eq(schema.entregasHa.estudianteId, studentId),
-                    eq(schema.entregasHa.plantillaHaId, plantillaHaId)
-                ));
-        }
-
-        // Get levelId for this template
-        const template = await this.db.select({ nivelId: schema.plantillasHa.nivelId })
-            .from(schema.plantillasHa)
-            .where(eq(schema.plantillasHa.id, plantillaHaId))
-            .limit(1);
-
-        const res = await this.db.insert(schema.entregasHa).values({
-            estudianteId: studentId,
-            plantillaHaId: plantillaHaId,
-            archivosUrls: JSON.stringify(archivosUrls),
-            comentarioEstudiante: comentarioEstudiante,
-            validado: false
-        }).returning();
-
-        const resId = res[0].id;
-
-        // Award XP immediately since HA is a single submission activity
-        try {
-            const student = await this.db.select({ planId: schema.usuarios.planId })
-                .from(schema.usuarios)
-                .where(eq(schema.usuarios.id, studentId))
-                .limit(1);
-
-            let baseXP = 100;
-            const isOro = student.length > 0 && student[0].planId === 3;
-            if (isOro) baseXP = Math.floor(baseXP * 1.2);
-
-            if (existing.length === 0) {
-                await this.gamificationService.awardXP(studentId, baseXP, `HA completado${isOro ? ' (Bono Oro)' : ''}`);
-                await this.gamificationService.updateMissionProgress(studentId, 'COMPLETE_ACTIVITY', 1);
-            }
-        } catch (error) {
-            console.error('Error awarding XP for HA:', error.message);
-        }
-
-        // Trigger level progress update
-        if (template.length > 0 && template[0].nivelId) {
-            await this.updateLevelProgress(studentId, template[0].nivelId);
-        }
-
-        return { success: true, action: 'created', id: resId };
+        // TODO: Refactor this logic to work with the new schema
+        return { success: false, action: 'not-implemented', id: null };
     }
 
     async submitRagProgress(data: { studentId: any; plantillaRagId: any; pasoIndice: number; archivoUrl: string; tipoArchivo: string }) {
-        const studentId = parseInt(data.studentId);
-        const plantillaRagId = parseInt(data.plantillaRagId);
-        const { pasoIndice, archivoUrl, tipoArchivo } = data;
-
-        console.log(`[RAG SUBMIT] Student: ${studentId}, Template: ${plantillaRagId}, Step: ${pasoIndice}`);
-
-        // 1. Check if this specific step was already submitted
-        const existingStep = await this.db.select()
-            .from(schema.entregasRag)
-            .where(and(
-                eq(schema.entregasRag.estudianteId, studentId),
-                eq(schema.entregasRag.plantillaRagId, plantillaRagId),
-                eq(schema.entregasRag.pasoIndice, pasoIndice)
-            ))
-            .limit(1);
-
-        if (existingStep.length > 0) {
-            console.log(`[RAG SUBMIT] Updating existing step. Deleting old record.`);
-            await this.db.delete(schema.entregasRag)
-                .where(and(
-                    eq(schema.entregasRag.estudianteId, studentId),
-                    eq(schema.entregasRag.plantillaRagId, plantillaRagId),
-                    eq(schema.entregasRag.pasoIndice, pasoIndice)
-                ));
-        }
-
-        // 2. Get RAG template and levelId
-        const rag = await this.db.select()
-            .from(schema.plantillasRag)
-            .where(eq(schema.plantillasRag.id, plantillaRagId))
-            .limit(1);
-
-        if (rag.length === 0) {
-            console.error(`[RAG SUBMIT] ERROR: Template ${plantillaRagId} not found in DB`);
-            throw new Error(`Plantilla RAG #${plantillaRagId} no encontrada`);
-        }
-        const nivelId = rag[0].nivelId;
-
-        // 3. Pre-check: Is it already finished? (To avoid awarding XP twice)
-        const submissionsBefore = await this.db.select().from(schema.entregasRag)
-            .where(and(eq(schema.entregasRag.estudianteId, studentId), eq(schema.entregasRag.plantillaRagId, plantillaRagId)));
-
-        // Safe parsing of pasosGuiados
-        let pasos: any[] = [];
-        try {
-            const rawPasos = rag[0].pasosGuiados;
-            pasos = typeof rawPasos === 'string' ? JSON.parse(rawPasos) : (Array.isArray(rawPasos) ? rawPasos : []);
-        } catch (e) {
-            console.error('Error parsing pasosGuiados:', e);
-            pasos = [];
-        }
-
-        const submittedIndicesBefore = new Set(submissionsBefore.map(s => s.pasoIndice));
-        const isAlreadyComplete = pasos.length > 0 && pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesBefore.has(idx));
-
-        // We removed the strict throw to allow updates after completion
-        // but we use isAlreadyComplete in Section 5 below.
-
-        // 4. Perform submission
-        await this.db.insert(schema.entregasRag).values({
-            estudianteId: studentId,
-            plantillaRagId: plantillaRagId,
-            pasoIndice: pasoIndice,
-            archivoUrl: archivoUrl,
-            tipoArchivo: tipoArchivo,
-            feedbackAvatar: '¡Excelente trabajo! Entregable recibido.'
-        });
-
-        // 5. Post-check: Is it NOW complete?
-        const submissionsAfter = await this.db.select().from(schema.entregasRag)
-            .where(and(eq(schema.entregasRag.estudianteId, studentId), eq(schema.entregasRag.plantillaRagId, plantillaRagId)));
-        const submittedIndicesAfter = new Set(submissionsAfter.map(s => s.pasoIndice));
-        const isNowComplete = pasos.length > 0 && pasos.every((p, idx) => !p.requiereEntregable || submittedIndicesAfter.has(idx));
-
-        if (isNowComplete && !isAlreadyComplete) {
-            // Award XP only if this is the transition to completion
-            try {
-                const student = await this.db.select({ planId: schema.usuarios.planId })
-                    .from(schema.usuarios)
-                    .where(eq(schema.usuarios.id, studentId))
-                    .limit(1);
-
-                let baseXP = 100;
-                const isOro = student.length > 0 && student[0].planId === 3;
-                if (isOro) baseXP = Math.floor(baseXP * 1.2);
-
-                await this.gamificationService.awardXP(studentId, baseXP, `RAG completado${isOro ? ' (Bono Oro)' : ''}`);
-                await this.gamificationService.updateMissionProgress(studentId, 'COMPLETE_ACTIVITY', 1);
-            } catch (error) {
-                console.error('Error awarding XP for RAG:', error.message);
-            }
-        }
-
-        // 6. Trigger level progress update
-        if (nivelId) {
-            await this.updateLevelProgress(studentId, nivelId);
-        }
-
-        return { success: true, pasoIndice, isCompleted: isNowComplete };
+        // TODO: Refactor this logic to work with the new schema
+        return { success: false, pasoIndice: 0, isCompleted: false };
     }
 
     async getRagSubmissions(studentId: number, plantillaRagId: number) {
-        return this.db.select()
-            .from(schema.entregasRag)
-            .where(and(
-                eq(schema.entregasRag.estudianteId, studentId),
-                eq(schema.entregasRag.plantillaRagId, plantillaRagId)
-            ));
+        // TODO: Refactor this logic to work with the new schema
+        return [];
     }
 
     async getHaSubmissions(studentId: number, plantillaHaId: number) {
-        return this.db.select()
-            .from(schema.entregasHa)
-            .where(and(
-                eq(schema.entregasHa.estudianteId, studentId),
-                eq(schema.entregasHa.plantillaHaId, plantillaHaId)
-            ));
+        // TODO: Refactor this logic to work with the new schema
+        return [];
     }
 
     async getStudentCurriculum(studentId: number) {
@@ -944,36 +598,9 @@ export class StudentService {
             .orderBy(desc(schema.puntosLog.fechaObtencion))
             .limit(20);
 
+        // TODO: Refactor this logic to work with the new schema
         // 5. Recent Submissions (RAG & HA)
-        const recentRag = await this.db.select({
-            id: schema.entregasRag.id,
-            tipo: sql`'RAG'`,
-            titulo: schema.plantillasRag.nombreActividad,
-            fecha: schema.entregasRag.fechaSubida
-        })
-            .from(schema.entregasRag)
-            .innerJoin(schema.plantillasRag, eq(schema.entregasRag.plantillaRagId, schema.plantillasRag.id))
-            .where(eq(schema.entregasRag.estudianteId, studentId))
-            .orderBy(desc(schema.entregasRag.fechaSubida))
-            .limit(5);
-
-        const recentHa = await this.db.select({
-            id: schema.entregasHa.id,
-            tipo: sql`'HA'`,
-            titulo: schema.plantillasHa.fase,
-            fecha: schema.entregasHa.fechaSubida
-        })
-            .from(schema.entregasHa)
-            .innerJoin(schema.plantillasHa, eq(schema.entregasHa.plantillaHaId, schema.plantillasHa.id))
-            .where(eq(schema.entregasHa.estudianteId, studentId))
-            .orderBy(desc(schema.entregasHa.fechaSubida))
-            .limit(5);
-
-        const activity = [...recentRag, ...recentHa].sort((a, b) => {
-            const dateA = a.fecha ? new Date(a.fecha).getTime() : 0;
-            const dateB = b.fecha ? new Date(b.fecha).getTime() : 0;
-            return dateB - dateA;
-        }).slice(0, 10);
+        const activity: any[] = [];
 
         return {
             student: student[0],

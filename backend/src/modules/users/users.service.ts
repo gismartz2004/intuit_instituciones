@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { usuarios, InsertUsuario, Usuario } from 'src/shared/schema';
+import { usuarios, InsertUsuario, Usuario } from '../../shared/schema';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from 'src/shared/schema';
+import * as schema from '../../shared/schema';
 import { eq } from 'drizzle-orm';
-import { DRIZZLE_DB } from 'src/database/drizzle.provider';
+import { DRIZZLE_DB } from '../../database/drizzle.provider';
 
 @Injectable()
 export class UsersService {

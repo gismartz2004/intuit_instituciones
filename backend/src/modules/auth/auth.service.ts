@@ -4,9 +4,9 @@ import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
-import { usuarios } from 'src/shared/schema';
-import { DRIZZLE_DB } from 'src/database/drizzle.provider';
-import * as schema from 'src/shared/schema';
+import { usuarios } from '../../shared/schema';
+import { DRIZZLE_DB } from '../../database/drizzle.provider';
+import * as schema from '../../shared/schema';
 import { GamificationService } from '../student/services/gamification.service';
 
 @Injectable()

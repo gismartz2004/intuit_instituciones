@@ -9,7 +9,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ModulesService } from './modules.service';
-import { ModuleGeneratorService, ModuleGenerationRequest } from './module-generator.service';
+import { ModuleGeneratorService, type ModuleGenerationRequest } from './module-generator.service';
 
 @Controller('modules')
 export class ModulesController {
