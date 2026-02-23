@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import zoneMalecon from "@/assets/gamification/zone_malecon.png";
 import zonePenas from "@/assets/gamification/zone_penas.png";
 import zoneSantaAna from "@/assets/gamification/zone_santa_ana.png";
-import { OnboardingWizard } from "@/features/auth/components/OnboardingWizard";
 import { studentApi } from '../services/student.api';
 import { BackgroundMusic } from "./BackgroundMusic";
 
@@ -138,11 +137,10 @@ const ZONES = [
 export default function StudentDashboard({ user }: StudentDashboardProps) {
   const { toast } = useToast();
   const [match, params] = useRoute("/dashboard/module/:moduleId");
-  const moduleIdFromRoute = match && params ? parseInt((params as any).moduleId) : null;
+  const moduleIdFromRoute = match && params ? Number((params as any).moduleId) : null;
 
   const [modules, setModules] = useState<any[]>([]);
   const [progress, setProgress] = useState<any>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(avatarBoy);
   const [levelProgress, setLevelProgress] = useState<Record<number, any>>({});
   const [userData, setUserData] = useState<any>(null); // Storing full user data
@@ -153,9 +151,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
       studentApi.getUserInfo(user.id)
         .then(data => {
           setUserData(data);
-          if (!data.onboardingCompleted) {
-            setShowOnboarding(true);
-          }
           if (data.avatar && AVATAR_MAP[data.avatar]) {
             setCurrentAvatar(AVATAR_MAP[data.avatar]);
           }
@@ -173,13 +168,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     }
   }, [modules, moduleIdFromRoute]); // Re-fetch if modules or route changes
 
-  const handleOnboardingComplete = (avatarId: string) => {
-    setShowOnboarding(false);
-    if (AVATAR_MAP[avatarId]) {
-      setCurrentAvatar(AVATAR_MAP[avatarId]);
-    }
-    // Optimistically update local storage if needed, or just state
-  };
 
   const fetchModules = async () => {
     try {
@@ -309,27 +297,63 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                 </motion.div>
               </div>
 
+              {/* Course & Module Info */}
+              <div className="absolute top-32 left-1/2 -translate-x-1/2 w-full max-w-4xl px-8 z-20 text-center">
+                {modules.find(m => m.id === moduleIdFromRoute)?.cursoNombre && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-cyan-400 font-black uppercase tracking-[0.4em] text-[10px] mb-2"
+                  >
+                    Curso: {modules.find(m => m.id === moduleIdFromRoute)?.cursoNombre}
+                  </motion.p>
+                )}
+                {moduleIdFromRoute && !modules.some(m => m.id === moduleIdFromRoute) && (
+                  <div className="bg-red-500/10 backdrop-blur-md border border-red-500/20 p-4 rounded-2xl">
+                    <p className="text-red-400 font-bold">Módulo no encontrado o no asignado para este estudiante.</p>
+                  </div>
+                )}
+              </div>
+
               {/* Levels Path */}
               <div className="relative z-10 w-full max-w-4xl pt-20 pb-32 flex flex-col items-center">
                 {zoneData.modules.map((mod: any, mIdx: number) => {
-                  // Calcular posiciones de los nodos para el SVG
                   const modLevels = mod.levels || [];
-                  const pathPoints = modLevels.map((_: any, lIdx: number) => {
-                    const globalIdx = mIdx * 10 + lIdx;
-                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                    const baseOffset = isMobile ? 60 : 160;
-                    const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
-                    // Aproximación del centro del contenedor (ancho_max_4xl = 896px / 2 = 448px)
-                    return { x: 448 + xOffset, y: 100 + (lIdx * 180) };
-                  });
-
+                  // Rendering Module Header
                   return (
                     <div key={mod.id} className="w-full flex flex-col items-center relative min-h-[800px]">
+                      {/* Module Title Header */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        className="text-center mb-16 relative z-10"
+                      >
+                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">
+                          {mod.nombreModulo || mod.nombre || "Módulo Sin Nombre"}
+                        </h2>
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="h-1 w-12 bg-cyan-500 rounded-full" />
+                          <span className="text-cyan-400 font-bold uppercase tracking-[0.3em] text-[10px]">Territorio de Aprendizaje</span>
+                          <div className="h-1 w-12 bg-cyan-500 rounded-full" />
+                        </div>
+                      </motion.div>
+
                       {/* SVG Path Dinámico */}
-                      <CurvyPath points={pathPoints} isActive={true} />
+                      <CurvyPath points={mod.levels?.length > 1 ? modLevels.map((_: any, lIdx: number) => {
+                        const globalIdx = mIdx * 10 + lIdx;
+                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                        const baseOffset = isMobile ? 60 : 160;
+                        const xOffset = globalIdx % 2 === 0 ? 0 : (globalIdx % 4 === 1 ? -baseOffset : baseOffset);
+                        return { x: 448 + xOffset, y: 100 + (lIdx * 180) };
+                      }) : []} isActive={true} />
 
                       <div className="flex flex-col gap-32 items-center relative w-full pt-16">
-                        {modLevels.map((lvl: any, lIdx: number) => {
+                        {modLevels.length === 0 ? (
+                          <div className="flex flex-col items-center gap-4 py-20 bg-black/20 backdrop-blur-md rounded-3xl border border-white/5 px-12">
+                            <Lock className="w-12 h-12 text-slate-600 opacity-50" />
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Aún no hay niveles para este módulo</p>
+                          </div>
+                        ) : modLevels.map((lvl: any, lIdx: number) => {
                           const globalIdx = mIdx * 10 + lIdx;
                           const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                           const baseOffset = isMobile ? 60 : 160;
@@ -345,19 +369,14 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
                             return <div key={lvl.id} className="h-20 w-20" />;
                           }
 
-                          // Extract flags from progress
                           const isCompleted = !!currentLevelProgress?.completado;
                           const isUnlockedByTime = !!currentLevelProgress?.isUnlockedByTime;
                           const isManuallyBlocked = !!currentLevelProgress?.isManuallyBlocked;
 
-                          // Final availability check: 
-                          // 1. Must NOT be manually blocked
-                          // 2. Must be unlocked by time
-                          // 3. Must be the first level OR the previous level must be completed
                           const isPreviousCompleted = lIdx === 0 || !!levelProgress[mod.levels[lIdx - 1].id]?.completado;
-                          const isSequenceLocked = !isPreviousCompleted;
+                          const isAvailable = !!currentLevelProgress?.isUnlocked;
 
-                          const isAvailable = !!currentLevelProgress?.isUnlocked && !isManuallyBlocked && isUnlockedByTime && !isSequenceLocked;
+                          const isSequenceLocked = !isPreviousCompleted && !isAvailable;
 
                           const isActive = lIdx === activeIdx && isAvailable;
 
@@ -465,11 +484,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
 
       <BackgroundMusic />
 
-      <OnboardingWizard
-        isOpen={showOnboarding}
-        userId={user.id}
-        onComplete={handleOnboardingComplete}
-      />
+
     </div >
   );
 }

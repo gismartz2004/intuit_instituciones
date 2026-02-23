@@ -9,10 +9,31 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ModulesService } from './modules.service';
+import { ModuleGeneratorService, ModuleGenerationRequest } from './module-generator.service';
 
-@Controller('modulos')
+@Controller('modules')
 export class ModulesController {
-  constructor(private readonly modulesService: ModulesService) {}
+  constructor(
+    private readonly modulesService: ModulesService,
+    private readonly generatorService: ModuleGeneratorService,
+  ) {}
+
+  @Post('generate')
+  async generateModule(@Body() body: ModuleGenerationRequest) {
+    return this.generatorService.generateModuleFromPrompt(body);
+  }
+
+  @Post('save-generated')
+  async saveGeneratedModule(
+    @Body() body: { module: any; cursoId: number; profesorId: number },
+  ) {
+    const request: ModuleGenerationRequest = {
+      prompt: '',
+      cursoId: body.cursoId,
+      profesorId: body.profesorId,
+    };
+    return this.generatorService.saveGeneratedModule(body.module, request);
+  }
 
   @Post()
   async createModule(@Body() body: any) {

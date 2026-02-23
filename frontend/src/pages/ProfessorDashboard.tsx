@@ -40,7 +40,7 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
 
   const fetchModules = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/professor/${user.id}/modules`);
+      const res = await fetch(`/api/professor/${user.id}/modules`);
       if (res.ok) {
         const data = await res.json();
         setModules(data);
@@ -97,7 +97,7 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
 
     try {
       // 1. Create User and Assign (Unified Endpoint)
-      const res = await fetch('http://localhost:3000/api/professor/students', {
+      const res = await fetch('/api/professor/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -278,3 +278,4 @@ export default function ProfessorDashboard({ user }: ProfessorDashboardProps) {
     </div>
   );
 }
+

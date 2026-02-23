@@ -11,7 +11,8 @@ import type {
   ModuleWithStats,
   SystemStats,
   ImportPreview,
-  Plan
+  Plan,
+  CourseWithStats
 } from '../types/admin.types';
 
 /**
@@ -63,6 +64,10 @@ export const adminApi = {
     return apiClient.get<ModuleWithStats[]>('/api/admin/modules');
   },
 
+  async getCourses(): Promise<CourseWithStats[]> {
+    return apiClient.get<CourseWithStats[]>('/api/admin/courses');
+  },
+
   async getModuleContent(moduleId: number): Promise<any> {
     return apiClient.get(`/api/admin/modules/${moduleId}/content`);
   },
@@ -89,8 +94,16 @@ export const adminApi = {
     return apiClient.post('/api/admin/assignments/bulk', { moduleId, studentIds, professorId });
   },
 
+  async bulkAssignCourse(courseId: number, studentIds: number[], professorId?: number): Promise<{ success: boolean; modulesCount: number; totalAssigned: number }> {
+    return apiClient.post('/api/admin/courses/assign', { courseId, studentIds, professorId });
+  },
+
   async getModuleAssignments(moduleId: number): Promise<User[]> {
     return apiClient.get<User[]>(`/api/admin/modules/${moduleId}/assignments`);
+  },
+
+  async getCourseAssignments(courseId: number): Promise<User[]> {
+    return apiClient.get<User[]>(`/api/admin/courses/${courseId}/assignments`);
   },
 
   async assignProfessorToModule(moduleId: number, professorId: number): Promise<void> {
@@ -99,6 +112,10 @@ export const adminApi = {
 
   async unassignModule(moduleId: number, studentId: number): Promise<{ success: boolean }> {
     return apiClient.post(`/api/admin/modules/${moduleId}/assignments/unassign`, { studentId });
+  },
+
+  async bulkUnassignCourse(courseId: number, studentId: number): Promise<{ success: boolean }> {
+    return apiClient.post(`/api/admin/courses/${courseId}/unassign`, { studentId });
   },
 
   // ========== ESTADÍSTICAS Y PLANES ==========

@@ -9,14 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File, Lock, Unlock, Save, Clock, UserCheck } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File, Lock, Unlock, Clock, UserCheck, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-
-import RagEditor from "./RagEditor";
-
-import HaEditor from "./HaEditor";
-import PimEditor from "./PimEditor";
 import { AttendanceManager } from "./AttendanceManager";
 
 interface Content {
@@ -36,8 +30,6 @@ interface Level {
     bloqueadoManual?: boolean;
     diasParaDesbloquear?: number;
     contents: Content[];
-    ragTemplate?: any; // To check if exists
-    haTemplate?: any; // To check if exists
 }
 
 export default function CourseEditor() {
@@ -50,54 +42,12 @@ export default function CourseEditor() {
     const [showLevelDialog, setShowLevelDialog] = useState(false);
     const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
-    // RAG Editor State
-    const [editingRagLevelId, setEditingRagLevelId] = useState<number | null>(null);
-    const [ragInitialData, setRagInitialData] = useState<any>(null);
-
-    // HA Editor State
-    const [editingHaLevelId, setEditingHaLevelId] = useState<number | null>(null);
-    const [haInitialData, setHaInitialData] = useState<any>(null);
-
-    // PIM Editor State
-    const [editingPimLevelId, setEditingPimLevelId] = useState<number | null>(null);
-    const [pimInitialData, setPimInitialData] = useState<any>(null);
-
     // Attendance State
     const [editingAttendanceLevelId, setEditingAttendanceLevelId] = useState<number | null>(null);
-
-    useEffect(() => {
-        if (editingRagLevelId) {
-            // Fetch existing RAG if any
-            professorApi.getRagTemplate(editingRagLevelId).then(data => {
-                if (data) setRagInitialData(data);
-                else setRagInitialData(null);
-            });
-        }
-    }, [editingRagLevelId]);
-
-    useEffect(() => {
-        if (editingHaLevelId) {
-            professorApi.getHaTemplate(editingHaLevelId).then(data => {
-                if (data) setHaInitialData(data);
-                else setHaInitialData(null);
-            })
-        }
-    }, [editingHaLevelId]);
-
-    useEffect(() => {
-        if (editingPimLevelId) {
-            // Reusing studentApi.getPimTemplate as it's the same endpoint
-            professorApi.getPimTemplate(editingPimLevelId).then(data => {
-                if (data) setPimInitialData(data);
-                else setPimInitialData(null);
-            });
-        }
-    }, [editingPimLevelId]);
 
     // Content form states
     const [contentType, setContentType] = useState("link");
     const [contentUrl, setContentUrl] = useState("");
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     // Resources for file picker
     const [resources, setResources] = useState<any[]>([]);
@@ -118,7 +68,7 @@ export default function CourseEditor() {
         loadResources();
     }, []);
 
-    // Code exercise states
+    // Code/Blockly exercise states
     const [exerciseTitle, setExerciseTitle] = useState("");
     const [exerciseDescription, setExerciseDescription] = useState("");
     const [starterCode, setStarterCode] = useState("");
@@ -139,7 +89,6 @@ export default function CourseEditor() {
             setModuleName(modData.nombreModulo);
 
             const levelsData = await professorApi.getModuleLevels(moduleId);
-            console.log("[COURSE EDITOR] Loaded Levels:", levelsData);
             setLevels(levelsData);
 
             setLoading(false);
@@ -157,7 +106,7 @@ export default function CourseEditor() {
 
         try {
             await professorApi.createLevel(moduleId, {
-                tituloNivel: newLevelTitle, // Corrected from 'titulo' to 'tituloNivel' to match backend DTO
+                tituloNivel: newLevelTitle,
                 orden: levels.length + 1
             });
 
@@ -177,45 +126,34 @@ export default function CourseEditor() {
         }
 
         let payload: any = {
-            titulo: "Nuevo Contenido", // Default title if not provided
-            tipo: contentType, // Corrected to match backend expected Body: { tipo, urlRecurso }
-            urlRecurso: contentUrl,      // Corrected to match backend expected Body
-            orden: 1,                   // Default order
-            // Extra fields for code exercises
-            tituloEjercicio: undefined,
-            descripcionEjercicio: undefined,
-            codigoInicial: undefined,
-            codigoEsperado: undefined,
-            lenguaje: undefined
+            titulo: exerciseTitle || "Nuevo Contenido",
+            tipo: contentType,
+            urlRecurso: contentUrl,
+            orden: 1,
         };
 
-        if (contentType === "codigo_lab") {
-            // Code exercise
-            if (!exerciseTitle || !exerciseDescription || !starterCode) {
-                toast({ title: "Error", description: "Completa todos los campos del ejercicio", variant: "destructive" });
+        if (contentType === "codigo_lab" || contentType === "blockly_lab") {
+            if (!exerciseTitle || !exerciseDescription) {
+                toast({ title: "Error", description: "Completa el título y descripción del ejercicio", variant: "destructive" });
                 return;
             }
             payload = {
                 ...payload,
-                titulo: exerciseTitle,
                 tituloEjercicio: exerciseTitle,
                 descripcionEjercicio: exerciseDescription,
-                codigoInicial: starterCode,
-                codigoEsperado: expectedCode,
-                lenguaje: language,
-                urlRecurso: "" // Not used for code exercises
+                codigoInicial: starterCode || "",
+                codigoEsperado: expectedCode || "",
+                lenguaje: language || "javascript",
+                urlRecurso: ""
             };
         } else if (contentType === "file" || contentType === "pdf") {
-            // File from library
             if (!contentUrl) {
                 toast({ title: "Error", description: "No se ha seleccionado un recurso", variant: "destructive" });
                 return;
             }
-
             payload.urlRecurso = contentUrl;
             payload.tipo = contentUrl.includes('.pdf') ? 'pdf' : 'file';
         } else {
-            // Link
             if (!contentUrl.trim()) {
                 toast({ title: "Error", description: "La URL es requerida", variant: "destructive" });
                 return;
@@ -224,12 +162,7 @@ export default function CourseEditor() {
         }
 
         try {
-            // Note: createContent expects (levelId, payload)
-            // Payload needs to match CreateContentPayload interface in api
-            // interface CreateContentPayload { titulo: string; tipoContenido: string; contenido: string; orden: number; }
-
             await professorApi.createContent(selectedLevel, payload);
-
             toast({ title: "Éxito", description: "Contenido agregado correctamente" });
             resetContentForm();
             fetchModuleData();
@@ -240,7 +173,6 @@ export default function CourseEditor() {
 
     const resetContentForm = () => {
         setContentUrl("");
-        setSelectedFile(null);
         setExerciseTitle("");
         setExerciseDescription("");
         setStarterCode("");
@@ -251,7 +183,6 @@ export default function CourseEditor() {
     const deleteContent = async (contentId: number) => {
         try {
             await professorApi.deleteContent(contentId);
-
             toast({ title: "Éxito", description: "Contenido eliminado" });
             fetchModuleData();
         } catch (error) {
@@ -275,39 +206,13 @@ export default function CourseEditor() {
             case 'video': return <Video className="w-4 h-4" />;
             case 'link': return <LinkIcon className="w-4 h-4" />;
             case 'codigo_lab': return <Code className="w-4 h-4" />;
+            case 'blockly_lab': return <Sparkles className="w-4 h-4" />;
             default: return <File className="w-4 h-4" />;
         }
     };
 
     if (loading) {
         return <div className="p-8">Cargando...</div>;
-    }
-
-    if (editingRagLevelId) {
-        return <RagEditor
-            levelId={editingRagLevelId}
-            moduleId={Number(moduleId)}
-            initialData={ragInitialData}
-            onClose={() => setEditingRagLevelId(null)}
-        />;
-    }
-
-    if (editingHaLevelId) {
-        return <HaEditor
-            levelId={editingHaLevelId}
-            moduleId={Number(moduleId)}
-            initialData={haInitialData}
-            onClose={() => setEditingHaLevelId(null)}
-        />;
-    }
-
-    if (editingPimLevelId) {
-        return <PimEditor
-            levelId={editingPimLevelId}
-            moduleId={Number(moduleId)}
-            initialData={pimInitialData}
-            onClose={() => setEditingPimLevelId(null)}
-        />;
     }
 
     if (editingAttendanceLevelId) {
@@ -355,9 +260,6 @@ export default function CourseEditor() {
                                 <DialogContent>
                                     <DialogHeader>
                                         <DialogTitle>Crear Nuevo Nivel</DialogTitle>
-                                        <div className="text-sm text-slate-500">
-                                            Ingresa el nombre del nuevo nivel para agregarlo al módulo.
-                                        </div>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div>
@@ -400,14 +302,12 @@ export default function CourseEditor() {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (confirm('¿Estás seguro de eliminar este nivel y todo su contenido?')) {
-                                                                professorApi.deleteLevel(level.id)
-                                                                    .then(() => {
-                                                                        toast({ title: "Nivel eliminado" });
-                                                                        fetchModuleData();
-                                                                    })
-                                                                    .catch(() => {
-                                                                        toast({ title: "Error", description: "No se pudo eliminar the level", variant: "destructive" });
-                                                                    });
+                                                                professorApi.deleteLevel(level.id).then(() => {
+                                                                    toast({ title: "Nivel eliminado" });
+                                                                    fetchModuleData();
+                                                                }).catch(() => {
+                                                                    toast({ title: "Error", description: "No se pudo eliminar", variant: "destructive" });
+                                                                });
                                                             }
                                                         }}
                                                     >
@@ -416,7 +316,7 @@ export default function CourseEditor() {
                                                 </div>
                                             </div>
 
-                                            {/* Access Controls - 3-State Logic */}
+                                            {/* Access Controls */}
                                             <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 mb-3" onClick={(e) => e.stopPropagation()}>
                                                 <Tabs
                                                     defaultValue={level.bloqueadoManual === true ? "locked" : (level.bloqueadoManual === false ? "unlocked" : "auto")}
@@ -443,7 +343,6 @@ export default function CourseEditor() {
                                                             <Unlock className="w-3 h-3 mr-1" /> OPEN
                                                         </TabsTrigger>
                                                     </TabsList>
-
                                                     <TabsContent value="auto" className="mt-2 pt-0">
                                                         <div className="flex items-center justify-center gap-2 px-2">
                                                             <span className="text-[9px] font-black text-slate-400 uppercase">Se abre el día</span>
@@ -468,65 +367,24 @@ export default function CourseEditor() {
                                                             />
                                                         </div>
                                                     </TabsContent>
-                                                    <TabsContent value="locked" className="mt-2 text-center">
-                                                        <p className="text-[9px] font-bold text-red-500 uppercase">Bloqueado para todos</p>
-                                                    </TabsContent>
-                                                    <TabsContent value="unlocked" className="mt-2 text-center">
-                                                        <p className="text-[9px] font-bold text-emerald-600 uppercase">Disponible ahora</p>
-                                                    </TabsContent>
                                                 </Tabs>
                                             </div>
 
-                                            <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
+                                            <div className="flex items-center justify-between gap-4 mt-2">
                                                 <p className="text-sm text-slate-500 font-medium">
                                                     {level.contents?.length || 0} contenido(s)
                                                 </p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingRagLevelId(level.id);
-                                                        }}
-                                                    >
-                                                        Guía RAG
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-xs h-7 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingHaLevelId(level.id);
-                                                        }}
-                                                    >
-                                                        Hito HA
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-xs h-7 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingPimLevelId(level.id);
-                                                        }}
-                                                    >
-                                                        Proy PIM
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingAttendanceLevelId(level.id);
-                                                        }}
-                                                    >
-                                                        <UserCheck className="w-3 h-3 mr-1" /> Asistencia
-                                                    </Button>
-                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-xs h-7 border-green-200 text-green-700 hover:bg-green-50"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingAttendanceLevelId(level.id);
+                                                    }}
+                                                >
+                                                    <UserCheck className="w-3 h-3 mr-1" /> Asistencia
+                                                </Button>
                                             </div>
 
                                             {level.contents && level.contents.length > 0 && (
@@ -567,7 +425,7 @@ export default function CourseEditor() {
                         <CardTitle>Agregar Contenido</CardTitle>
                         {selectedLevel && (
                             <p className="text-sm text-slate-500">
-                                Nivel seleccionado: {levels.find(l => l.id === selectedLevel)?.tituloNivel}
+                                Nivel: {levels.find(l => l.id === selectedLevel)?.tituloNivel}
                             </p>
                         )}
                     </CardHeader>
@@ -576,177 +434,75 @@ export default function CourseEditor() {
                             <p className="text-slate-400 text-center py-8">Selecciona un nivel para agregar contenido</p>
                         ) : (
                             <Tabs value={contentType} onValueChange={setContentType}>
-                                <TabsList className="grid w-full grid-cols-3">
-                                    <TabsTrigger value="link">
-                                        <LinkIcon className="w-4 h-4 mr-2" />
-                                        Enlace
-                                    </TabsTrigger>
-                                    <TabsTrigger value="file">
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        Archivo
-                                    </TabsTrigger>
-                                    <TabsTrigger value="codigo_lab">
-                                        <Code className="w-4 h-4 mr-2" />
-                                        Código
-                                    </TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-4">
+                                    <TabsTrigger value="link"><LinkIcon className="w-4 h-4 mr-2" /> Link</TabsTrigger>
+                                    <TabsTrigger value="file"><Upload className="w-4 h-4 mr-2" /> File</TabsTrigger>
+                                    <TabsTrigger value="codigo_lab"><Code className="w-4 h-4 mr-2" /> Code</TabsTrigger>
+                                    <TabsTrigger value="blockly_lab"><Sparkles className="w-4 h-4 mr-2" /> Blockly</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="link" className="space-y-4">
-                                    <div>
-                                        <Label>Tipo de Recurso</Label>
+                                    <div className="space-y-2">
+                                        <Label>Tipo</Label>
                                         <Select value={contentType} onValueChange={setContentType}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="link">Enlace Web</SelectItem>
-                                                <SelectItem value="video">Video (YouTube, etc)</SelectItem>
-                                                <SelectItem value="pdf">PDF (URL)</SelectItem>
+                                                <SelectItem value="video">Video</SelectItem>
+                                                <SelectItem value="pdf">PDF</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div>
-                                        <Label>URL del Recurso</Label>
-                                        <Input
-                                            value={contentUrl}
-                                            onChange={(e) => setContentUrl(e.target.value)}
-                                            placeholder="https://..."
-                                        />
+                                    <div className="space-y-2">
+                                        <Label>URL</Label>
+                                        <Input value={contentUrl} onChange={e => setContentUrl(e.target.value)} placeholder="https://..." />
                                     </div>
-                                    <Button onClick={addContent} className="w-full">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Agregar Enlace
-                                    </Button>
+                                    <Button onClick={addContent} className="w-full">Agregar Enlace</Button>
                                 </TabsContent>
 
                                 <TabsContent value="file" className="space-y-4">
-                                    <div>
-                                        <Label>Seleccionar de Biblioteca</Label>
-                                        <div className="mt-2">
-                                            {resourcesLoading ? (
-                                                <p className="text-sm text-slate-400">Cargando recursos...</p>
-                                            ) : (
-                                                <Select
-                                                    value={contentUrl}
-                                                    onValueChange={(val) => {
-                                                        const res = resources.find(r => r.url === val);
-                                                        if (res) {
-                                                            setContentUrl(res.url);
-                                                            // Normalize type detection
-                                                            const typeLower = (res.tipo || '').toLowerCase();
-                                                            const urlLower = res.url.toLowerCase();
-
-                                                            const isPdf = urlLower.endsWith('.pdf') || typeLower.includes('pdf');
-                                                            const isVideo = urlLower.endsWith('.mp4') || typeLower.includes('video');
-                                                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/.test(urlLower) || typeLower.includes('image');
-
-                                                            // Update tab selection based on type
-                                                            if (isPdf) setContentType('pdf'); // Note: This might need to be 'file' depending on tab logic, but usually we want specific type
-                                                            else if (isVideo) setContentType('video'); // If you have a video tab
-                                                            else if (isImage) setContentType('image'); // If you have image support
-                                                            else setContentType('file');
-                                                        }
-                                                    }}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Selecciona un archivo..." />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {resources.length === 0 ? (
-                                                            <SelectItem value="none" disabled>No hay archivos subidos</SelectItem>
-                                                        ) : (
-                                                            resources.map((r: any) => (
-                                                                <SelectItem key={r.id} value={r.url}>
-                                                                    {r.nombre || r.url.split('/').pop()}
-                                                                </SelectItem>
-                                                            ))
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-
-                                            <div className="mt-4 p-4 bg-slate-50 rounded border border-slate-100">
-                                                <p className="text-sm text-slate-500 mb-2">¿No encuentras el archivo?</p>
-                                                <Button variant="outline" size="sm" onClick={() => setLocation("/files")} className="w-full">
-                                                    Ir al Gestor de Archivos (Subir Nuevo)
-                                                </Button>
-                                            </div>
-
-                                            {contentUrl && (
-                                                <p className="text-sm text-green-600 mt-2 text-center break-all">
-                                                    Seleccionado: {contentUrl.split('/').pop()}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <Button onClick={() => {
-                                        if (!contentUrl) {
-                                            toast({ title: "Error", description: "Selecciona un recurso", variant: "destructive" });
-                                            return;
-                                        }
-                                        addContent();
-                                    }} className="w-full">
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        Asignar Archivo Seleccionado
-                                    </Button>
-                                </TabsContent>
-
-                                <TabsContent value="codigo_lab" className="space-y-4">
-                                    <div>
-                                        <Label>Título del Ejercicio</Label>
-                                        <Input
-                                            value={exerciseTitle}
-                                            onChange={(e) => setExerciseTitle(e.target.value)}
-                                            placeholder="Ej: Crear una función que sume dos números"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>Descripción/Instrucciones</Label>
-                                        <Textarea
-                                            value={exerciseDescription}
-                                            onChange={(e) => setExerciseDescription(e.target.value)}
-                                            placeholder="Explica qué debe hacer el estudiante..."
-                                            rows={3}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>Lenguaje de Programación</Label>
-                                        <Select value={language} onValueChange={setLanguage}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
+                                    <div className="space-y-2">
+                                        <Label>Biblioteca</Label>
+                                        <Select value={contentUrl} onValueChange={setContentUrl}>
+                                            <SelectTrigger><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="javascript">JavaScript</SelectItem>
-                                                <SelectItem value="python">Python</SelectItem>
-                                                <SelectItem value="java">Java</SelectItem>
-                                                <SelectItem value="cpp">C++</SelectItem>
+                                                {resources.map(r => <SelectItem key={r.id} value={r.url}>{r.nombre || r.url.split('/').pop()}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div>
-                                        <Label>Código Inicial (Starter Code)</Label>
-                                        <Textarea
-                                            value={starterCode}
-                                            onChange={(e) => setStarterCode(e.target.value)}
-                                            placeholder="// Código que verá el estudiante al iniciar"
-                                            rows={6}
-                                            className="font-mono text-sm"
-                                        />
+                                    <Button onClick={addContent} className="w-full">Asignar Archivo</Button>
+                                </TabsContent>
+
+                                <TabsContent value="codigo_lab" className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label>Título</Label>
+                                        <Input value={exerciseTitle} onChange={e => setExerciseTitle(e.target.value)} />
                                     </div>
-                                    <div>
-                                        <Label>Código Esperado (Solución de Referencia)</Label>
-                                        <Textarea
-                                            value={expectedCode}
-                                            onChange={(e) => setExpectedCode(e.target.value)}
-                                            placeholder="// Solución de referencia (opcional)"
-                                            rows={6}
-                                            className="font-mono text-sm"
-                                        />
+                                    <div className="space-y-2">
+                                        <Label>Instrucciones</Label>
+                                        <Textarea value={exerciseDescription} onChange={e => setExerciseDescription(e.target.value)} rows={3} />
                                     </div>
-                                    <Button onClick={addContent} className="w-full">
-                                        <Code className="w-4 h-4 mr-2" />
-                                        Crear Ejercicio de Código
-                                    </Button>
+                                    <div className="space-y-2">
+                                        <Label>Starter Code</Label>
+                                        <Textarea value={starterCode} onChange={e => setStarterCode(e.target.value)} className="font-mono text-sm" rows={5} />
+                                    </div>
+                                    <Button onClick={addContent} className="w-full">Crear Ejercicio de Código</Button>
+                                </TabsContent>
+
+                                <TabsContent value="blockly_lab" className="space-y-4">
+                                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex items-start gap-3">
+                                        <Sparkles className="w-5 h-5 text-purple-600 shrink-0 mt-1" />
+                                        <p className="text-xs text-purple-700"><strong>Blockly:</strong> Los estudiantes resolverán el desafío arrastrando bloques.</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Título</Label>
+                                        <Input value={exerciseTitle} onChange={e => setExerciseTitle(e.target.value)} placeholder="Ej: Mueve al Robot" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Objetivo</Label>
+                                        <Textarea value={exerciseDescription} onChange={e => setExerciseDescription(e.target.value)} placeholder="Explica qué lograr..." rows={3} />
+                                    </div>
+                                    <Button onClick={addContent} className="w-full bg-purple-600 hover:bg-purple-700 text-white">Crear Laboratorio Visual</Button>
                                 </TabsContent>
                             </Tabs>
                         )}

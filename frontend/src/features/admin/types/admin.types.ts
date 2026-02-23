@@ -27,6 +27,18 @@ export interface Module {
   professors?: User[];
 }
 
+export interface Course {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  imagenUrl?: string;
+}
+
+export interface CourseWithStats extends Course {
+  moduleCount: number;
+  studentCount: number;
+}
+
 export interface CreateUserPayload {
   nombre: string;
   email: string;

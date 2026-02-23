@@ -15,7 +15,7 @@ export default function AITutor() {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: '¡Hola! Soy tu Tutor IA de Genios AI 🤖. Estoy aquí para ayudarte con tus tareas y resolver tus dudas. ¿En qué puedo ayudarte hoy?',
+            content: '¡Hola! Soy tu Tutor IA de Intuit AI 🤖. Estoy aquí para ayudarte con tus tareas y resolver tus dudas. ¿En qué puedo ayudarte hoy?',
             timestamp: new Date()
         }
     ]);
@@ -65,14 +65,14 @@ export default function AITutor() {
                     <Bot className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Tutor IA - Genios AI</h1>
+                    <h1 className="text-3xl font-bold text-slate-800">Tutor IA - Intuit AI</h1>
                     <p className="text-slate-500">Tu asistente personal para tareas y aprendizaje</p>
                 </div>
                 <div className="ml-auto">
                     <div className="bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-2 rounded-full border-2 border-purple-200">
                         <p className="text-sm font-bold text-purple-700 flex items-center gap-2">
                             <Sparkles className="w-4 h-4" />
-                            Genio Pro Exclusivo
+                            Intuit Pro Exclusivo
                         </p>
                     </div>
                 </div>
@@ -116,8 +116,8 @@ export default function AITutor() {
                                 >
                                     <div
                                         className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-slate-100 text-slate-800'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-100 text-slate-800'
                                             }`}
                                     >
                                         <p className="text-sm">{msg.content}</p>

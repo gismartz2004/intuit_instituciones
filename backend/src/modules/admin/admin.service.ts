@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { ExcelProcessorService } from '../../shared/services/excel-processor.service';
 import * as bcrypt from 'bcrypt';
 
@@ -108,6 +108,47 @@ export class AdminService {
     }
 
     /**
+     * Get all courses with stats
+     */
+    async getAllCourses() {
+        const courses = await this.db.select().from(schema.cursos);
+
+        const coursesWithStats = await Promise.all(
+            courses.map(async (course) => {
+                const courseModules = await this.db
+                    .select()
+                    .from(schema.modulos)
+                    .where(eq(schema.modulos.cursoId, course.id));
+
+                // Get all students assigned to ANY module of this course
+                const moduleIds = courseModules.map(m => m.id);
+                let studentCount = 0;
+                let assignments: any[] = [];
+
+                if (moduleIds.length > 0) {
+                    assignments = await this.db
+                        .select({
+                            estudianteId: schema.asignaciones.estudianteId
+                        })
+                        .from(schema.asignaciones)
+                        .where(sql`${schema.asignaciones.moduloId} IN (${sql.join(moduleIds, sql`, `)})`);
+
+                    const uniqueStudents = new Set(assignments.map(a => a.estudianteId));
+                    studentCount = uniqueStudents.size;
+                }
+
+                return {
+                    ...course,
+                    moduleCount: courseModules.length,
+                    studentCount: studentCount,
+                };
+            }),
+        );
+
+        return coursesWithStats;
+    }
+
+    /**
      * Get complete content of a module (RAG, HA, PIM)
      */
     async getModuleContent(moduleId: number) {
@@ -210,6 +251,34 @@ export class AdminService {
     }
 
     /**
+     * Get students assigned to a specific course (unique across all modules)
+     */
+    async getAssignmentsByCourse(courseId: number) {
+        // 1. Get all modules for the course
+        const courseModules = await this.db
+            .select()
+            .from(schema.modulos)
+            .where(eq(schema.modulos.cursoId, courseId));
+
+        const moduleIds = courseModules.map(m => m.id);
+        if (moduleIds.length === 0) return [];
+
+        // 2. Get unique students across all these modules
+        return this.db
+            .selectDistinct({
+                id: schema.usuarios.id,
+                nombre: schema.usuarios.nombre,
+                email: schema.usuarios.email,
+            })
+            .from(schema.asignaciones)
+            .innerJoin(
+                schema.usuarios,
+                eq(schema.asignaciones.estudianteId, schema.usuarios.id),
+            )
+            .where(sql`${schema.asignaciones.moduloId} IN (${sql.join(moduleIds, sql`, `)})`);
+    }
+
+    /**
      * Unassign a module
      */
     async unassignModule(moduleId: number, studentId: number) {
@@ -286,6 +355,52 @@ export class AdminService {
         await this.db.insert(schema.asignaciones).values(assignments);
 
         return { success: true, count: assignments.length };
+    }
+
+    /**
+     * Bulk assign all modules of a course
+     */
+    async bulkAssignCourse(courseId: number, studentIds: number[], professorId?: number) {
+        console.log(`[DEBUG] Bulk assigning course ${courseId} to ${studentIds.length} students`);
+
+        // 1. Get all modules for the course
+        const courseModules = await this.db
+            .select()
+            .from(schema.modulos)
+            .where(eq(schema.modulos.cursoId, courseId));
+
+        if (courseModules.length === 0) {
+            throw new Error('El curso no tiene módulos para asignar');
+        }
+
+        // 2. Assign each module
+        let totalAssigned = 0;
+        for (const mod of courseModules) {
+            const result = await this.bulkAssignModules(mod.id, studentIds, professorId);
+            if (result.success) {
+                totalAssigned += (result.count || 0);
+            }
+        }
+
+        return { success: true, modulesCount: courseModules.length, totalAssigned };
+    }
+
+    /**
+     * Bulk unassign all modules of a course
+     */
+    async bulkUnassignCourse(courseId: number, studentId: number) {
+        // 1. Get all modules for the course
+        const courseModules = await this.db
+            .select()
+            .from(schema.modulos)
+            .where(eq(schema.modulos.cursoId, courseId));
+
+        // 2. Unassign each module
+        for (const mod of courseModules) {
+            await this.unassignModule(mod.id, studentId);
+        }
+
+        return { success: true };
     }
 
     /**

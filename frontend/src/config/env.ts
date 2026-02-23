@@ -16,9 +16,9 @@ const getEnvVar = (key: string, defaultValue?: string): string => {
 export const env = {
   /**
    * API Base URL - URL del backend
-   * @default 'http://localhost:3000'
+   * @default ''
    */
-  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', '/api'),
+  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', ''),
 
   /**
    * Nombre de la aplicación
@@ -49,3 +49,4 @@ if (env.NODE_ENV === 'development') {
 }
 
 export default env;
+

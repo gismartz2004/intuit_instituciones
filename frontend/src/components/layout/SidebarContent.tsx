@@ -19,11 +19,12 @@ import {
     Cpu,
     ChevronRight,
     Sparkles,
-    Store
+    Store,
+    Globe
 } from "lucide-react";
 import generatedImage from '@/assets/generated_images/arg_academy_logo.png';
 
-type Role = "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor";
+type Role = "student" | "admin" | "professor" | "superadmin";
 
 interface SidebarContentProps {
     currentRole: Role;
@@ -62,6 +63,7 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
         if (userPlanId === 1) {
             setStudentLinks([
                 { href: "/dashboard", icon: Book, label: "Aprender" },
+                { href: "/minecraft-world", icon: Globe, label: "Mundo Minecraft" },
                 { href: "/profile", icon: User, label: "Perfil" }
             ]);
             return;
@@ -81,6 +83,9 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
             if (!links.find((l: any) => l.href === '/arduino-lab')) {
                 links.push({ href: "/arduino-lab", icon: Cpu, label: "Lab Arduino" });
             }
+            if (!links.find((l: any) => l.href === '/minecraft-world')) {
+                links.push({ href: "/minecraft-world", icon: Globe, label: "Mundo Minecraft" });
+            }
             setStudentLinks(links);
         } catch (error) {
             // Fallback: Full access for all other plans
@@ -92,6 +97,7 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
                 { href: "/store", icon: Store, label: "Tienda" },
                 { href: "/lab", icon: Code, label: "Lab de Código" },
                 { href: "/arduino-lab", icon: Cpu, label: "Lab Arduino" },
+                { href: "/minecraft-world", icon: Globe, label: "Mundo Minecraft" },
                 { href: "/profile", icon: User, label: "Perfil" }
             ]);
         }
@@ -109,6 +115,7 @@ export function SidebarContent({ currentRole, onLogout, userPlanId = 1, onClose 
 
     const professorLinks = [
         { href: "/teach", icon: GraduationCap, label: "Mis Módulos" },
+        { href: "/minecraft-world", icon: Globe, label: "Mundo Minecraft" },
         { href: "/files", icon: FileText, label: "Archivos" },
         { href: "/profile", icon: Settings, label: "Perfil" },
     ];

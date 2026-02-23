@@ -36,7 +36,7 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
     useEffect(() => {
         if (user?.id) {
             // Refresh user data to check onboarding status
-            fetch(`http://localhost:3000/api/usuarios/${user.id}`)
+            fetch(`/api/usuarios/${user.id}`)
                 .then(res => res.json())
                 .then(userData => {
                     if (userData.avatar && AVATAR_MAP[userData.avatar]) {
@@ -51,7 +51,7 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
 
     const fetchModules = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/student/${user.id}/modules`);
+            const res = await fetch(`/api/student/${user.id}/modules`);
             if (res.ok) {
                 const data = await res.json();
                 setModules(data);
@@ -63,7 +63,7 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
 
     const fetchProgress = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/student/${user.id}/progress`);
+            const res = await fetch(`/api/student/${user.id}/progress`);
             if (res.ok) {
                 const data = await res.json();
                 setProgress(data);
@@ -107,3 +107,4 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
         </div >
     );
 }
+

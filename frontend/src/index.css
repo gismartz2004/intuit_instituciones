@@ -51,89 +51,89 @@
 }
 
 :root {
-  /* Cobalt Blue Palette & Neon Cyan */
-  --cobalt: 215 100% 34%;      /* #0047AB */
-  --neon-blue: 180 100% 50%;   /* #00FFFF */
-  --tech-gray: 210 20% 96%;    /* F0F4F8 */
-  --tech-dark: 215 28% 17%;    /* 1F2937 */
+  /* Purple & Pastel Palette */
+  --royal-purple: 270 95% 60%;      /* #8B5CF6 */
+  --pastel-purple: 270 95% 90%;    /* #F5F3FF */
+  --lavender: 280 100% 70%;        /* #A855F7 */
+  --soft-white: 0 0% 100%;
   
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
+  --background: 270 20% 98%;
+  --foreground: 270 47% 11%;
 
   --card: 0 0% 100% / 0.8;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 270 47% 11%;
  
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 270 47% 11%;
  
-  --primary: 215 100% 45%; 
+  --primary: 270 95% 60%; 
   --primary-foreground: 0 0% 100%;
  
-  --secondary: 215 100% 95%;
-  --secondary-foreground: 215 100% 34%;
+  --secondary: 270 95% 90%;
+  --secondary-foreground: 270 95% 40%;
  
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  --muted: 270 30% 96%;
+  --muted-foreground: 270 16% 47%;
  
-  --accent: 180 100% 50%;
-  --accent-foreground: 222 47% 11%;
+  --accent: 280 100% 70%;
+  --accent-foreground: 0 0% 100%;
  
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 215 100% 45%;
+  --border: 270 32% 91%;
+  --input: 270 32% 91%;
+  --ring: 270 95% 60%;
  
   --radius: 1rem;
  
-  --sidebar: 215 100% 34%;
+  --sidebar: 270 95% 40%;
   --sidebar-foreground: 0 0% 100%;
   --sidebar-primary: 0 0% 100%;
-  --sidebar-primary-foreground: 215 100% 34%;
-  --sidebar-accent: 215 100% 45%;
+  --sidebar-primary-foreground: 270 95% 40%;
+  --sidebar-accent: 270 95% 50%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 215 100% 40%;
-  --sidebar-ring: 180 100% 50%;
+  --sidebar-border: 270 95% 45%;
+  --sidebar-ring: 280 100% 70%;
 }
  
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
+  --background: 270 47% 6%;
+  --foreground: 270 40% 98%;
  
-  --card: 222 47% 11%;
-  --card-foreground: 210 40% 98%;
+  --card: 270 47% 8%;
+  --card-foreground: 270 40% 98%;
  
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
+  --popover: 270 47% 8%;
+  --popover-foreground: 270 40% 98%;
  
-  --primary: 215 100% 60%;
-  --primary-foreground: 222 47% 11%;
+  --primary: 270 95% 70%;
+  --primary-foreground: 270 47% 6%;
  
-  --secondary: 180 100% 50%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary: 280 100% 70%;
+  --secondary-foreground: 270 47% 6%;
  
-  --muted: 217 19% 27%;
-  --muted-foreground: 215 20% 65%;
+  --muted: 270 19% 20%;
+  --muted-foreground: 270 20% 65%;
  
-  --accent: 217 19% 27%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 270 19% 20%;
+  --accent-foreground: 270 40% 98%;
  
   --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 270 40% 98%;
  
-  --border: 217 19% 27%;
-  --input: 217 19% 27%;
-  --ring: 212.7 26.8% 83.9%;
+  --border: 270 19% 20%;
+  --input: 270 19% 20%;
+  --ring: 270 26.8% 83.9%;
   
-  --sidebar: 222 47% 10%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 215 100% 60%;
+  --sidebar: 270 47% 5%;
+  --sidebar-foreground: 270 40% 98%;
+  --sidebar-primary: 270 95% 70%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 217 19% 27%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 217 19% 27%;
-  --sidebar-ring: 212.7 26.8% 83.9%;
+  --sidebar-accent: 270 19% 20%;
+  --sidebar-accent-foreground: 270 40% 98%;
+  --sidebar-border: 270 19% 20%;
+  --sidebar-ring: 270 26.8% 83.9%;
 }
 
 @layer base {
@@ -159,16 +159,16 @@
 }
 
 .premium-gradient-bg {
-  background: radial-gradient(circle at top right, rgba(0, 71, 171, 0.05), transparent),
-              radial-gradient(circle at bottom left, rgba(0, 255, 255, 0.03), transparent);
+  background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.08), transparent),
+              radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.05), transparent);
 }
 
 .card-hover {
-  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10;
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/10;
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--cobalt))] to-[hsl(var(--neon-blue))];
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))];
 }
 
 /* Hide scrollbar but keep scroll */

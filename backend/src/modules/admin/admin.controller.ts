@@ -26,6 +26,11 @@ export class AdminController {
         return this.adminService.getAllModules();
     }
 
+    @Get('courses')
+    async getAllCourses() {
+        return this.adminService.getAllCourses();
+    }
+
     @Get('students')
     async getSystemStudents() {
         return this.adminService.getSystemStudents();
@@ -51,9 +56,19 @@ export class AdminController {
         return this.adminService.bulkAssignModules(body.moduleId, body.studentIds, body.professorId);
     }
 
+    @Post('courses/assign')
+    async bulkAssignCourse(@Body() body: { courseId: number; studentIds: number[]; professorId?: number }) {
+        return this.adminService.bulkAssignCourse(body.courseId, body.studentIds, body.professorId);
+    }
+
     @Get('modules/:id/assignments')
     async getModuleAssignments(@Param('id', ParseIntPipe) moduleId: number) {
         return this.adminService.getAssignmentsByModule(moduleId);
+    }
+
+    @Get('courses/:id/assignments')
+    async getCourseAssignments(@Param('id', ParseIntPipe) courseId: number) {
+        return this.adminService.getAssignmentsByCourse(courseId);
     }
 
     @Post('modules/:id/professor')
@@ -91,6 +106,14 @@ export class AdminController {
         @Body('studentId', ParseIntPipe) studentId: number,
     ) {
         return this.adminService.unassignModule(moduleId, studentId);
+    }
+
+    @Post('courses/:id/unassign')
+    async bulkUnassignCourse(
+        @Param('id', ParseIntPipe) courseId: number,
+        @Body('studentId', ParseIntPipe) studentId: number,
+    ) {
+        return this.adminService.bulkUnassignCourse(courseId, studentId);
     }
 
     @Post('students/preview')

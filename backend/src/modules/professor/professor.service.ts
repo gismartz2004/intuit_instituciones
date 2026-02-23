@@ -18,30 +18,49 @@ export class ProfessorService {
     private readonly storageService: StorageService,
     private readonly studentService: StudentService,
   ) { }
-  async getModulesByProfessor(professorId: number) {
-    // Select all modules where:
-    // 1. A multi-professor assignment exists and it matches this professor
-    // 2. OR: No multi-professor assignments exist for the module AND this professor is the record's main professorId
-    const assignedModules = await this.db
+  async getCoursesByProfessor(professorId: number) {
+    return await this.db
+      .select()
+      .from(schema.cursos)
+      .where(eq(schema.cursos.profesorId, professorId))
+      .orderBy(asc(schema.cursos.fechaCreacion));
+  }
+
+  async createCourse(data: schema.InsertCurso) {
+    const [newCourse] = await this.db
+      .insert(schema.cursos)
+      .values(data)
+      .returning();
+    return newCourse;
+  }
+
+  async getModulesByCourse(courseId: number) {
+    return await this.db
       .select()
       .from(schema.modulos)
+      .where(eq(schema.modulos.cursoId, courseId))
+      .orderBy(asc(schema.modulos.fechaCreacion));
+  }
+
+  async getModulesByProfessor(professorId: number) {
+    // Select modules where the professor is directly assigned or owns the parent course
+    const assignedModules = await this.db
+      .select({
+        modulo: schema.modulos,
+      })
+      .from(schema.modulos)
+      .leftJoin(schema.cursos, eq(schema.modulos.cursoId, schema.cursos.id))
       .where(
         or(
-          // Case 1: Assigned via the newer join table
-          sql`EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id} AND mp.profesor_id = ${professorId})`,
-          // Case 2: Legacy fallback (only if join table is completely empty for this module)
-          and(
-            eq(schema.modulos.profesorId, professorId),
-            sql`NOT EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id})`
-          ),
-          // Case 3: Assigned to specific students in this module 
-          // (Usually restricted by multi-professor list, but kept for student-specific oversight)
-          sql`EXISTS (SELECT 1 FROM ${schema.asignaciones} a WHERE a.modulo_id = ${schema.modulos.id} AND a.profesor_id = ${professorId})`
+          eq(schema.modulos.profesorId, professorId),
+          eq(schema.cursos.profesorId, professorId),
+          sql`EXISTS (SELECT 1 FROM ${schema.moduloProfesores} mp WHERE mp.modulo_id = ${schema.modulos.id} AND mp.profesor_id = ${professorId})`
         )
       );
 
     const modulesWithDetails = await Promise.all(
-      assignedModules.map(async (mod) => {
+      assignedModules.map(async (row) => {
+        const mod = row.modulo;
 
         const studentAssignments = await this.db
           .select({

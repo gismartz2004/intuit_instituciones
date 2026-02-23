@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, FileText, Video, Link as LinkIcon, Code, Upload, File, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Content {
@@ -60,13 +60,13 @@ export default function CourseEditor() {
 
     const fetchModuleData = async () => {
         try {
-            const modRes = await fetch(`http://localhost:3000/api/modulos/${moduleId}`);
+            const modRes = await fetch(`/api/modulos/${moduleId}`);
             if (modRes.ok) {
                 const modData = await modRes.json();
                 setModuleName(modData.nombreModulo);
             }
 
-            const levelsRes = await fetch(`http://localhost:3000/api/professor/modules/${moduleId}/levels`);
+            const levelsRes = await fetch(`/api/professor/modules/${moduleId}/levels`);
             if (levelsRes.ok) {
                 const levelsData = await levelsRes.json();
                 setLevels(levelsData);
@@ -85,7 +85,7 @@ export default function CourseEditor() {
         }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/professor/modules/${moduleId}/levels`, {
+            const res = await fetch(`/api/professor/modules/${moduleId}/levels`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -115,20 +115,20 @@ export default function CourseEditor() {
             tipo: contentType
         };
 
-        if (contentType === "codigo_lab") {
-            // Code exercise
-            if (!exerciseTitle || !exerciseDescription || !starterCode) {
-                toast({ title: "Error", description: "Completa todos los campos del ejercicio", variant: "destructive" });
+        if (contentType === "codigo_lab" || contentType === "blockly_lab") {
+            // Code or Blockly exercise
+            if (!exerciseTitle || !exerciseDescription) {
+                toast({ title: "Error", description: "Completa el título y descripción", variant: "destructive" });
                 return;
             }
             payload = {
                 ...payload,
                 tituloEjercicio: exerciseTitle,
                 descripcionEjercicio: exerciseDescription,
-                codigoInicial: starterCode,
-                codigoEsperado: expectedCode,
-                lenguaje: language,
-                urlRecurso: "" // Not used for code exercises
+                codigoInicial: starterCode || "",
+                codigoEsperado: expectedCode || "",
+                lenguaje: language || "javascript",
+                urlRecurso: ""
             };
         } else if (contentType === "file" || contentType === "pdf") {
             // File from library
@@ -149,7 +149,7 @@ export default function CourseEditor() {
         }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/professor/levels/${selectedLevel}/contents`, {
+            const res = await fetch(`/api/professor/levels/${selectedLevel}/contents`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -177,7 +177,7 @@ export default function CourseEditor() {
 
     const deleteContent = async (contentId: number) => {
         try {
-            const res = await fetch(`http://localhost:3000/api/professor/contents/${contentId}`, {
+            const res = await fetch(`/api/professor/contents/${contentId}`, {
                 method: 'DELETE'
             });
 
@@ -275,7 +275,7 @@ export default function CourseEditor() {
                                                         e.stopPropagation();
                                                         if (confirm('¿Estás seguro de eliminar este nivel y todo su contenido?')) {
                                                             // Call delete function (needs to be implemented in component body first, but for now assuming it exists or doing fetch directly)
-                                                            fetch(`http://localhost:3000/api/professor/levels/${level.id}`, { method: 'DELETE' })
+                                                            fetch(`/api/professor/levels/${level.id}`, { method: 'DELETE' })
                                                                 .then(res => {
                                                                     if (res.ok) {
                                                                         toast({ title: "Nivel eliminado" });
@@ -338,7 +338,7 @@ export default function CourseEditor() {
                             <p className="text-slate-400 text-center py-8">Selecciona un nivel para agregar contenido</p>
                         ) : (
                             <Tabs value={contentType} onValueChange={setContentType}>
-                                <TabsList className="grid w-full grid-cols-3">
+                                <TabsList className="grid w-full grid-cols-4">
                                     <TabsTrigger value="link">
                                         <LinkIcon className="w-4 h-4 mr-2" />
                                         Enlace
@@ -350,6 +350,10 @@ export default function CourseEditor() {
                                     <TabsTrigger value="codigo_lab">
                                         <Code className="w-4 h-4 mr-2" />
                                         Código
+                                    </TabsTrigger>
+                                    <TabsTrigger value="blockly_lab">
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        Blockly
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -492,6 +496,36 @@ export default function CourseEditor() {
                                         Crear Ejercicio de Código
                                     </Button>
                                 </TabsContent>
+
+                                <TabsContent value="blockly_lab" className="space-y-4">
+                                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex items-start gap-3 mb-4">
+                                        <Sparkles className="w-5 h-5 text-purple-600 shrink-0 mt-1" />
+                                        <p className="text-xs text-purple-700 leading-relaxed">
+                                            <strong>Laboratorio Visual (Blockly):</strong> Los estudiantes resolverán el desafío arrastrando bloques de programación. Define el objetivo y el título del ejercicio.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label>Título del Laboratorio</Label>
+                                        <Input
+                                            value={exerciseTitle}
+                                            onChange={(e) => setExerciseTitle(e.target.value)}
+                                            placeholder="Ej: Mueve al Robot a la Meta"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label>Objetivo del Estudiante (Instrucciones)</Label>
+                                        <Textarea
+                                            value={exerciseDescription}
+                                            onChange={(e) => setExerciseDescription(e.target.value)}
+                                            placeholder="Explica qué debe lograr el estudiante..."
+                                            rows={3}
+                                        />
+                                    </div>
+                                    <Button onClick={addContent} className="w-full bg-purple-600 hover:bg-purple-700">
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        Crear Laboratorio Visual
+                                    </Button>
+                                </TabsContent>
                             </Tabs>
                         )}
                     </CardContent>
@@ -500,3 +534,4 @@ export default function CourseEditor() {
         </div>
     );
 }
+

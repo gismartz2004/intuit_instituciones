@@ -32,7 +32,7 @@
                         "login",
                         "acceso"
                     ],
-                    "answer": "Si tienes problemas para iniciar sesión:\n\n1. **Verifica tus credenciales**: Asegúrate de escribir correctamente tu email y contraseña\n2. **Revisa las mayúsculas**: La contraseña distingue entre mayúsculas y minúsculas\n3. **Limpia el caché**: Borra el caché de tu navegador\n4. **Prueba otro navegador**: Intenta con Chrome, Firefox o Edge\n5. **Contacta soporte**: Si el problema persiste, contacta al administrador\n\n**Email de soporte:** soporte@geniosbot.com",
+                    "answer": "Si tienes problemas para iniciar sesión:\n\n1. **Verifica tus credenciales**: Asegúrate de escribir correctamente tu email y contraseña\n2. **Revisa las mayúsculas**: La contraseña distingue entre mayúsculas y minúsculas\n3. **Limpia el caché**: Borra el caché de tu navegador\n4. **Prueba otro navegador**: Intenta con Chrome, Firefox o Edge\n5. **Contacta soporte**: Si el problema persiste, contacta al administrador\n\n**Email de soporte:** soporte@intuitmodel.education",
                     "relatedQuestions": [
                         "forgot-password",
                         "browser-support"
@@ -181,7 +181,7 @@
                         "no funciona",
                         "falla"
                     ],
-                    "answer": "**Solución de Problemas Técnicos:**\n\n🔧 **Pasos básicos:**\n1. **Recarga la página**: Presiona F5 o Ctrl+R\n2. **Limpia el caché**: Ctrl+Shift+Delete\n3. **Prueba modo incógnito**: Ctrl+Shift+N\n4. **Actualiza el navegador**: Verifica que esté actualizado\n5. **Reinicia el dispositivo**: A veces es la solución más simple\n\n📱 **Problemas comunes:**\n- **Página en blanco**: Limpia caché y cookies\n- **Botones no responden**: Desactiva extensiones del navegador\n- **Carga lenta**: Verifica tu conexión a internet\n- **Error 404/500**: Reporta al soporte técnico\n\n📧 **Contacto de Soporte:**\n- Email: soporte@geniosbot.com\n- WhatsApp: +593 99 123 4567\n- Horario: Lunes a Viernes, 8:00 - 18:00\n\n**Tip:** Toma captura de pantalla del error para enviarlo a soporte.",
+                    "answer": "**Solución de Problemas Técnicos:**\n\n🔧 **Pasos básicos:**\n1. **Recarga la página**: Presiona F5 o Ctrl+R\n2. **Limpia el caché**: Ctrl+Shift+Delete\n3. **Prueba modo incógnito**: Ctrl+Shift+N\n4. **Actualiza el navegador**: Verifica que esté actualizado\n5. **Reinicia el dispositivo**: A veces es la solución más simple\n\n📱 **Problemas comunes:**\n- **Página en blanco**: Limpia caché y cookies\n- **Botones no responden**: Desactiva extensiones del navegador\n- **Carga lenta**: Verifica tu conexión a internet\n- **Error 404/500**: Reporta al soporte técnico\n\n📧 **Contacto de Soporte:**\n- Email: soporte@intuitmodel.education\n- WhatsApp: +593 99 123 4567\n- Horario: Lunes a Viernes, 8:00 - 18:00\n\n**Tip:** Toma captura de pantalla del error para enviarlo a soporte.",
                     "relatedQuestions": [
                         "browser-support",
                         "slow-performance"
@@ -252,7 +252,7 @@
                         "privacidad",
                         "hackeo"
                     ],
-                    "answer": "**Seguridad de tu Cuenta:**\n\n🔐 **Mejores Prácticas:**\n1. **Contraseña fuerte:**\n   - Mínimo 8 caracteres\n   - Combina letras, números y símbolos\n   - No uses información personal\n   - Cámbiala cada 3-6 meses\n\n2. **Protege tus credenciales:**\n   - No compartas tu contraseña\n   - No uses la misma contraseña en otros sitios\n   - Cierra sesión en computadoras públicas\n\n3. **Verifica actividad:**\n   - Revisa el historial de inicio de sesión\n   - Reporta actividad sospechosa\n   - Activa notificaciones de inicio de sesión\n\n4. **Autenticación de dos factores (próximamente):**\n   - Código por SMS\n   - App de autenticación\n\n⚠️ **Si detectas acceso no autorizado:**\n1. Cambia tu contraseña inmediatamente\n2. Contacta a soporte: soporte@geniosbot.com\n3. Revisa tu email de recuperación",
+                    "answer": "**Seguridad de tu Cuenta:**\n\n🔐 **Mejores Prácticas:**\n1. **Contraseña fuerte:**\n   - Mínimo 8 caracteres\n   - Combina letras, números y símbolos\n   - No uses información personal\n   - Cámbiala cada 3-6 meses\n\n2. **Protege tus credenciales:**\n   - No compartas tu contraseña\n   - No uses la misma contraseña en otros sitios\n   - Cierra sesión en computadoras públicas\n\n3. **Verifica actividad:**\n   - Revisa el historial de inicio de sesión\n   - Reporta actividad sospechosa\n   - Activa notificaciones de inicio de sesión\n\n4. **Autenticación de dos factores (próximamente):**\n   - Código por SMS\n   - App de autenticación\n\n⚠️ **Si detectas acceso no autorizado:**\n1. Cambia tu contraseña inmediatamente\n2. Contacta a soporte: soporte@intuitmodel.education\n3. Revisa tu email de recuperación",
                     "relatedQuestions": [
                         "change-password",
                         "forgot-password"
@@ -267,7 +267,7 @@
             "questions": [
                 {
                     "id": "what-is-system",
-                    "question": "¿Qué es Genios Bot Academy?",
+                    "question": "¿Qué es Intuit Model Education?",
                     "keywords": [
                         "qué es",
                         "genios bot",
@@ -275,7 +275,7 @@
                         "plataforma",
                         "sistema"
                     ],
-                    "answer": "**Genios Bot Academy** es una plataforma educativa gamificada de última generación para el aprendizaje de tecnología, programación y robótica.\n\n🎯 **Características principales:**\n- **Aprendizaje Gamificado**: Sistema de niveles, XP y recompensas\n- **Contenido Interactivo**: Videos, quizzes y proyectos prácticos\n- **Seguimiento en Tiempo Real**: Monitoreo del progreso estudiantil\n- **Especialidades**: Base de Datos, Infraestructura TI, Programación\n\n👨‍🎓 **Para Estudiantes:**\n- Rutas de aprendizaje personalizadas\n- Competencias y rankings\n- Certificaciones al completar módulos\n\n👨‍👩‍👧 **Para Padres:**\n- Dashboard de seguimiento\n- Reportes automáticos\n- Comunicación directa con profesores\n\n**Misión:** Formar la próxima generación de profesionales tecnológicos con habilidades del siglo XXI.",
+                    "answer": "**Intuit Model Education** es una plataforma educativa gamificada de última generación para el aprendizaje de tecnología, programación y robótica.\n\n🎯 **Características principales:**\n- **Aprendizaje Gamificado**: Sistema de niveles, XP y recompensas\n- **Contenido Interactivo**: Videos, quizzes y proyectos prácticos\n- **Seguimiento en Tiempo Real**: Monitoreo del progreso estudiantil\n- **Especialidades**: Base de Datos, Infraestructura TI, Programación\n\n👨‍🎓 **Para Estudiantes:**\n- Rutas de aprendizaje personalizadas\n- Competencias y rankings\n- Certificaciones al completar módulos\n\n👨‍👩‍👧 **Para Padres:**\n- Dashboard de seguimiento\n- Reportes automáticos\n- Comunicación directa con profesores\n\n**Misión:** Formar la próxima generación de profesionales tecnológicos con habilidades del siglo XXI.",
                     "relatedQuestions": [
                         "how-to-navigate",
                         "contact-support"
@@ -291,7 +291,7 @@
                         "administrador",
                         "support"
                     ],
-                    "answer": "**Canales de Soporte:**\n\n📧 **Email:**\n- Soporte técnico: soporte@geniosbot.com\n- Administración: admin@geniosbot.com\n- Consultas generales: info@geniosbot.com\n\n📱 **WhatsApp:**\n- +593 99 123 4567\n- Horario: Lunes a Viernes, 8:00 - 18:00\n\n🌐 **Redes Sociales:**\n- Facebook: @GeniosBotAcademy\n- Instagram: @geniosbot_academy\n- Twitter: @GeniosBotEdu\n\n🏢 **Oficina:**\n- Dirección: Av. Principal 123, Quito, Ecuador\n- Horario de atención: Lunes a Viernes, 9:00 - 17:00\n\n**Tiempo de respuesta:**\n- Email: 24-48 horas\n- WhatsApp: 2-4 horas (horario laboral)\n- Urgencias: Llamar directamente\n\n**Tip:** Para soporte técnico, incluye capturas de pantalla del problema.",
+                    "answer": "**Canales de Soporte:**\n\n📧 **Email:**\n- Soporte técnico: soporte@intuitmodel.education\n- Administración: admin@intuitmodel.education\n- Consultas generales: info@intuitmodel.education\n\n📱 **WhatsApp:**\n- +593 99 123 4567\n- Horario: Lunes a Viernes, 8:00 - 18:00\n\n🌐 **Redes Sociales:**\n- Facebook: @IntuitModel\n- Instagram: @intuitmodel_edu\n- Twitter: @IntuitModelEdu\n\n🏢 **Oficina:**\n- Dirección: Av. Principal 123, Quito, Ecuador\n- Horario de atención: Lunes a Viernes, 9:00 - 17:00\n\n**Tiempo de respuesta:**\n- Email: 24-48 horas\n- WhatsApp: 2-4 horas (horario laboral)\n- Urgencias: Llamar directamente\n\n**Tip:** Para soporte técnico, incluye capturas de pantalla del problema.",
                     "relatedQuestions": [
                         "technical-issues",
                         "what-is-system"
@@ -300,8 +300,8 @@
             ]
         }
     ],
-    "welcomeMessage": "¡Hola! 👋 Soy el **Asistente Virtual de Genios Bot Academy**.\n\nEstoy aquí para ayudarte con cualquier pregunta sobre la plataforma. Puedes preguntarme sobre:\n\n🔐 Inicio de sesión y contraseñas\n🧭 Cómo navegar por el sistema\n📊 Progreso de tu hijo/a\n🔧 Problemas técnicos\n👤 Gestión de tu cuenta\n\n**¿En qué puedo ayudarte hoy?**",
-    "defaultResponse": "Lo siento, no encontré una respuesta específica para tu pregunta. 😔\n\nPero no te preocupes, puedes:\n\n1. **Reformular tu pregunta** con otras palabras\n2. **Explorar las categorías** de preguntas frecuentes arriba\n3. **Contactar directamente** a nuestro equipo de soporte:\n   - 📧 Email: soporte@geniosbot.com\n   - 📱 WhatsApp: +593 99 123 4567\n\n¿Hay algo más en lo que pueda ayudarte?",
+    "welcomeMessage": "¡Hola! 👋 Soy el **Asistente Virtual de Intuit Model Education**.\n\nEstoy aquí para ayudarte con cualquier pregunta sobre la plataforma. Puedes preguntarme sobre:\n\n🔐 Inicio de sesión y contraseñas\n🧭 Cómo navegar por el sistema\n📊 Progreso de tu hijo/a\n🔧 Problemas técnicos\n👤 Gestión de tu cuenta\n\n**¿En qué puedo ayudarte hoy?**",
+    "defaultResponse": "Lo siento, no encontré una respuesta específica para tu pregunta. 😔\n\nPero no te preocupes, puedes:\n\n1. **Reformular tu pregunta** con otras palabras\n2. **Explorar las categorías** de preguntas frecuentes arriba\n3. **Contactar directamente** a nuestro equipo de soporte:\n   - 📧 Email: soporte@intuitmodel.education\n   - 📱 WhatsApp: +593 99 123 4567\n\n¿Hay algo más en lo que pueda ayudarte?",
     "quickActions": [
         {
             "label": "🔑 Olvidé mi contraseña",

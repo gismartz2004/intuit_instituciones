@@ -28,7 +28,7 @@ export default function FileSystem() {
 
     const fetchResources = async () => {
         try {
-            const res = await fetch("http://localhost:3000/api/professor/resources");
+            const res = await fetch("/api/professor/resources");
             if (res.ok) {
                 const data = await res.json();
                 setResources(data);
@@ -50,7 +50,7 @@ export default function FileSystem() {
         formData.append("profesorId", "1"); // Hardcoded for now
 
         try {
-            const res = await fetch("http://localhost:3000/api/professor/upload", {
+            const res = await fetch("/api/professor/upload", {
                 method: "POST",
                 body: formData,
             });
@@ -163,3 +163,4 @@ export default function FileSystem() {
         </div>
     );
 }
+

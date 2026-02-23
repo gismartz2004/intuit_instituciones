@@ -46,17 +46,27 @@ export const usuarios = pgTable('usuarios', {
   edad: integer('edad'),
   institucion: varchar('institucion', { length: 255 }),
   curso: varchar('curso', { length: 100 }),
-  especializacion: varchar('especializacion', { length: 100 }),
+});
+
+// 3.5 Tabla de Cursos (Nivel superior)
+export const cursos = pgTable('cursos', {
+  id: serial('id').primaryKey(),
+  nombre: varchar('nombre', { length: 100 }).notNull(),
+  descripcion: text('descripcion'),
+  imagenUrl: text('imagen_url'),
+  profesorId: integer('profesor_id').references(() => usuarios.id),
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
 // 4. Tabla de Módulos
 export const modulos = pgTable('modulos', {
   id: serial('id').primaryKey(),
+  cursoId: integer('curso_id').references(() => cursos.id),
   nombreModulo: varchar('nombre_modulo', { length: 100 }),
   duracionDias: integer('duracion_dias'),
   profesorId: integer('profesor_id').references(() => usuarios.id),
   categoria: varchar('categoria', { length: 20 }).default('standard'), // 'standard' or 'specialization'
-  especializacion: varchar('especializacion', { length: 50 }), // 'cs', 'mechatronics'
+  generadoPorIA: boolean('generado_por_ia').default(false),
   fechaCreacion: timestamp('fecha_creacion').defaultNow(),
 });
 
@@ -77,13 +87,15 @@ export const niveles = pgTable('niveles', {
   orden: integer('orden'),
   bloqueadoManual: boolean('bloqueado_manual'), // Nullable by default, no fixed default here
   diasParaDesbloquear: integer('dias_para_desbloquear').default(7), // Default to 1 week
+  descripcion: text('descripcion'),
+  objetivos: jsonb('objetivos'), // Array of learning objectives
 });
 
 // 7. Contenidos
 export const contenidos = pgTable('contenidos', {
   id: serial('id').primaryKey(),
   nivelId: integer('nivel_id').references(() => niveles.id),
-  tipo: varchar('tipo', { length: 20 }), // video, pdf, link, word, slides, entregable, codigo_lab
+  tipo: varchar('tipo', { length: 20 }), // video, pdf, link, word, slides, entregable, codigo_lab, reto
   urlRecurso: text('url_recurso'),
   // Campos para ejercicios de código
   tituloEjercicio: varchar('titulo_ejercicio', { length: 255 }),
@@ -91,6 +103,10 @@ export const contenidos = pgTable('contenidos', {
   codigoInicial: text('codigo_inicial'),
   codigoEsperado: text('codigo_esperado'),
   lenguaje: varchar('lenguaje', { length: 50 }), // javascript, python, etc.
+  // Campos para retos generados por IA
+  dificultad: varchar('dificultad', { length: 20 }), // fácil, media, difícil
+  archivosBase: jsonb('archivos_base'), // Array of {nombre, contenido, lenguaje}
+  criterios: jsonb('criterios'), // Array of {descripcion, puntos}
 });
 
 // 8. Tabla Maestra de Puntos
@@ -431,6 +447,7 @@ export const insertEntregaSchema = createInsertSchema(entregas);
 export const insertRankingAwardSchema = createInsertSchema(rankingAwards);
 export const insertCertificadoSchema = createInsertSchema(certificados);
 export const insertProgresoNivelSchema = createInsertSchema(progresoNiveles);
+export const insertCursoSchema = createInsertSchema(cursos);
 
 // Types
 export type Role = typeof roles.$inferSelect;
@@ -441,6 +458,9 @@ export type InsertPlan = z.infer<typeof insertPlanSchema>;
 
 export type Usuario = typeof usuarios.$inferSelect;
 export type InsertUsuario = z.infer<typeof insertUsuarioSchema>;
+
+export type Curso = typeof cursos.$inferSelect;
+export type InsertCurso = z.infer<typeof insertCursoSchema>;
 
 export type Modulo = typeof modulos.$inferSelect;
 export type InsertModulo = z.infer<typeof insertModuloSchema>;

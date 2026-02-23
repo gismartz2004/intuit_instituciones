@@ -14,10 +14,9 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 import { SidebarContent } from "./SidebarContent";
-import { SpecialistSidebarContent } from "@/features/specialist/components/SpecialistSidebarContent";
 import { useState } from "react";
 
-type Role = "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor";
+type Role = "student" | "admin" | "professor" | "superadmin";
 
 interface MobileNavProps {
   currentRole: Role;
@@ -51,22 +50,10 @@ export function MobileNav({ currentRole, onLogout, userPlanId = 1 }: MobileNavPr
     { href: "/profile", icon: User, label: "Perfil" },
   ];
 
-  const specialistLinks = [
-    { href: "/dashboard", icon: Target, label: "Aprende" },
-    { href: "/profile", icon: User, label: "Perfil" },
-  ];
-
-  const specialistProfessorLinks = [
-    { href: "/specialist-teach", icon: Home, label: "Tech Area" },
-    { href: "/profile", icon: User, label: "Perfil" },
-  ];
-
   const links = currentRole === "admin" ? adminLinks :
     currentRole === "superadmin" ? superadminLinks :
       currentRole === "professor" ? professorLinks :
-        currentRole === "specialist" ? specialistLinks :
-          currentRole === "specialist_professor" ? specialistProfessorLinks :
-            studentLinks;
+        studentLinks;
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-100 px-4 pb-6 pt-2 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
@@ -105,20 +92,12 @@ export function MobileNav({ currentRole, onLogout, userPlanId = 1 }: MobileNavPr
             </div>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[280px] border-none">
-            {currentRole === "specialist" || currentRole === "specialist_professor" ? (
-              <SpecialistSidebarContent
-                currentRole={currentRole as any}
-                onLogout={onLogout}
-                onClose={() => setOpen(false)}
-              />
-            ) : (
-              <SidebarContent
-                currentRole={currentRole as any}
-                onLogout={onLogout}
-                userPlanId={userPlanId}
-                onClose={() => setOpen(false)}
-              />
-            )}
+            <SidebarContent
+              currentRole={currentRole as any}
+              onLogout={onLogout}
+              userPlanId={userPlanId}
+              onClose={() => setOpen(false)}
+            />
           </SheetContent>
         </Sheet>
       </div>

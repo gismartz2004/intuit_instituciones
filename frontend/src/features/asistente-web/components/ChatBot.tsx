@@ -178,8 +178,8 @@ export default function ChatBot({ className = "" }: ChatBotProps) {
                                 {/* Avatar */}
                                 <div
                                     className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${message.type === "bot"
-                                            ? "bg-gradient-to-br from-cyan-600 to-blue-700"
-                                            : "bg-gradient-to-br from-purple-600 to-pink-600"
+                                        ? "bg-gradient-to-br from-cyan-600 to-blue-700"
+                                        : "bg-gradient-to-br from-purple-600 to-pink-600"
                                         }`}
                                 >
                                     {message.type === "bot" ? (
@@ -192,8 +192,8 @@ export default function ChatBot({ className = "" }: ChatBotProps) {
                                 {/* Message Bubble */}
                                 <div
                                     className={`rounded-2xl p-4 ${message.type === "bot"
-                                            ? "bg-slate-800/50 border border-white/10"
-                                            : "bg-gradient-to-br from-cyan-600 to-blue-700"
+                                        ? "bg-slate-800/50 border border-white/10"
+                                        : "bg-gradient-to-br from-cyan-600 to-blue-700"
                                         }`}
                                 >
                                     <div className="text-sm md:text-base text-white whitespace-pre-line leading-relaxed">
@@ -293,7 +293,7 @@ export default function ChatBot({ className = "" }: ChatBotProps) {
                     </Button>
                 </form>
                 <p className="text-xs text-slate-500 mt-2 text-center">
-                    Presiona Enter para enviar • Powered by Genios Bot AI
+                    Presiona Enter para enviar • Powered by Intuit Model AI
                 </p>
             </div>
         </div>

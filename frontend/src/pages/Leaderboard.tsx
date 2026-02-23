@@ -18,17 +18,17 @@ export default function Leaderboard() {
         <div className="inline-block bg-yellow-100 p-3 rounded-2xl mb-2">
           <Trophy className="w-10 h-10 text-yellow-600" />
         </div>
-        <h1 className="text-4xl font-black text-slate-800 tracking-tight">Genios Awards</h1>
-        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Liga de Oro • Temporada 2026</p>
+        <h1 className="text-4xl font-black text-slate-800 tracking-tight">Intuit Excellence</h1>
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Cuadro de Honor • Temporada 2026</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
         {RANKING_DATA.map((player, index) => (
-          <div 
+          <div
             key={player.id}
             className={cn(
               "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all hover:scale-[1.01]",
-              player.isUser ? "bg-blue-50 border-[#0047AB] shadow-lg shadow-blue-100" : "bg-white border-slate-100"
+              player.isUser ? "bg-purple-50 border-purple-600 shadow-lg shadow-purple-100" : "bg-white border-slate-100"
             )}
           >
             <div className="w-12 text-2xl font-black text-slate-300 flex justify-center">
@@ -37,14 +37,14 @@ export default function Leaderboard() {
               {index + 1 === 3 && <Medal className="w-8 h-8 text-amber-600" />}
               {index + 1 > 3 && <span>{index + 1}</span>}
             </div>
-            
+
             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border-2 border-white shadow-sm">
               {player.avatar}
             </div>
 
             <div className="flex-1">
-              <p className={cn("font-bold text-lg", player.isUser ? "text-[#0047AB]" : "text-slate-700")}>
-                {player.name} {player.isUser && <span className="text-xs bg-blue-200 px-2 py-0.5 rounded-full ml-2">TÚ</span>}
+              <p className={cn("font-bold text-lg", player.isUser ? "text-purple-600" : "text-slate-700")}>
+                {player.name} {player.isUser && <span className="text-xs bg-purple-200 px-2 py-0.5 rounded-full ml-2 text-purple-700">TÚ</span>}
               </p>
               <div className="flex items-center gap-4 mt-1">
                 <span className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">

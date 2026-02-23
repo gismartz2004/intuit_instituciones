@@ -20,7 +20,7 @@ import {
   Library,
 } from "lucide-react";
 import { adminApi } from "../services/admin.api";
-import { User as Student, ModuleWithStats } from "../types/admin.types";
+import { User as Student, CourseWithStats } from "../types/admin.types";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -44,10 +44,10 @@ interface AssignmentManagerViewProps {
 }
 
 export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
-  const [modules, setModules] = useState<ModuleWithStats[]>([]);
+  const [courses, setCourses] = useState<CourseWithStats[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [assignedStudents, setAssignedStudents] = useState<Student[]>([]);
-  const [selectedModule, setSelectedModule] = useState<ModuleWithStats | null>(
+  const [selectedCourse, setSelectedCourse] = useState<CourseWithStats | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
@@ -65,24 +65,24 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
   }, []);
 
   useEffect(() => {
-    if (selectedModule) {
-      loadAssignedStudents(selectedModule.id);
+    if (selectedCourse) {
+      loadAssignedStudents(selectedCourse.id);
     }
-  }, [selectedModule]);
+  }, [selectedCourse]);
 
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const [modulesData, studentsData, professorsData] = await Promise.all([
-        adminApi.getAllModulesWithStats(),
+      const [coursesData, studentsData, professorsData] = await Promise.all([
+        adminApi.getCourses(),
         adminApi.getSystemStudents(),
         adminApi.getSystemProfessors(),
       ]);
-      setModules(modulesData);
+      setCourses(coursesData);
       setStudents(studentsData);
       setProfessors(professorsData);
-      if (modulesData.length > 0) {
-        setSelectedModule(modulesData[0]);
+      if (coursesData.length > 0) {
+        setSelectedCourse(coursesData[0]);
       }
     } catch (error) {
       toast({
@@ -95,12 +95,12 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
     }
   };
 
-  const loadAssignedStudents = async (moduleId: number) => {
+  const loadAssignedStudents = async (courseId: number) => {
     try {
-      const data = await adminApi.getModuleAssignments(moduleId);
+      const data = await adminApi.getCourseAssignments(courseId);
       setAssignedStudents(data);
 
-      // Set current professor from assignments if any
+      // Set current professor from first module if any (simplified)
       if (data.length > 0 && data[0].profesorId) {
         setSelectedProfessorId(data[0].profesorId.toString());
       } else {
@@ -112,47 +112,38 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
   };
 
   const handleAssignProfessor = async (professorId: string) => {
-    if (!selectedModule) return;
-
-    const id = professorId === "none" ? null : parseInt(professorId);
-    try {
-      await adminApi.assignProfessorToModule(selectedModule.id, id as any);
-      setSelectedProfessorId(professorId);
-      toast({
-        title: "Profesor asignado",
-        description: "El profesor ha sido vinculado al módulo correctamente",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo asignar el profesor",
-        variant: "destructive",
-      });
-    }
+    // Note: In course-level, this might need to update all modules. 
+    // For now, we keep it simple or show a message that professor assignment is per module.
+    toast({
+      title: "Información",
+      description: "La asignación de profesor se gestiona actualmente por módulo individual en el editor de cursos.",
+    });
   };
 
   const handleAssign = async (studentId: number) => {
-    if (!selectedModule) return;
+    if (!selectedCourse) return;
     setActionLoading(studentId);
     try {
       const professorId =
         selectedProfessorId === "none"
           ? undefined
           : parseInt(selectedProfessorId);
-      await adminApi.bulkAssignModules(
-        selectedModule.id,
+
+      await adminApi.bulkAssignCourse(
+        selectedCourse.id,
         [studentId],
         professorId,
       );
+
       toast({
-        title: "Estudiante asignado",
-        description: "La asignación se realizó correctamente",
+        title: "Curso asignado",
+        description: "El estudiante ahora tiene acceso a todos los módulos del curso",
       });
-      await loadAssignedStudents(selectedModule.id);
+      await loadAssignedStudents(selectedCourse.id);
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo completar la asignación",
+        description: "No se pudo completar la asignación del curso",
         variant: "destructive",
       });
     } finally {
@@ -161,15 +152,15 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
   };
 
   const handleUnassign = async (studentId: number) => {
-    if (!selectedModule) return;
+    if (!selectedCourse) return;
     setActionLoading(studentId);
     try {
-      await adminApi.unassignModule(selectedModule.id, studentId);
+      await adminApi.bulkUnassignCourse(selectedCourse.id, studentId);
       toast({
         title: "Asignación eliminada",
-        description: "El estudiante fue removido del módulo",
+        description: "El estudiante fue removido del curso completo",
       });
-      await loadAssignedStudents(selectedModule.id);
+      await loadAssignedStudents(selectedCourse.id);
     } catch (error) {
       toast({
         title: "Error",
@@ -183,14 +174,14 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
 
   const assignedIds = new Set(assignedStudents.map((s) => s.id));
 
-  const filteredModules = modules.filter((m) =>
-    m.nombreModulo.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredCourses = courses.filter((c) =>
+    (c.nombre || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const filteredStudents = students.filter(
     (s) =>
-      (s.nombre.toLowerCase().includes(studentSearch.toLowerCase()) ||
-        s.email.toLowerCase().includes(studentSearch.toLowerCase())) &&
+      ((s.nombre || "").toLowerCase().includes(studentSearch.toLowerCase()) ||
+        (s.email || "").toLowerCase().includes(studentSearch.toLowerCase())) &&
       !assignedIds.has(s.id),
   );
 
@@ -223,10 +214,10 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
           <div>
             <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <Library className="w-5 h-5 text-blue-600" />
-              Gestión Avanzada de Asignaciones
+              Gestión de Asignaciones por Curso
             </h1>
             <p className="text-sm text-slate-500">
-              Módulos &gt; Asignaciones de Estudiantes
+              Cursos &gt; Asignaciones Globales
             </p>
           </div>
         </div>
@@ -247,7 +238,7 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
-                placeholder="Buscar módulo..."
+                placeholder="Buscar curso..."
                 className="pl-9 bg-white border-slate-200 rounded-xl"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -255,28 +246,27 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-hidden p-3 space-y-2">
-            {filteredModules.map((mod) => (
+            {filteredCourses.map((course) => (
               <button
-                key={mod.id}
-                onClick={() => setSelectedModule(mod)}
-                className={`w-full text-left p-4 rounded-xl transition-all border-2 ${
-                  selectedModule?.id === mod.id
-                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
-                    : "bg-white text-slate-600 border-transparent hover:border-slate-100 hover:bg-slate-50"
-                }`}
+                key={course.id}
+                onClick={() => setSelectedCourse(course)}
+                className={`w-full text-left p-4 rounded-xl transition-all border-2 ${selectedCourse?.id === course.id
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
+                  : "bg-white text-slate-600 border-transparent hover:border-slate-100 hover:bg-slate-50"
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`p-2 rounded-lg ${selectedModule?.id === mod.id ? "bg-white/20" : "bg-blue-50 text-blue-600"}`}
+                    className={`p-2 rounded-lg ${selectedCourse?.id === course.id ? "bg-white/20" : "bg-blue-50 text-blue-600"}`}
                   >
                     <BookOpen className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold truncate">{mod.nombreModulo}</div>
+                    <div className="font-bold truncate">{course.nombre}</div>
                     <div
-                      className={`text-xs ${selectedModule?.id === mod.id ? "text-blue-100" : "text-slate-400"}`}
+                      className={`text-xs ${selectedCourse?.id === course.id ? "text-blue-100" : "text-slate-400"}`}
                     >
-                      {mod.levelCount} Niveles
+                      {course.moduleCount} Módulos
                     </div>
                   </div>
                 </div>
@@ -287,22 +277,22 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
 
         {/* Main Workspace */}
         <main className="flex-1 overflow-y-auto scrollbar-hidden p-4 flex flex-col gap-8 min-h-0">
-          {selectedModule && (
+          {selectedCourse && (
             <>
               <div className="flex flex-col md:flex-row gap-6 items-start justify-between">
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">
-                    {selectedModule.nombreModulo}
+                    {selectedCourse.nombre}
                   </h2>
                   <div className="flex flex-wrap gap-2">
                     <Badge className="bg-emerald-100 text-emerald-700 border-none px-3">
-                      {assignedStudents.length} Estudiantes Asignados
+                      {assignedStudents.length} Estudiantes con Acceso
                     </Badge>
                     <Badge
                       variant="outline"
                       className="border-slate-200 text-slate-500"
                     >
-                      ID: #{selectedModule.id}
+                      ID: #{selectedCourse.id}
                     </Badge>
                   </div>
                 </div>
@@ -339,7 +329,7 @@ export function AssignmentManagerView({ onBack }: AssignmentManagerViewProps) {
                     <CardTitle className="text-emerald-900 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5" />
-                        Con Acceso al Módulo
+                        Con Acceso al Curso
                       </div>
                       <span className="text-sm font-normal text-emerald-600">
                         {assignedStudents.length} alumnos

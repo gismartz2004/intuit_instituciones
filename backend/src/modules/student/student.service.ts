@@ -16,16 +16,18 @@ export class StudentService {
     ) { }
 
     async getStudentModules(studentId: number) {
-        // 1. Get Assigned Modules
-        const assignments = await this.db.select({
-            module: schema.modulos
+        // 1. Get Assigned Modules with Course info
+        const results = await this.db.select({
+            module: schema.modulos,
+            cursoNombre: schema.cursos.nombre
         })
             .from(schema.asignaciones)
             .innerJoin(schema.modulos, eq(schema.asignaciones.moduloId, schema.modulos.id))
+            .leftJoin(schema.cursos, eq(schema.modulos.cursoId, schema.cursos.id))
             .where(eq(schema.asignaciones.estudianteId, studentId));
 
         // 2. For each module, get Levels (Niveles)
-        const modulesWithLevels = await Promise.all(assignments.map(async (row) => {
+        const modulesWithLevels = await Promise.all(results.map(async (row) => {
             const mod = row.module;
 
             const levels = await this.db.select()
@@ -35,6 +37,8 @@ export class StudentService {
 
             return {
                 ...mod,
+                cursoNombre: row.cursoNombre,
+                levelCount: levels.length,
                 levels: levels
             };
         }));

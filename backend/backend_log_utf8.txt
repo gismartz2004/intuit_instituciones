@@ -1,0 +1,140 @@
+﻿
+> backend@0.0.1 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m12:29:18 p.┬ám.[0m] Starting compilation in watch mode...
+
+[[90m12:29:29 p.┬ám.[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+--- DB CONNECTION ---
+Using URL: NEON DB (Cloud)
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMailerModule dependencies initialized[39m[38;5;3m +21ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDatabaseModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +6ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMailerCoreModule dependencies initialized[39m[38;5;3m +0ms[39m
+AiService: GEMINI_API_KEY present: true
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mServeStaticModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPremiosModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPlansModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUsersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mModulesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAdminModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStudentModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAiModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mProfessorModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/api}:[39m[38;5;3m +4ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUsersController {/api/usuarios}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/usuarios/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/usuarios, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/usuarios, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/usuarios/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/usuarios/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mModulesController {/api/modulos}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/asignar, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/profesor/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/niveles, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/:id/niveles, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/niveles/:id/contenidos, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/contenidos, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modulos/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStudentController {/api/student}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/modules, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/progress, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/curriculum, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/level/:levelId/contents, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/content/view, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/module/:moduleId/progress, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/level/:levelId/progress, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/level/:levelId/attendance, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/gamification, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/missions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/leaderboard/global, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/xp/add, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/rag/:templateId/submissions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:id/ha/:templateId/submissions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStudentUploadController {/api/student}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/upload, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/rag/submit, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/ha/submit, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mGamificationController {/api/student/:studentId/gamification}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:studentId/gamification/missions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:studentId/gamification/missions/:missionId/claim, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/student/:studentId/gamification/achievements, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mProfessorController {/api/professor}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/upload, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/resources, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/:id/modules, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/resources/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/folders, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/students, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/modules/:id/levels, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/modules/:id/levels, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/contents, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/contents, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/contents/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/rag, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/rag, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/ha, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/ha, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/ha, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/pim, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/pim, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/attendance, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/levels/:id/attendance, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mGradingController {/api/professor/grading}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/grading/submissions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/professor/grading/submissions/:id/grade, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPlansController {/api/plans}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/plans/:id/features, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/plans, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminController {/api/admin}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/modules, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/students, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/professors, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/modules/:id/content, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assignments, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assignments/bulk, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/modules/:id/assignments, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/modules/:id/professor, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/modules/:id/assignments/unassign, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/students/preview, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/students/import, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/planes, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/test-notifications, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/users/:id/reset, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/users/bulk-reset, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPremiosController {/api/premios}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/premios, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/premios, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/premios/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/premios/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAiController {/api/ai}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/ai/chat, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 1504  - [39m09/02/2026, 12:29:31 p.┬ám. [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +20ms[39m
+Application is running on: http://[::1]:8080
+[GET MODULE PROGRESS] Student: 15, Module: 18
+[LEVEL CHECK] ID:71 Ord:1 Man:null Time:true Prog:true -> Force:false Avail:true
+[LEVEL CHECK] ID:72 Ord:2 Man:false Time:false Prog:true -> Force:true Avail:true
+[LEVEL CHECK] ID:73 Ord:3 Man:null Time:false Prog:false -> Force:false Avail:false
+[LEVEL CHECK] ID:74 Ord:4 Man:null Time:false Prog:false -> Force:false Avail:false

@@ -1,0 +1,13 @@
+﻿
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/features/student/components/LevelViewer.tsx(194,13): error TS2304: Cannot find name 'setModuleLevels'.
+src/features/student/components/LevelViewer.tsx(195,13): error TS2304: Cannot find name 'setCurrentLevelData'.
+src/features/student/components/LevelViewer.tsx(224,28): error TS2304: Cannot find name 'moduleLevels'.
+src/features/student/components/LevelViewer.tsx(226,31): error TS2304: Cannot find name 'moduleLevels'.
+src/features/student/components/LevelViewer.tsx(249,28): error TS2304: Cannot find name 'moduleLevels'.
+src/features/student/components/LevelViewer.tsx(250,26): error TS2304: Cannot find name 'moduleLevels'.
+src/features/student/components/LevelViewer.tsx(251,27): error TS2304: Cannot find name 'moduleLevels'.
+src/pages/CourseEditor.tsx(498,42): error TS2304: Cannot find name 'Sparkles'.
+src/pages/CourseEditor.tsx(521,42): error TS2304: Cannot find name 'Sparkles'.

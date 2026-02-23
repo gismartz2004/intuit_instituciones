@@ -118,7 +118,7 @@ export default function Profile({ user }: ProfileProps) {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 md:space-y-8 pb-24">
       <div className="flex items-center gap-6">
-        <div className="w-24 h-24 bg-gradient-to-br from-[#0047AB] to-blue-600 rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-blue-200 relative overflow-hidden">
+        <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-purple-200 relative overflow-hidden">
           {user.name[0]}
           <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />
         </div>
@@ -128,7 +128,7 @@ export default function Profile({ user }: ProfileProps) {
             <Badge className="bg-blue-100 text-[#0047AB] border-none uppercase tracking-widest text-[10px] font-bold">{user.role}</Badge>
             {user.plan && (
               <Badge className="bg-yellow-100 text-yellow-700 border-none uppercase tracking-widest text-[10px] font-bold flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Genio {user.plan === '3' ? 'Pro' : user.plan}
+                <Sparkles className="w-3 h-3" /> Intuit {user.plan === '3' ? 'Pro' : user.plan}
               </Badge>
             )}
           </div>
@@ -158,7 +158,7 @@ export default function Profile({ user }: ProfileProps) {
           <Card className="border-2 border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle>Información Personal</CardTitle>
-              <CardDescription>Datos básicos de tu cuenta en ARG Academy.</CardDescription>
+              <CardDescription>Datos básicos de tu cuenta en Intuit Model Education.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -358,7 +358,7 @@ export default function Profile({ user }: ProfileProps) {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
                 <CardContent className="p-8 relative z-10 flex flex-col md:flex-row items-center gap-8">
                   <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-3xl font-black mb-4">Competencias Genios</h2>
+                    <h2 className="text-3xl font-black mb-4">Competencias Intuit</h2>
                     <p className="text-slate-300 font-medium">
                       Has obtenido puntos en {curriculum?.pointsHistory?.length || 0} actividades diferentes.
                       Tu rendimiento actual destaca en **Lógica** y **Creatividad**.

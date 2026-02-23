@@ -16,38 +16,14 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { studentApi } from "../services/student.api";
-import RagViewer from "./RagViewer";
-import HaViewer from "./HaViewer";
-import PimViewer from "./PimViewer";
+import BlocklyLab from "@/features/labs/components/BlocklyLab";
 import EnhancedGamificationHud from "./EnhancedGamificationHud";
 import { GamificationState } from "@/types/gamification";
-import BdViewer from "@/features/specialist/components/BD/BdViewer";
-import ItViewer from "@/features/specialist/components/IT/ItViewer";
-import PicViewer from "@/features/specialist/components/PIC/PicViewer";
 
 export default function LevelViewer() {
   const [match, params] = useRoute("/level/:levelId");
   const [, setLocation] = useLocation();
 
-  // Role-based redirection logic
-  useEffect(() => {
-    const userStr = localStorage.getItem("edu_user");
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        if (
-          user.role === "specialist" ||
-          user.role === "specialist_professor"
-        ) {
-          // If specialists land here, they should be redirected to their technical content
-          // Specialists are now unified in LevelViewer, no redirection needed
-          // setLocation(`/specialist/bd/${levelId}`);
-        }
-      } catch (e) {
-        console.error("Error parsing user for redirection:", e);
-      }
-    }
-  }, [setLocation, match, params]);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -60,10 +36,7 @@ export default function LevelViewer() {
       return null;
     }
   })();
-  const isSpecialist =
-    user?.role === "specialist" || user?.role === "specialist_professor";
-
-  const [viewMode, setViewMode] = useState<string>(isSpecialist ? "bd" : "rag");
+  const [viewMode, setViewMode] = useState<string>("blockly");
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
@@ -180,12 +153,7 @@ export default function LevelViewer() {
     };
   }, []);
 
-  const ragRef = useRef<any>(null);
-  const haRef = useRef<any>(null);
-  const pimRef = useRef<any>(null);
-  const bdRef = useRef<any>(null);
-  const itRef = useRef<any>(null);
-  const picRef = useRef<any>(null);
+  const blocklyRef = useRef<any>(null);
 
   const [moduleLevels, setModuleLevels] = useState<any[]>([]);
   const [currentLevelData, setCurrentLevelData] = useState<any>(null);
@@ -235,12 +203,7 @@ export default function LevelViewer() {
 
   const handlePrev = () => {
     const modeRefs: Record<string, React.RefObject<any>> = {
-      rag: ragRef,
-      ha: haRef,
-      pim: pimRef,
-      bd: bdRef,
-      it: itRef,
-      pic: picRef,
+      blockly: blocklyRef,
     };
 
     if (modeRefs[viewMode]?.current) {
@@ -263,12 +226,7 @@ export default function LevelViewer() {
 
   const handleNext = () => {
     const modeRefs: Record<string, React.RefObject<any>> = {
-      rag: ragRef,
-      ha: haRef,
-      pim: pimRef,
-      bd: bdRef,
-      it: itRef,
-      pic: picRef,
+      blockly: blocklyRef,
     };
 
     if (modeRefs[viewMode]?.current) {
@@ -299,38 +257,14 @@ export default function LevelViewer() {
   };
 
   const menuItems = [
-    { id: "rag", label: "Guía RAG", shortLabel: "RAG", color: "text-cyan-400" },
-    { id: "ha", label: "Hito HA", shortLabel: "HA", color: "text-purple-400" },
     {
-      id: "pim",
-      label: "Proyecto PIM",
-      shortLabel: "PIM",
-      color: "text-indigo-400",
-    },
-    {
-      id: "bd",
-      label: "BlQ. Desarrollo",
-      shortLabel: "BD",
-      color: "text-violet-500",
-    },
-    {
-      id: "it",
-      label: "Iteración",
-      shortLabel: "IT",
-      color: "text-violet-500",
-    },
-    {
-      id: "pic",
-      label: "Innovación",
-      shortLabel: "PIC",
-      color: "text-violet-500",
+      id: "blockly",
+      label: "Laboratorio",
+      shortLabel: "LAB",
+      color: "text-fuchsia-500",
     },
   ].filter((item) => {
-    if (isSpecialist) {
-      // Specialists see their specific technical options
-      return ["bd", "it", "pic"].includes(item.id);
-    }
-    return detailedStatus && detailedStatus[item.id] !== null;
+    return true; // Simplify for now
   });
 
   if (loading)
@@ -341,26 +275,13 @@ export default function LevelViewer() {
     );
 
   return (
-    <div
-      className={cn(
-        "min-h-screen flex overflow-hidden font-sans transition-colors duration-500 bg-slate-50",
-      )}
-    >
-      {/* SIDEBAR - Ultra Modern Fixed with Hover */}
+    <div className={cn("min-h-screen flex overflow-hidden font-sans transition-colors duration-500 bg-slate-50")}>
       <motion.aside
         initial={false}
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
         animate={{
-          width: isFullscreen
-            ? 0
-            : isSidebarOpen
-              ? isMobile
-                ? "100%"
-                : 300
-              : isMobile
-                ? 0
-                : 88,
+          width: isFullscreen ? 0 : isSidebarOpen ? (isMobile ? "100%" : 300) : (isMobile ? 0 : 88),
           x: isFullscreen || (isMobile && !isSidebarOpen) ? -300 : 0,
           opacity: isFullscreen ? 0 : 1,
         }}
@@ -370,7 +291,6 @@ export default function LevelViewer() {
           !isSidebarOpen && !isMobile && "items-center",
         )}
       >
-        {/* Mobile Close Button - Only visible when open on mobile */}
         {isMobile && isSidebarOpen && (
           <div className="p-4 flex justify-end">
             <Button
@@ -384,33 +304,18 @@ export default function LevelViewer() {
           </div>
         )}
 
-        {/* Gamification HUD - Integrated in Sidebar for Specialists or when expanded for everyone */}
-        {(isSpecialist || isSidebarOpen) && (
-          <div
-            className={cn(
-              "py-10 px-4 transition-all duration-500 overflow-hidden",
-              isSidebarOpen || isMobile ? "opacity-100" : "opacity-0 max-h-0",
-            )}
-          >
+        {isSidebarOpen && (
+          <div className={cn("py-10 px-4 transition-all duration-500 overflow-hidden", isSidebarOpen || isMobile ? "opacity-100" : "opacity-0 max-h-0")}>
             <EnhancedGamificationHud state={gameState} />
           </div>
         )}
 
-        {/* Navigation - Centered & Refined */}
         <nav className="flex-1 flex flex-col justify-center px-4 space-y-4 overflow-y-auto relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none]">
           <div className="space-y-4">
             {menuItems.map((item) => {
-              const status =
-                detailedStatus?.[item.id as keyof typeof detailedStatus]
-                  ?.status || "pending";
+              const status = detailedStatus?.[item.id as keyof typeof detailedStatus]?.status || "pending";
               const isSelected = viewMode === item.id;
-
-              const StatusIcon =
-                status === "completed"
-                  ? CheckCircle
-                  : status === "missing"
-                    ? X
-                    : Clock;
+              const StatusIcon = status === "completed" ? CheckCircle : status === "missing" ? X : Clock;
 
               return (
                 <button
@@ -421,9 +326,7 @@ export default function LevelViewer() {
                   }}
                   className={cn(
                     "w-full flex items-center justify-center gap-4 px-4 py-5 rounded-2xl transition-all duration-500 relative group overflow-hidden",
-                    isSelected
-                      ? "text-violet-700 bg-violet-50 shadow-sm border border-violet-100"
-                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-50",
+                    isSelected ? "text-violet-700 bg-violet-50 shadow-sm border border-violet-100" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50",
                   )}
                 >
                   {isSelected && (
@@ -431,21 +334,10 @@ export default function LevelViewer() {
                       layoutId="navHighlight"
                       className="absolute inset-0 bg-violet-50 border-l-4 border-violet-600 z-0"
                       initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 240,
-                        damping: 28,
-                      }}
+                      transition={{ type: "spring", stiffness: 240, damping: 28 }}
                     />
                   )}
-                  <div
-                    className={cn(
-                      "relative z-10 flex items-center w-full transition-all duration-300 ease-out",
-                      isSidebarOpen || isMobile
-                        ? "gap-4 justify-start"
-                        : "justify-center",
-                    )}
-                  >
+                  <div className={cn("relative z-10 flex items-center w-full transition-all duration-300 ease-out", isSidebarOpen || isMobile ? "gap-4 justify-start" : "justify-center")}>
                     <motion.div
                       animate={{
                         opacity: isSidebarOpen || isMobile ? 0 : 1,
@@ -455,12 +347,7 @@ export default function LevelViewer() {
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       className="relative flex flex-col items-center overflow-hidden"
                     >
-                      <span
-                        className={cn(
-                          "text-[10px] font-black tracking-tighter transition-all duration-300",
-                          isSelected ? "text-violet-700" : "text-slate-500",
-                        )}
-                      >
+                      <span className={cn("text-[10px] font-black tracking-tighter transition-all duration-300", isSelected ? "text-violet-700" : "text-slate-500")}>
                         {item.shortLabel}
                       </span>
                       {status === "completed" && !isSelected && (
@@ -477,36 +364,13 @@ export default function LevelViewer() {
                       transition={{ duration: 0.24, ease: "easeOut" }}
                       className="flex items-center gap-4 w-full overflow-hidden"
                     >
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all duration-300",
-                          isSelected
-                            ? "text-violet-600 border-violet-200 bg-white shadow-sm"
-                            : "text-slate-400 border-slate-200 bg-slate-50 group-hover:border-slate-300",
-                        )}
-                      >
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all duration-300", isSelected ? "text-violet-600 border-violet-200 bg-white shadow-sm" : "text-slate-400 border-slate-200 bg-slate-50 group-hover:border-slate-300")}>
                         {item.shortLabel}
                       </div>
-                      <span
-                        className={cn(
-                          "font-black text-xs tracking-[0.2em] uppercase whitespace-nowrap transition-all duration-300 flex-1",
-                          isSelected
-                            ? "translate-x-1"
-                            : "group-hover:translate-x-1",
-                        )}
-                      >
+                      <span className={cn("font-black text-xs tracking-[0.2em] uppercase whitespace-nowrap transition-all duration-300 flex-1", isSelected ? "translate-x-1" : "group-hover:translate-x-1")}>
                         {item.label}
                       </span>
-                      <StatusIcon
-                        className={cn(
-                          "w-4 h-4 ml-auto",
-                          status === "completed"
-                            ? "text-emerald-500"
-                            : status === "missing"
-                              ? "text-red-400"
-                              : "text-amber-400",
-                        )}
-                      />
+                      <StatusIcon className={cn("w-4 h-4 ml-auto", status === "completed" ? "text-emerald-500" : status === "missing" ? "text-red-400" : "text-amber-400")} />
                     </motion.div>
                   </div>
                 </button>
@@ -515,26 +379,17 @@ export default function LevelViewer() {
           </div>
         </nav>
 
-        {/* Exit Button */}
         <div className="p-6 border-t border-slate-100 bg-slate-50/50">
           <button
             onClick={() => setLocation("/dashboard")}
-            className={cn(
-              "w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-100 border border-transparent transition-all duration-300 group",
-              !isSidebarOpen && !isMobile && "justify-center",
-            )}
+            className={cn("w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-100 border border-transparent transition-all duration-300 group", !isSidebarOpen && !isMobile && "justify-center")}
           >
             <LogOut className="w-5 h-5 shrink-0 group-hover:-translate-x-1 transition-transform" />
-            {(isSidebarOpen || isMobile) && (
-              <span className="font-black text-[10px] tracking-[0.2em] uppercase">
-                Salir
-              </span>
-            )}
+            {(isSidebarOpen || isMobile) && <span className="font-black text-[10px] tracking-[0.2em] uppercase">Salir</span>}
           </button>
         </div>
       </motion.aside>
 
-      {/* OVERLAY FOR MOBILE SIDEBAR */}
       <AnimatePresence>
         {isMobile && isSidebarOpen && (
           <motion.div
@@ -547,7 +402,6 @@ export default function LevelViewer() {
         )}
       </AnimatePresence>
 
-      {/* MOBILE TRIGGER */}
       {isMobile && !isSidebarOpen && (
         <button
           onClick={() => setIsSidebarOpen(true)}
@@ -557,29 +411,13 @@ export default function LevelViewer() {
         </button>
       )}
 
-      {/* MAIN CONTENT AREA */}
-      <main
-        className={cn(
-          "flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-500 bg-slate-50",
-          !isMobile && !isFullscreen && (isSidebarOpen ? "pl-75" : "pl-22"),
-          isFullscreen && "pl-0",
-        )}
-      >
-        {!isFullscreen && !isSpecialist && (
-          <header
-            className={cn(
-              "h-24 shrink-0 px-24 flex items-center justify-between border-b z-30 shadow-sm relative transition-colors duration-500 bg-white border-slate-200",
-            )}
-          >
+      <main className={cn("flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-500 bg-slate-50", !isMobile && !isFullscreen && (isSidebarOpen ? "pl-75" : "pl-22"), isFullscreen && "pl-0")}>
+        {!isFullscreen && (
+          <header className={cn("h-24 shrink-0 px-24 flex items-center justify-between border-b z-30 shadow-sm relative transition-colors duration-500 bg-white border-slate-200")}>
             <div className="flex items-center gap-8">
-              <h2
-                className={cn(
-                  "font-black text-xl tracking-tight uppercase italic text-slate-800",
-                )}
-              >
+              <h2 className={cn("font-black text-xl tracking-tight uppercase italic text-slate-800")}>
                 {menuItems.find((i) => i.id === viewMode)?.label || "Módulo"}
               </h2>
-
               {attendance?.asistio && (
                 <Badge className="bg-green-500 text-white border-0 shadow-lg shadow-green-200 ml-4 px-3 py-1">
                   <Target className="w-3 h-3 mr-1" /> ASISTENCIA REGISTRADA
@@ -590,49 +428,28 @@ export default function LevelViewer() {
                   <Target className="w-3 h-3 mr-1" /> ASISTENCIA RECUPERADA
                 </Badge>
               )}
-              {!attendance?.asistio &&
-                !attendance?.recuperada &&
-                attendance && (
-                  <Badge
-                    variant="destructive"
-                    className="ml-4 animate-bounce px-3 py-1"
-                  >
-                    <X className="w-3 h-3 mr-1" /> CLASE NO ASISTIDA
-                  </Badge>
-                )}
+              {!attendance?.asistio && !attendance?.recuperada && attendance && (
+                <Badge variant="destructive" className="ml-4 animate-bounce px-3 py-1">
+                  <X className="w-3 h-3 mr-1" /> CLASE NO ASISTIDA
+                </Badge>
+              )}
             </div>
           </header>
         )}
 
-        <div
-          className={cn(
-            "flex-1 overflow-hidden relative w-full flex transition-colors duration-500 bg-slate-50/50",
-            isFullscreen || isSpecialist ? "h-screen" : "h-[calc(100vh-96px)]",
-          )}
-        >
-          {/* Left Navigation Button */}
-          {!isSpecialist && (
-            <div className="hidden md:flex items-center px-4 z-40">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePrev}
-                className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </Button>
-            </div>
-          )}
+        <div className={cn("flex-1 overflow-hidden relative w-full flex transition-colors duration-500 bg-slate-50/50", isFullscreen ? "h-screen" : "h-[calc(100vh-96px)]")}>
+          <div className="hidden md:flex items-center px-4 z-40">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePrev}
+              className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-purple-500 hover:bg-white transition-all duration-300"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </Button>
+          </div>
 
-          {/* Main Focused Content Area */}
-          <div
-            className={cn(
-              "flex-1 w-full mx-auto relative overflow-hidden flex flex-col",
-              isFullscreen || isSpecialist
-                ? "max-w-none px-0 py-0"
-                : "max-w-7xl px-4 py-2",
-            )}
-          >
+          <div className={cn("flex-1 w-full mx-auto relative overflow-hidden flex flex-col", isFullscreen ? "max-w-none px-0 py-0" : "max-w-7xl px-4 py-2")}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${levelId}-${viewMode}`}
@@ -642,63 +459,31 @@ export default function LevelViewer() {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="w-full h-full will-change-transform"
               >
-                {viewMode === "rag" && (
-                  <RagViewer
-                    ref={ragRef}
-                    levelId={levelId}
-                    onAddPoints={handleAddPoints}
-                    hasAttended={attendance?.asistio || attendance?.recuperada}
-                  />
-                )}
-                {viewMode === "ha" && (
-                  <HaViewer
-                    ref={haRef}
-                    levelId={levelId}
-                    onAddPoints={handleAddPoints}
-                    hasAttended={attendance?.asistio || attendance?.recuperada}
-                  />
-                )}
-                {viewMode === "pim" && (
-                  <PimViewer ref={pimRef} levelId={levelId} />
-                )}
-                {viewMode === "bd" && (
-                  <BdViewer
-                    ref={bdRef}
-                    levelId={levelId}
-                    isFullscreen={isFullscreen}
-                  />
-                )}
-                {viewMode === "it" && (
-                  <ItViewer
-                    ref={itRef}
-                    levelId={levelId}
-                    isFullscreen={isFullscreen}
-                  />
-                )}
-                {viewMode === "pic" && (
-                  <PicViewer
-                    ref={picRef}
-                    levelId={levelId}
-                    isFullscreen={isFullscreen}
+                {/* Legacy RAG/HA/PIM views removed */}
+                {viewMode === "blockly" && (
+                  <BlocklyLab
+                    objective={detailedStatus?.blockly?.objective || "Completa el desafío visual."}
+                    title={detailedStatus?.blockly?.title}
+                    onComplete={() => {
+                      handleAddPoints(100, "Laboratorio Completado");
+                      toast({ title: "¡Excelente!", description: "Has completado el laboratorio visual." });
+                    }}
                   />
                 )}
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* Right Navigation Button */}
-          {!isSpecialist && (
-            <div className="hidden md:flex items-center px-4 z-40">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleNext}
-                className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
-              >
-                <ChevronRight className="w-8 h-8" />
-              </Button>
-            </div>
-          )}
+          <div className="hidden md:flex items-center px-4 z-40">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNext}
+              className="w-12 h-12 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-slate-200 text-slate-400 hover:text-cyan-500 hover:bg-white transition-all duration-300"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </Button>
+          </div>
         </div>
       </main>
     </div>

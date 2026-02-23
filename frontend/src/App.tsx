@@ -3,14 +3,12 @@ import { Switch, Route, Redirect, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { SpecialistDashboard, SpecialistSidebar, BdViewer, ItViewer, PicViewer } from "@/features/specialist";
-import { SpecialistProfessorDashboard, BdEditor, SpecialistCourseEditor, ItEditor, PicEditor } from "@/features/specialist-professor";
+import { Lobby, WorldSelection, StudentDashboard, LevelViewer, WorldSelector } from "@/features/student";
 import { MobileNav } from "@/components/layout/MobileNav";
 import StudentDashboard3D from "@/pages/StudentDashboard3D";
 import Leaderboard from "@/features/leaderboard/components/Leaderboard";
 import Missions from "@/pages/Missions";
 import NotFound from "@/pages/not-found";
-import { StudentDashboard, LevelViewer, WorldSelector } from "@/features/student";
 import { AdminDashboard } from "@/features/admin";
 import { ProfessorDashboard, CourseEditor, FileSystem, GradingDashboard } from "@/features/professor";
 import { CodingLab, ArduinoLab } from "@/features/labs";
@@ -23,9 +21,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { notificationService } from "@/services/notification.service";
 import AsistenteWeb from "@/pages/AsistenteWeb";
+import MinecraftLab from "@/pages/MinecraftLab";
+import PythonLab from "@/pages/PythonLab";
+import MinecraftWorldPage from "@/features/minecraft/pages/MinecraftWorldPage";
 
 function App() {
-  const [user, setUser] = useState<{ role: "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor"; name: string; id: string; plan?: string; especializacion?: string } | null>(() => {
+  const [user, setUser] = useState<{ role: "student" | "admin" | "professor" | "superadmin"; name: string; id: string; plan?: string } | null>(() => {
     // Initialize state from local storage
     const savedUser = localStorage.getItem("edu_user");
     return savedUser ? JSON.parse(savedUser) : null;
@@ -41,8 +42,8 @@ function App() {
     }
   }, [user]);
 
-  const handleLogin = (role: "student" | "admin" | "professor" | "superadmin" | "specialist" | "specialist_professor", name: string, id: string, planId?: number, accessToken?: string, especializacion?: string) => {
-    const userData = { role, name, id, plan: planId ? planId.toString() : undefined, especializacion };
+  const handleLogin = (role: "student" | "admin" | "professor" | "superadmin", name: string, id: string, planId?: number, accessToken?: string) => {
+    const userData = { role, name, id, plan: planId ? planId.toString() : undefined };
     setUser(userData);
     localStorage.setItem("edu_user", JSON.stringify(userData));
 
@@ -67,28 +68,18 @@ function App() {
 
   const isManagementRoute = location.startsWith("/admin") || location.startsWith("/superadmin");
   const isLevelRoute = location.startsWith("/level");
-  // Fix: Hide nav for specialist content views AND specialist professor editors (which have their own sidebar)
-  // Keep nav for dashboards like /specialist-teach
-  const isSpecialistContentRoute = location.startsWith("/specialist/") || location.startsWith("/specialist-professor/");
-  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && !isManagementRoute && !isLevelRoute && !isSpecialistContentRoute;
+  const showNav = user && location !== "/login" && location !== "/lab" && location !== "/arduino-lab" && location !== "/minecraft-lab" && location !== "/python-lab" && location !== "/minecraft-world" && !isManagementRoute && !isLevelRoute;
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">
       {showNav && (
         <>
-          {(user.role === "specialist" || user.role === "specialist_professor") ? (
-            <SpecialistSidebar
-              currentRole={user.role as any}
-              onLogout={handleLogout}
-            />
-          ) : (
-            <Sidebar
-              currentRole={user.role as any}
-              onRoleChange={(r) => setUser({ ...user, role: r })}
-              onLogout={handleLogout}
-              userPlanId={user.plan ? parseInt(user.plan) : 1}
-            />
-          )}
+          <Sidebar
+            currentRole={user.role as "student" | "admin" | "professor" | "superadmin"}
+            onRoleChange={(r) => setUser({ ...user, role: r as any })}
+            onLogout={handleLogout}
+            userPlanId={user.plan ? parseInt(user.plan) : 1}
+          />
           <MobileHeader
             currentRole={user!.role}
             onLogout={handleLogout}
@@ -123,17 +114,14 @@ function App() {
             {!user ? <Redirect to="/login" /> :
               user.role === "superadmin" || user.role === "admin" ? <Redirect to="/admin" /> :
                 user.role === "professor" ? <Redirect to="/teach" /> :
-                  user.role === "specialist_professor" ? <Redirect to="/specialist-teach" /> :
-                    user.role === "specialist" ? <Redirect to="/dashboard" /> :
-                      <Redirect to="/dashboard" />}
+                  <Redirect to="/dashboard" />}
           </Route>
 
           <Route path="/dashboard">
-            {user?.role === "specialist" ? (
-              <SpecialistDashboard user={user} />
-            ) : (
-              <WorldSelector user={user!} />
-            )}
+            <Lobby user={user!} />
+          </Route>
+          <Route path="/world-selection">
+            <WorldSelection />
           </Route>
           <Route path="/dashboard/module/:moduleId">
             <StudentDashboard user={user!} />
@@ -152,24 +140,11 @@ function App() {
           </Route>
           <Route path="/teach/grading" component={GradingDashboard} />
           <Route path="/teach/module/:id" component={CourseEditor} />
-          <Route path="/specialist/bd/:id">
-            {(params: any) => params ? <BdViewer levelId={Number(params.id)} /> : null}
-          </Route>
-          <Route path="/specialist/it/:id">
-            {(params: any) => params ? <ItViewer levelId={Number(params.id)} /> : null}
-          </Route>
-          <Route path="/specialist/pic/:id">
-            {(params: any) => params ? <PicViewer levelId={Number(params.id)} /> : null}
-          </Route>
-          <Route path="/specialist-teach">
-            <SpecialistProfessorDashboard user={user!} />
-          </Route>
-          <Route path="/specialist-professor/module/:id" component={SpecialistCourseEditor} />
-          <Route path="/specialist-professor/bd/edit/:id" component={BdEditor} />
-          <Route path="/specialist-professor/it/edit/:id" component={ItEditor} />
-          <Route path="/specialist-professor/pic/edit/:id" component={PicEditor} />
           <Route path="/lab" component={CodingLab} />
           <Route path="/arduino-lab" component={ArduinoLab} />
+          <Route path="/minecraft-lab" component={MinecraftLab} />
+          <Route path="/minecraft-world" component={MinecraftWorldPage} />
+          <Route path="/python-lab" component={PythonLab} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/ai-tutor" component={AITutor} />
           <Route path="/pro-courses" component={ProCourses} />

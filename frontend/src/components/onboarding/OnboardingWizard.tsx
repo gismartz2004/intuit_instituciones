@@ -34,7 +34,7 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
         setIsSubmitting(true);
         try {
             // Update user in backend
-            const res = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+            const res = await fetch(`/api/usuarios/${userId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -142,3 +142,4 @@ export function OnboardingWizard({ isOpen, userId, onComplete }: OnboardingWizar
         </Dialog>
     );
 }
+

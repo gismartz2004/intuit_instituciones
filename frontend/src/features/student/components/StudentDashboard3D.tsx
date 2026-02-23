@@ -4,6 +4,8 @@ import { Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { WorldMap3D } from "@/components/student/WorldMap3D";
 
+import { studentApi } from '../services/student.api';
+
 // Avatar Assets
 import avatarBoy from "@/assets/avatars/avatar_boy.png";
 import avatarGirl from "@/assets/avatars/avatar_girl.png";
@@ -36,8 +38,7 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
     useEffect(() => {
         if (user?.id) {
             // Refresh user data to check onboarding status
-            fetch(`http://localhost:3000/api/usuarios/${user.id}`)
-                .then(res => res.json())
+            studentApi.getUserInfo(user.id)
                 .then(userData => {
                     if (userData.avatar && AVATAR_MAP[userData.avatar]) {
                         setCurrentAvatar(AVATAR_MAP[userData.avatar]);
@@ -51,11 +52,8 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
 
     const fetchModules = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/student/${user.id}/modules`);
-            if (res.ok) {
-                const data = await res.json();
-                setModules(data);
-            }
+            const data = await studentApi.getModules(user.id);
+            setModules(data);
         } catch (error) {
             console.error("Error fetching student modules:", error);
         }
@@ -63,11 +61,8 @@ export default function StudentDashboard3D({ user }: StudentDashboardProps) {
 
     const fetchProgress = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/student/${user.id}/progress`);
-            if (res.ok) {
-                const data = await res.json();
-                setProgress(data);
-            }
+            const data = await studentApi.getProgress(user.id);
+            setProgress(data);
         } catch (error) {
             console.error("Error fetching progress:", error);
         }

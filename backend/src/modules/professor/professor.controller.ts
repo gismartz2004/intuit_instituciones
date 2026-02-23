@@ -22,6 +22,21 @@ export class ProfessorController {
     private readonly storageService: StorageService,
   ) { }
 
+  @Get('courses')
+  async getCourses(@Query('profesorId') profesorId: string) {
+    return this.professorService.getCoursesByProfessor(parseInt(profesorId) || 1);
+  }
+
+  @Post('courses')
+  async createCourse(@Body() body: any) {
+    return this.professorService.createCourse({ ...body, profesorId: parseInt(body.profesorId) || 1 });
+  }
+
+  @Get('courses/:id/modules')
+  async getCourseModules(@Param('id', ParseIntPipe) id: number) {
+    return this.professorService.getModulesByCourse(id);
+  }
+
   // Resource Library Endpoints
   @Post('upload')
   @UseInterceptors(

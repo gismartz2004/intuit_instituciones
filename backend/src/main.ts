@@ -5,8 +5,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS for frontend communication
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || true;
   app.enableCors({
-    origin: true, // Allow all origins for dev, or specify ['http://localhost:5173', 'http://localhost:5002']
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

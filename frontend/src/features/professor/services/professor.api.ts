@@ -20,6 +20,20 @@ export interface CreateStudentPayload {
   moduleId: string;
 }
 
+export interface CreateCoursePayload {
+  nombre: string;
+  descripcion?: string;
+  imagenUrl?: string;
+  profesorId?: string;
+}
+
+export interface CreateModulePayload {
+  title: string;
+  description: string;
+  professorId: string;
+  cursoId?: number;
+}
+
 export interface CreateLevelPayload {
   tituloNivel: string;
   descripcion?: string;
@@ -66,7 +80,7 @@ export const professorApi = {
    * Obtener información de un módulo específico
    */
   async getModule(moduleId: string): Promise<any> {
-    return apiClient.get<any>(`/api/modulos/${moduleId}`);
+    return apiClient.get<any>(`/api/modules/${moduleId}`);
   },
 
   /**
@@ -130,7 +144,7 @@ export const professorApi = {
    */
   async uploadFile(formData: FormData): Promise<any> {
     // Special case for file upload - use fetch directly
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const response = await fetch(`${baseUrl}/api/professor/upload`, {
       method: 'POST',
       body: formData,
@@ -154,7 +168,7 @@ export const professorApi = {
    * Eliminar una carpeta y todo su contenido
    */
   async deleteFolder(path: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const response = await fetch(`${baseUrl}/api/professor/folders?path=${encodeURIComponent(path)}`, {
       method: 'DELETE',
     });
@@ -213,6 +227,18 @@ export const professorApi = {
   async gradeSubmission(id: number, data: { type: 'rag' | 'ha'; grade: number; feedback: string }): Promise<any> {
     return apiClient.post(`/api/professor/grading/submissions/${id}/grade`, data);
   },
+  async getCourses(professorId: string): Promise<any[]> {
+    return apiClient.get<any[]>(`/api/professor/courses?profesorId=${professorId}`);
+  },
+
+  async createCourse(payload: CreateCoursePayload): Promise<any> {
+    return apiClient.post<any>('/api/professor/courses', payload);
+  },
+
+  async getCourseModules(courseId: string): Promise<any[]> {
+    return apiClient.get<any[]>(`/api/professor/courses/${courseId}/modules`);
+  },
 };
 
 export default professorApi;
+

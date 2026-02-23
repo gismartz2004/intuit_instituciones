@@ -7,9 +7,9 @@ export default function AsistenteWeb() {
     return (
         <div className="min-h-screen w-full bg-[#020617] relative overflow-hidden">
             <Seo
-                title="Asistente Virtual - Genios Bot Academy"
+                title="Asistente Virtual - Intuit Model Education"
                 description="Obtén ayuda instantánea con nuestro asistente virtual. Preguntas frecuentes sobre login, navegación, progreso estudiantil y soporte técnico."
-                keywords="asistente virtual, ayuda, FAQ, soporte, Genios Bot, preguntas frecuentes"
+                keywords="asistente virtual, ayuda, FAQ, soporte, Intuit Model, preguntas frecuentes"
             />
 
             {/* Background Effects */}
@@ -31,7 +31,7 @@ export default function AsistenteWeb() {
                         scale: [1, 1.1, 1],
                     }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-cyan-600/10 blur-[120px] rounded-full"
+                    className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-purple-600/10 blur-[120px] rounded-full"
                 />
                 <motion.div
                     animate={{
@@ -40,7 +40,7 @@ export default function AsistenteWeb() {
                         scale: [1, 1.2, 1],
                     }}
                     transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full"
+                    className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full"
                 />
             </div>
 
@@ -52,7 +52,7 @@ export default function AsistenteWeb() {
                         <div className="flex items-center justify-between">
                             {/* Logo & Title */}
                             <div className="flex items-center gap-3 md:gap-4">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-cyan-600 to-blue-700 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg">
                                     <Bot className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
                                 <div>
@@ -60,7 +60,7 @@ export default function AsistenteWeb() {
                                         Asistente Virtual
                                     </h1>
                                     <p className="text-xs md:text-sm text-slate-400 font-medium">
-                                        Genios Bot Academy
+                                        Intuit Model Education
                                     </p>
                                 </div>
                             </div>
@@ -92,8 +92,8 @@ export default function AsistenteWeb() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                             {/* Feature 1 */}
                             <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 md:w-10 md:h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
+                                <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
                                 </div>
                                 <div>
                                     <h3 className="text-sm md:text-base font-bold text-white mb-1">
@@ -139,11 +139,11 @@ export default function AsistenteWeb() {
                         {/* Copyright */}
                         <div className="mt-6 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-2">
                             <p className="text-xs text-slate-500 font-medium">
-                                © 2026 Genios Bot Academy. Todos los derechos reservados.
+                                © 2026 Intuit Model Education. Todos los derechos reservados.
                             </p>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                                 <HelpCircle className="w-3 h-3" />
-                                <span>¿Necesitas más ayuda? Contacta: soporte@geniosbot.com</span>
+                                <span>¿Necesitas más ayuda? Contacta: soporte@intuitmodel.education</span>
                             </div>
                         </div>
                     </div>

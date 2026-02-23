@@ -93,7 +93,7 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/usuarios');
+      const res = await fetch('/api/usuarios');
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
   const fetchModules = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/modulos');
+      const res = await fetch('/api/modulos');
       if (res.ok) {
         const data = await res.json();
         setModules(data);
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
         activo: true
       };
 
-      const res = await fetch('http://localhost:3000/api/usuarios', {
+      const res = await fetch('/api/usuarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
         duracionDias: parseInt(newModule.duracionDias.toString())
       };
 
-      const res = await fetch('http://localhost:3000/api/modulos', {
+      const res = await fetch('/api/modulos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
     else payload.estudianteId = user.id; // Student (default)
 
     try {
-      const res = await fetch('http://localhost:3000/api/modulos/asignar', {
+      const res = await fetch('/api/modulos/asignar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
     const newPlan = PLANS[newPlanId as PlanId];
 
     try {
-      const res = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+      const res = await fetch(`/api/usuarios/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId: newPlanId })
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
 
   const handleToggleActive = async (user: any) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/usuarios/${user.id}`, {
+      const res = await fetch(`/api/usuarios/${user.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ activo: !user.activo })
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
   const handleDeleteUser = async (userId: number) => {
     if (!confirm("¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/usuarios/${userId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/usuarios/${userId}`, { method: 'DELETE' });
       if (res.ok) {
         toast({ title: "Usuario eliminado" });
         fetchUsers();
@@ -277,7 +277,7 @@ export default function AdminDashboard() {
   const handleDeleteModule = async (moduleId: number) => {
     if (!confirm("¿Estás seguro de eliminar este módulo? Se borrarán todos los niveles y contenidos.")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/modulos/${moduleId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/modulos/${moduleId}`, { method: 'DELETE' });
       if (res.ok) {
         toast({ title: "Módulo eliminado" });
         fetchModules();
@@ -815,3 +815,4 @@ export default function AdminDashboard() {
     </div >
   );
 }
+
