@@ -1,0 +1,347 @@
+# npm audit report
+
+ajv  7.0.0-alpha.0 - 8.17.1
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+fix available via `npm audit fix --force`
+Will install @nestjs/schematics@7.3.1, which is a breaking change
+node_modules/@angular-devkit/core/node_modules/ajv
+node_modules/@nestjs/schematics/node_modules/ajv
+  @angular-devkit/core  12.0.0-next.0 - 21.2.0-next.2
+  Depends on vulnerable versions of ajv
+  node_modules/@angular-devkit/core
+  node_modules/@nestjs/schematics/node_modules/@angular-devkit/core
+    @angular-devkit/schematics  12.0.0-next.0 - 21.2.0-next.2
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    node_modules/@nestjs/schematics/node_modules/@angular-devkit/schematics
+    @angular-devkit/schematics-cli  0.1200.0-next.0 - 21.2.0-next.2
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@angular-devkit/schematics-cli
+    @nestjs/cli  >=6.8.2
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    Depends on vulnerable versions of @angular-devkit/schematics-cli
+    Depends on vulnerable versions of @nestjs/schematics
+    Depends on vulnerable versions of fork-ts-checker-webpack-plugin
+    node_modules/@nestjs/cli
+    @nestjs/schematics  >=8.0.0
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@nestjs/schematics
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install drizzle-kit@0.18.1, which is a breaking change
+node_modules/@esbuild-kit/core-utils/node_modules/esbuild
+  @esbuild-kit/core-utils  *
+  Depends on vulnerable versions of esbuild
+  node_modules/@esbuild-kit/core-utils
+    @esbuild-kit/esm-loader  *
+    Depends on vulnerable versions of @esbuild-kit/core-utils
+    node_modules/@esbuild-kit/esm-loader
+      drizzle-kit  0.17.5-6b7793f - 0.17.5-e5944eb || 0.18.1-065de38 - 0.18.1-f3800bf || 0.19.0-07024c4 - 1.0.0-beta.1-fd8bfcc
+      Depends on vulnerable versions of @esbuild-kit/esm-loader
+      node_modules/drizzle-kit
+
+glob  3.0.0 - 10.5.0
+Severity: high
+glob CLI: Command injection via -c/--cmd executes matches with shell:true - https://github.com/advisories/GHSA-5j98-mcp5-4vw2
+Depends on vulnerable versions of minimatch
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@1.8.1, which is a breaking change
+node_modules/@jest/reporters/node_modules/glob
+node_modules/@nestjs-modules/mailer/node_modules/glob
+node_modules/jest-config/node_modules/glob
+node_modules/jest-runtime/node_modules/glob
+node_modules/js-beautify/node_modules/glob
+node_modules/mjml-cli/node_modules/glob
+node_modules/test-exclude/node_modules/glob
+  @jest/reporters  *
+  Depends on vulnerable versions of @jest/transform
+  Depends on vulnerable versions of glob
+  node_modules/@jest/reporters
+  @nestjs-modules/mailer  >=1.7.0
+  Depends on vulnerable versions of glob
+  Depends on vulnerable versions of mjml
+  node_modules/@nestjs-modules/mailer
+  jest-config  >=19.1.0-alpha.eed82034
+  Depends on vulnerable versions of babel-jest
+  Depends on vulnerable versions of glob
+  Depends on vulnerable versions of jest-circus
+  Depends on vulnerable versions of jest-runner
+  node_modules/jest-config
+    jest-cli  >=19.1.0-alpha.eed82034
+    Depends on vulnerable versions of @jest/core
+    Depends on vulnerable versions of jest-config
+    node_modules/jest-cli
+      jest  >=19.1.0-alpha.eed82034
+      Depends on vulnerable versions of @jest/core
+      Depends on vulnerable versions of jest-cli
+      node_modules/jest
+        ts-jest  >=25.10.0-alpha.1
+        Depends on vulnerable versions of @jest/transform
+        Depends on vulnerable versions of babel-jest
+        Depends on vulnerable versions of jest
+        node_modules/ts-jest
+  jest-runtime  >=24.0.0-alpha.0
+  Depends on vulnerable versions of @jest/globals
+  Depends on vulnerable versions of @jest/transform
+  Depends on vulnerable versions of glob
+  Depends on vulnerable versions of jest-snapshot
+  node_modules/jest-runtime
+    @jest/core  *
+    Depends on vulnerable versions of @jest/reporters
+    Depends on vulnerable versions of @jest/transform
+    Depends on vulnerable versions of jest-config
+    Depends on vulnerable versions of jest-resolve-dependencies
+    Depends on vulnerable versions of jest-runner
+    Depends on vulnerable versions of jest-runtime
+    Depends on vulnerable versions of jest-snapshot
+    node_modules/@jest/core
+    jest-circus  >=25.2.4
+    Depends on vulnerable versions of @jest/expect
+    Depends on vulnerable versions of jest-runtime
+    Depends on vulnerable versions of jest-snapshot
+    node_modules/jest-circus
+    jest-runner  >=24.0.0-alpha.0
+    Depends on vulnerable versions of @jest/transform
+    Depends on vulnerable versions of jest-runtime
+    node_modules/jest-runner
+  js-beautify  >=1.8.9
+  Depends on vulnerable versions of editorconfig
+  Depends on vulnerable versions of glob
+  node_modules/js-beautify
+  mjml-cli  *
+  Depends on vulnerable versions of glob
+  Depends on vulnerable versions of html-minifier
+  Depends on vulnerable versions of minimatch
+  Depends on vulnerable versions of mjml-core
+  Depends on vulnerable versions of mjml-migrate
+  node_modules/mjml-cli
+    mjml  *
+    Depends on vulnerable versions of mjml-cli
+    Depends on vulnerable versions of mjml-core
+    Depends on vulnerable versions of mjml-migrate
+    Depends on vulnerable versions of mjml-preset-core
+    node_modules/mjml
+  test-exclude  4.2.2 || 5.0.0 - 7.0.2
+  Depends on vulnerable versions of glob
+  Depends on vulnerable versions of minimatch
+  node_modules/test-exclude
+    babel-plugin-istanbul  >=5.0.1
+    Depends on vulnerable versions of test-exclude
+    node_modules/babel-plugin-istanbul
+      @jest/transform  *
+      Depends on vulnerable versions of babel-plugin-istanbul
+      node_modules/@jest/transform
+        babel-jest  >=24.0.0-alpha.0
+        Depends on vulnerable versions of @jest/transform
+        Depends on vulnerable versions of babel-plugin-istanbul
+        node_modules/babel-jest
+        jest-snapshot  >=27.0.0-next.0
+        Depends on vulnerable versions of @jest/transform
+        node_modules/jest-snapshot
+          @jest/expect  *
+          Depends on vulnerable versions of jest-snapshot
+          node_modules/@jest/expect
+            @jest/globals  >=28.0.0-alpha.0
+            Depends on vulnerable versions of @jest/expect
+            node_modules/@jest/globals
+          jest-resolve-dependencies  >=27.0.0-next.0
+          Depends on vulnerable versions of jest-snapshot
+          node_modules/jest-resolve-dependencies
+
+html-minifier  *
+Severity: high
+kangax html-minifier REDoS vulnerability - https://github.com/advisories/GHSA-pfq8-rq6v-vf5m
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@1.8.1, which is a breaking change
+node_modules/html-minifier
+  mjml-core  <=4.18.0
+  Depends on vulnerable versions of html-minifier
+  Depends on vulnerable versions of mjml-migrate
+  node_modules/mjml-core
+    mjml-accordion  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-accordion
+    mjml-body  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-body
+      mjml-preset-core  <=4.18.0
+      Depends on vulnerable versions of mjml-accordion
+      Depends on vulnerable versions of mjml-body
+      Depends on vulnerable versions of mjml-button
+      Depends on vulnerable versions of mjml-carousel
+      Depends on vulnerable versions of mjml-column
+      Depends on vulnerable versions of mjml-divider
+      Depends on vulnerable versions of mjml-group
+      Depends on vulnerable versions of mjml-head
+      Depends on vulnerable versions of mjml-head-attributes
+      Depends on vulnerable versions of mjml-head-breakpoint
+      Depends on vulnerable versions of mjml-head-font
+      Depends on vulnerable versions of mjml-head-html-attributes
+      Depends on vulnerable versions of mjml-head-preview
+      Depends on vulnerable versions of mjml-head-style
+      Depends on vulnerable versions of mjml-head-title
+      Depends on vulnerable versions of mjml-hero
+      Depends on vulnerable versions of mjml-image
+      Depends on vulnerable versions of mjml-navbar
+      Depends on vulnerable versions of mjml-raw
+      Depends on vulnerable versions of mjml-section
+      Depends on vulnerable versions of mjml-social
+      Depends on vulnerable versions of mjml-spacer
+      Depends on vulnerable versions of mjml-table
+      Depends on vulnerable versions of mjml-text
+      Depends on vulnerable versions of mjml-wrapper
+      node_modules/mjml-preset-core
+    mjml-button  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-button
+    mjml-carousel  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-carousel
+    mjml-column  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-column
+    mjml-divider  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-divider
+    mjml-group  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-group
+    mjml-head  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head
+    mjml-head-attributes  <=2.0.4 || 4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-attributes
+    mjml-head-breakpoint  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-breakpoint
+    mjml-head-font  4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-font
+    mjml-head-html-attributes  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-html-attributes
+    mjml-head-preview  4.0.0-alpha.3 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-preview
+    mjml-head-style  4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-style
+    mjml-head-title  4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-title
+    mjml-hero  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-hero
+    mjml-image  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-image
+    mjml-migrate  4.0.0-beta.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-migrate
+    mjml-navbar  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-navbar
+    mjml-raw  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-raw
+    mjml-section  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-section
+    mjml-social  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-social
+    mjml-spacer  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-spacer
+    mjml-table  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-table
+    mjml-text  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-text
+    mjml-wrapper  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    Depends on vulnerable versions of mjml-section
+    node_modules/mjml-wrapper
+
+minimatch  <10.2.1
+Severity: high
+minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern - https://github.com/advisories/GHSA-3ppc-4f35-3m26
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@1.8.1, which is a breaking change
+node_modules/@jest/reporters/node_modules/minimatch
+node_modules/@nestjs-modules/mailer/node_modules/minimatch
+node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch
+node_modules/editorconfig/node_modules/minimatch
+node_modules/jest-config/node_modules/minimatch
+node_modules/jest-runtime/node_modules/minimatch
+node_modules/js-beautify/node_modules/minimatch
+node_modules/minimatch
+node_modules/mjml-cli/node_modules/minimatch
+  @eslint/config-array  <=0.22.0
+  Depends on vulnerable versions of minimatch
+  node_modules/@eslint/config-array
+    eslint  0.7.1 - 2.0.0-rc.1 || 4.1.0 - 10.0.0-rc.2
+    Depends on vulnerable versions of @eslint/config-array
+    Depends on vulnerable versions of @eslint/eslintrc
+    Depends on vulnerable versions of minimatch
+    node_modules/eslint
+  @eslint/eslintrc  0.0.1 || >=0.1.1
+  Depends on vulnerable versions of minimatch
+  node_modules/@eslint/eslintrc
+  @typescript-eslint/typescript-estree  6.16.0 - 8.56.1-alpha.2
+  Depends on vulnerable versions of minimatch
+  node_modules/@typescript-eslint/typescript-estree
+    @typescript-eslint/parser  6.16.0 - 8.56.1-alpha.2
+    Depends on vulnerable versions of @typescript-eslint/typescript-estree
+    node_modules/@typescript-eslint/parser
+      typescript-eslint  <=8.56.1-alpha.2
+      Depends on vulnerable versions of @typescript-eslint/eslint-plugin
+      Depends on vulnerable versions of @typescript-eslint/parser
+      Depends on vulnerable versions of @typescript-eslint/typescript-estree
+      Depends on vulnerable versions of @typescript-eslint/utils
+      node_modules/typescript-eslint
+    @typescript-eslint/type-utils  6.16.0 - 8.56.1-alpha.2
+    Depends on vulnerable versions of @typescript-eslint/typescript-estree
+    Depends on vulnerable versions of @typescript-eslint/utils
+    node_modules/@typescript-eslint/type-utils
+    @typescript-eslint/utils  6.16.0 - 8.56.1-alpha.2
+    Depends on vulnerable versions of @typescript-eslint/typescript-estree
+    node_modules/@typescript-eslint/utils
+      @typescript-eslint/eslint-plugin  6.16.0 - 8.56.1-alpha.2
+      Depends on vulnerable versions of @typescript-eslint/type-utils
+      Depends on vulnerable versions of @typescript-eslint/utils
+      node_modules/@typescript-eslint/eslint-plugin
+  editorconfig  >=1.0.0
+  Depends on vulnerable versions of minimatch
+  node_modules/editorconfig
+  fork-ts-checker-webpack-plugin  >=0.2.9
+  Depends on vulnerable versions of minimatch
+  node_modules/fork-ts-checker-webpack-plugin
+
+
+xlsx  *
+Severity: high
+Prototype Pollution in sheetJS - https://github.com/advisories/GHSA-4r6h-8v6p-xvw6
+SheetJS Regular Expression Denial of Service (ReDoS) - https://github.com/advisories/GHSA-5pgg-2g8v-p4x9
+No fix available
+node_modules/xlsx
+
+74 vulnerabilities (9 moderate, 65 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.

@@ -26,5 +26,9 @@
         "./src/shared/*"
       ]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

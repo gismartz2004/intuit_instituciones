@@ -1,0 +1,248 @@
+# npm audit report
+
+ajv  <6.14.0
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/@angular-devkit/core/node_modules/ajv
+node_modules/@nestjs/schematics/node_modules/ajv
+  @angular-devkit/core  0.0.24 - 12.0.0-rc.3
+  Depends on vulnerable versions of ajv
+  node_modules/@angular-devkit/core
+  node_modules/@nestjs/schematics/node_modules/@angular-devkit/core
+    @angular-devkit/schematics  0.0.43 - 12.0.0-rc.3
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    node_modules/@nestjs/schematics/node_modules/@angular-devkit/schematics
+      @nestjs/cli  2.0.0-rc.1 - 11.0.0-next.7
+      Depends on vulnerable versions of @angular-devkit/core
+      Depends on vulnerable versions of @angular-devkit/schematics
+      Depends on vulnerable versions of @angular-devkit/schematics-cli
+      Depends on vulnerable versions of @nestjs/schematics
+      Depends on vulnerable versions of inquirer
+      Depends on vulnerable versions of shelljs
+      Depends on vulnerable versions of webpack
+      node_modules/@nestjs/cli
+    @angular-devkit/schematics-cli  <=18.1.0-rc.1
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    Depends on vulnerable versions of @schematics/schematics
+    Depends on vulnerable versions of inquirer
+    Depends on vulnerable versions of minimist
+    node_modules/@angular-devkit/schematics-cli
+    @nestjs/schematics  <=7.3.1
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@nestjs/schematics
+    @schematics/schematics  >=0.0.12
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@schematics/schematics
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install drizzle-kit@0.31.9, which is a breaking change
+node_modules/drizzle-kit/node_modules/esbuild
+  drizzle-kit  0.9.1 - 0.9.54 || 0.12.9 - 0.18.1 || 0.19.2-9340465 - 0.30.6 || 1.0.0-beta.1 - 1.0.0-beta.1-fd5d1e8
+  Depends on vulnerable versions of esbuild
+  node_modules/drizzle-kit
+
+html-minifier  *
+Severity: high
+kangax html-minifier REDoS vulnerability - https://github.com/advisories/GHSA-pfq8-rq6v-vf5m
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@1.6.1, which is a breaking change
+node_modules/html-minifier
+  mjml-cli  <=5.0.0-alpha.0
+  Depends on vulnerable versions of html-minifier
+  Depends on vulnerable versions of mjml-core
+  Depends on vulnerable versions of mjml-migrate
+  node_modules/mjml-cli
+    mjml  <=5.0.0-alpha.0
+    Depends on vulnerable versions of mjml-cli
+    Depends on vulnerable versions of mjml-core
+    Depends on vulnerable versions of mjml-migrate
+    Depends on vulnerable versions of mjml-preset-core
+    node_modules/mjml
+      @nestjs-modules/mailer  >=1.4.0
+      Depends on vulnerable versions of mjml
+      Depends on vulnerable versions of preview-email
+      node_modules/@nestjs-modules/mailer
+  mjml-core  <=4.18.0
+  Depends on vulnerable versions of html-minifier
+  Depends on vulnerable versions of mjml-migrate
+  node_modules/mjml-core
+    mjml-accordion  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-accordion
+    mjml-body  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-body
+    mjml-button  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-button
+      mjml-preset-core  <=4.18.0
+      Depends on vulnerable versions of mjml-accordion
+      Depends on vulnerable versions of mjml-body
+      Depends on vulnerable versions of mjml-button
+      Depends on vulnerable versions of mjml-carousel
+      Depends on vulnerable versions of mjml-column
+      Depends on vulnerable versions of mjml-divider
+      Depends on vulnerable versions of mjml-group
+      Depends on vulnerable versions of mjml-head
+      Depends on vulnerable versions of mjml-head-attributes
+      Depends on vulnerable versions of mjml-head-breakpoint
+      Depends on vulnerable versions of mjml-head-font
+      Depends on vulnerable versions of mjml-head-html-attributes
+      Depends on vulnerable versions of mjml-head-preview
+      Depends on vulnerable versions of mjml-head-style
+      Depends on vulnerable versions of mjml-head-title
+      Depends on vulnerable versions of mjml-hero
+      Depends on vulnerable versions of mjml-image
+      Depends on vulnerable versions of mjml-navbar
+      Depends on vulnerable versions of mjml-raw
+      Depends on vulnerable versions of mjml-section
+      Depends on vulnerable versions of mjml-social
+      Depends on vulnerable versions of mjml-spacer
+      Depends on vulnerable versions of mjml-table
+      Depends on vulnerable versions of mjml-text
+      Depends on vulnerable versions of mjml-wrapper
+      node_modules/mjml-preset-core
+    mjml-carousel  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-carousel
+    mjml-column  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-column
+    mjml-divider  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-divider
+    mjml-group  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-group
+    mjml-head  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head
+    mjml-head-attributes  <=2.0.4 || 4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-attributes
+    mjml-head-breakpoint  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-breakpoint
+    mjml-head-font  4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-font
+    mjml-head-html-attributes  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-html-attributes
+    mjml-head-preview  4.0.0-alpha.3 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-preview
+    mjml-head-style  4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-style
+    mjml-head-title  4.0.0-alpha.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-head-title
+    mjml-hero  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-hero
+    mjml-image  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-image
+    mjml-migrate  4.0.0-beta.1 - 4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-migrate
+    mjml-navbar  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-navbar
+    mjml-raw  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-raw
+    mjml-section  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-section
+    mjml-social  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-social
+    mjml-spacer  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-spacer
+    mjml-table  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-table
+    mjml-text  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    node_modules/mjml-text
+    mjml-wrapper  <=4.18.0
+    Depends on vulnerable versions of mjml-core
+    Depends on vulnerable versions of mjml-section
+    node_modules/mjml-wrapper
+
+minimist  1.0.0 - 1.2.5
+Severity: critical
+Prototype Pollution in minimist - https://github.com/advisories/GHSA-xvch-5gv4-984h
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/@angular-devkit/schematics-cli/node_modules/minimist
+
+
+nodemailer  <=7.0.10
+Severity: high
+Nodemailer: Email to an unintended domain can occur due to Interpretation Conflict - https://github.com/advisories/GHSA-mm7p-fcc7-pg87
+Nodemailer???s addressparser is vulnerable to DoS caused by recursive calls - https://github.com/advisories/GHSA-rcmh-qjqh-p98v
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@1.6.1, which is a breaking change
+node_modules/preview-email/node_modules/nodemailer
+  preview-email  <=3.1.0
+  Depends on vulnerable versions of nodemailer
+  node_modules/preview-email
+
+shelljs  <=0.8.4
+Severity: high
+Improper Privilege Management in shelljs - https://github.com/advisories/GHSA-64g7-mvw6-v9qj
+Improper Privilege Management in shelljs - https://github.com/advisories/GHSA-4rq4-32rv-6wp6
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/shelljs
+
+tmp  <=0.2.3
+tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/tmp
+  external-editor  >=1.1.1
+  Depends on vulnerable versions of tmp
+  node_modules/external-editor
+    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
+    Depends on vulnerable versions of external-editor
+    node_modules/inquirer
+
+webpack  5.0.0-alpha.0 - 5.93.0
+Severity: critical
+Cross-realm object access in Webpack 5 - https://github.com/advisories/GHSA-hc6q-2mpp-qw7j
+Webpack's AutoPublicPathRuntimeModule has a DOM Clobbering Gadget that leads to XSS - https://github.com/advisories/GHSA-4vvj-4cpr-p986
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/@nestjs/cli/node_modules/webpack
+
+xlsx  *
+Severity: high
+Prototype Pollution in sheetJS - https://github.com/advisories/GHSA-4r6h-8v6p-xvw6
+SheetJS Regular Expression Denial of Service (ReDoS) - https://github.com/advisories/GHSA-5pgg-2g8v-p4x9
+No fix available
+node_modules/xlsx
+
+50 vulnerabilities (3 low, 9 moderate, 34 high, 4 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.

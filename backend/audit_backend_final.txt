@@ -1,0 +1,423 @@
+# npm audit report
+
+ajv  <6.14.0 || >=7.0.0-alpha.0 <8.18.0
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/@angular-devkit/core/node_modules/ajv
+node_modules/@nestjs/cli/node_modules/ajv
+node_modules/@nestjs/schematics/node_modules/ajv
+  @angular-devkit/core  0.0.24 - 21.2.0-next.2
+  Depends on vulnerable versions of ajv
+  Depends on vulnerable versions of ajv
+  node_modules/@angular-devkit/core
+  node_modules/@nestjs/cli/node_modules/@nestjs/schematics/node_modules/@angular-devkit/core
+  node_modules/@nestjs/schematics/node_modules/@angular-devkit/core
+    @angular-devkit/schematics  0.0.43 - 21.2.0-next.2
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    node_modules/@nestjs/cli/node_modules/@nestjs/schematics/node_modules/@angular-devkit/schematics
+    node_modules/@nestjs/schematics/node_modules/@angular-devkit/schematics
+      @nestjs/cli  2.0.0-rc.1 - 11.0.0-next.7
+      Depends on vulnerable versions of @angular-devkit/core
+      Depends on vulnerable versions of @angular-devkit/schematics
+      Depends on vulnerable versions of @angular-devkit/schematics-cli
+      Depends on vulnerable versions of @nestjs/schematics
+      Depends on vulnerable versions of inquirer
+      Depends on vulnerable versions of shelljs
+      Depends on vulnerable versions of webpack
+      node_modules/@nestjs/cli
+    @angular-devkit/schematics-cli  <=18.1.0-rc.1
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    Depends on vulnerable versions of @schematics/schematics
+    Depends on vulnerable versions of inquirer
+    Depends on vulnerable versions of minimist
+    node_modules/@angular-devkit/schematics-cli
+    @nestjs/schematics  *
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@nestjs/cli/node_modules/@nestjs/schematics
+    node_modules/@nestjs/schematics
+    @schematics/schematics  >=0.0.12
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@schematics/schematics
+
+babel-traverse  *
+Severity: critical
+Babel vulnerable to arbitrary code execution when compiling specifically crafted malicious code - https://github.com/advisories/GHSA-67hx-6x53-jw92
+fix available via `npm audit fix --force`
+Will install ts-jest@29.4.6, which is a breaking change
+node_modules/babel-traverse
+  babel-core  5.8.20 - 7.0.0-beta.3
+  Depends on vulnerable versions of babel-helpers
+  Depends on vulnerable versions of babel-register
+  Depends on vulnerable versions of babel-template
+  Depends on vulnerable versions of babel-traverse
+  Depends on vulnerable versions of json5
+  node_modules/babel-core
+    babel-jest  6.0.0 - 24.0.0-alpha.16
+    Depends on vulnerable versions of babel-core
+    Depends on vulnerable versions of babel-plugin-istanbul
+    node_modules/babel-jest
+      jest-runtime  12.1.1-alpha.2935e14d - 24.9.0 || 30.0.0-alpha.1 - 30.0.0-beta.2
+      Depends on vulnerable versions of babel-core
+      Depends on vulnerable versions of babel-jest
+      Depends on vulnerable versions of babel-plugin-istanbul
+      Depends on vulnerable versions of jest-config
+      Depends on vulnerable versions of jest-haste-map
+      Depends on vulnerable versions of jest-util
+      Depends on vulnerable versions of micromatch
+      Depends on vulnerable versions of yargs
+      node_modules/jest-runtime
+        jest-cli  0.10.2 - 24.9.0 || 30.0.0-alpha.1 - 30.0.0-beta.2
+        Depends on vulnerable versions of istanbul-api
+        Depends on vulnerable versions of istanbul-lib-instrument
+        Depends on vulnerable versions of jest-config
+        Depends on vulnerable versions of jest-environment-jsdom
+        Depends on vulnerable versions of jest-haste-map
+        Depends on vulnerable versions of jest-jasmine2
+        Depends on vulnerable versions of jest-message-util
+        Depends on vulnerable versions of jest-runtime
+        Depends on vulnerable versions of jest-snapshot
+        Depends on vulnerable versions of jest-util
+        Depends on vulnerable versions of micromatch
+        Depends on vulnerable versions of node-notifier
+        Depends on vulnerable versions of yargs
+        node_modules/jest-cli
+          jest  18.5.0-alpha.7da3df39 - 23.6.0
+          Depends on vulnerable versions of jest-cli
+          node_modules/jest
+            ts-jest  0.1.9 - 23.0.1 || 23.10.0-beta.1 - 23.10.5 || 27.0.0-alpha.0 - 27.0.0-next.8
+            Depends on vulnerable versions of babel-jest
+            Depends on vulnerable versions of babel-plugin-transform-es2015-modules-commonjs
+            Depends on vulnerable versions of istanbul-lib-instrument
+            Depends on vulnerable versions of jest
+            Depends on vulnerable versions of jest-config
+            Depends on vulnerable versions of jest-util
+            Depends on vulnerable versions of remap-istanbul
+            node_modules/ts-jest
+    babel-register  *
+    Depends on vulnerable versions of babel-core
+    node_modules/babel-register
+  babel-template  *
+  Depends on vulnerable versions of babel-traverse
+  node_modules/babel-template
+    babel-helpers  *
+    Depends on vulnerable versions of babel-template
+    node_modules/babel-helpers
+    babel-plugin-transform-es2015-modules-commonjs  <=7.0.0-beta.0
+    Depends on vulnerable versions of babel-template
+    node_modules/babel-plugin-transform-es2015-modules-commonjs
+  istanbul-lib-instrument  <=1.10.2
+  Depends on vulnerable versions of babel-template
+  Depends on vulnerable versions of babel-traverse
+  node_modules/istanbul-lib-instrument
+    babel-plugin-istanbul  <=5.0.0
+    Depends on vulnerable versions of istanbul-lib-instrument
+    Depends on vulnerable versions of test-exclude
+    node_modules/babel-plugin-istanbul
+    istanbul-api  <=1.3.7
+    Depends on vulnerable versions of istanbul-lib-instrument
+    node_modules/istanbul-api
+
+braces  <3.0.3
+Severity: high
+Uncontrolled resource consumption in braces - https://github.com/advisories/GHSA-grv7-fg5c-xmjg
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/jest-cli/node_modules/braces
+node_modules/jest-environment-jsdom/node_modules/braces
+node_modules/jest-environment-node/node_modules/braces
+node_modules/jest-haste-map/node_modules/braces
+node_modules/jest-jasmine2/node_modules/braces
+node_modules/jest-matchers/node_modules/braces
+node_modules/jest-runtime/node_modules/braces
+node_modules/jest-snapshot/node_modules/braces
+node_modules/sane/node_modules/braces
+node_modules/test-exclude/node_modules/braces
+node_modules/ts-jest/node_modules/braces
+  micromatch  <=4.0.7
+  Depends on vulnerable versions of braces
+  node_modules/jest-cli/node_modules/micromatch
+  node_modules/jest-environment-jsdom/node_modules/micromatch
+  node_modules/jest-environment-node/node_modules/micromatch
+  node_modules/jest-haste-map/node_modules/micromatch
+  node_modules/jest-jasmine2/node_modules/micromatch
+  node_modules/jest-matchers/node_modules/micromatch
+  node_modules/jest-runtime/node_modules/micromatch
+  node_modules/jest-snapshot/node_modules/micromatch
+  node_modules/sane/node_modules/micromatch
+  node_modules/test-exclude/node_modules/micromatch
+  node_modules/ts-jest/node_modules/micromatch
+    anymatch  1.2.0 - 2.0.0
+    Depends on vulnerable versions of micromatch
+    node_modules/sane/node_modules/anymatch
+      sane  1.0.4 - 4.1.0
+      Depends on vulnerable versions of anymatch
+      Depends on vulnerable versions of exec-sh
+      node_modules/sane
+        jest-haste-map  18.1.0 - 26.6.2
+        Depends on vulnerable versions of micromatch
+        Depends on vulnerable versions of sane
+        node_modules/jest-haste-map
+          jest-resolve  18.1.0 - 19.0.2 || 24.2.0-alpha.0 - 24.5.0
+          Depends on vulnerable versions of jest-haste-map
+          node_modules/jest-resolve
+    jest-message-util  18.5.0-alpha.7da3df39 - 24.9.0
+    Depends on vulnerable versions of micromatch
+    node_modules/jest-cli/node_modules/jest-message-util
+    node_modules/jest-environment-jsdom/node_modules/jest-message-util
+    node_modules/jest-environment-node/node_modules/jest-message-util
+    node_modules/jest-jasmine2/node_modules/jest-message-util
+    node_modules/jest-matchers/node_modules/jest-message-util
+    node_modules/jest-runtime/node_modules/jest-message-util
+    node_modules/jest-snapshot/node_modules/jest-message-util
+    node_modules/ts-jest/node_modules/jest-message-util
+      jest-jasmine2  18.5.0-alpha.7da3df39 - 24.9.0 || 30.0.0-alpha.1 - 30.0.0-beta.2
+      Depends on vulnerable versions of jest-matchers
+      Depends on vulnerable versions of jest-message-util
+      Depends on vulnerable versions of jest-snapshot
+      node_modules/jest-jasmine2
+        jest-config  12.1.1-alpha.2935e14d - 25.5.4 || 30.0.0-alpha.1 - 30.0.0-beta.2
+        Depends on vulnerable versions of jest-environment-jsdom
+        Depends on vulnerable versions of jest-environment-node
+        Depends on vulnerable versions of jest-jasmine2
+        node_modules/jest-config
+      jest-matchers  >=18.5.0-alpha.7da3df39
+      Depends on vulnerable versions of jest-message-util
+      node_modules/jest-matchers
+      jest-util  18.5.0-alpha.7da3df39 - 24.0.0
+      Depends on vulnerable versions of jest-message-util
+      node_modules/jest-cli/node_modules/jest-util
+      node_modules/jest-environment-jsdom/node_modules/jest-util
+      node_modules/jest-environment-node/node_modules/jest-util
+      node_modules/jest-runtime/node_modules/jest-util
+      node_modules/jest-snapshot/node_modules/jest-util
+      node_modules/ts-jest/node_modules/jest-util
+        jest-environment-jsdom  10.0.2 - 25.5.0
+        Depends on vulnerable versions of jest-util
+        Depends on vulnerable versions of jsdom
+        node_modules/jest-environment-jsdom
+        jest-environment-node  18.5.0-alpha.7da3df39 - 23.4.0 || 30.0.0-alpha.1 - 30.0.0-beta.2
+        Depends on vulnerable versions of jest-util
+        node_modules/jest-environment-node
+        jest-snapshot  18.5.0-alpha.7da3df39 - 21.0.0-beta.1 || 30.0.0-alpha.1 - 30.0.0-beta.2
+        Depends on vulnerable versions of jest-util
+        node_modules/jest-snapshot
+    test-exclude  <=4.2.3
+    Depends on vulnerable versions of micromatch
+    node_modules/test-exclude
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install drizzle-kit@0.18.1, which is a breaking change
+node_modules/@esbuild-kit/core-utils/node_modules/esbuild
+  @esbuild-kit/core-utils  *
+  Depends on vulnerable versions of esbuild
+  node_modules/@esbuild-kit/core-utils
+    @esbuild-kit/esm-loader  *
+    Depends on vulnerable versions of @esbuild-kit/core-utils
+    node_modules/@esbuild-kit/esm-loader
+      drizzle-kit  0.17.5-6b7793f - 0.17.5-e5944eb || 0.18.1-065de38 - 0.18.1-f3800bf || 0.19.0-07024c4 - 1.0.0-beta.1-fd8bfcc
+      Depends on vulnerable versions of @esbuild-kit/esm-loader
+      node_modules/drizzle-kit
+
+form-data  <2.5.4
+Severity: critical
+form-data uses unsafe random function in form-data for choosing boundary - https://github.com/advisories/GHSA-fjxv-7rqg-78g4
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/request/node_modules/form-data
+  request  *
+  Depends on vulnerable versions of form-data
+  Depends on vulnerable versions of qs
+  Depends on vulnerable versions of tough-cookie
+  node_modules/request
+    jsdom  0.1.20 || 0.2.0 - 16.5.3
+    Depends on vulnerable versions of request
+    Depends on vulnerable versions of tough-cookie
+    node_modules/jsdom
+
+json5  <1.0.2
+Severity: high
+Prototype Pollution in JSON5 via Parse Method - https://github.com/advisories/GHSA-9c47-m6qq-7p4h
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/babel-core/node_modules/json5
+
+lodash.pick  >=4.0.0
+Severity: high
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-p6mc-m468-83gw
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@2.0.2, which is a breaking change
+node_modules/lodash.pick
+  cheerio  0.19.0 - 1.0.0-rc.12
+  Depends on vulnerable versions of css-select
+  Depends on vulnerable versions of lodash.pick
+  node_modules/cheerio
+    inline-css  2.2.4 - 4.0.0
+    Depends on vulnerable versions of cheerio
+    Depends on vulnerable versions of extract-css
+    node_modules/inline-css
+      @nestjs-modules/mailer  1.3.18 - 1.11.2
+      Depends on vulnerable versions of inline-css
+      Depends on vulnerable versions of preview-email
+      node_modules/@nestjs-modules/mailer
+    list-stylesheets  1.1.1 - 1.2.10
+    Depends on vulnerable versions of cheerio
+    node_modules/list-stylesheets
+      extract-css  1.0.5 - 2.0.1
+      Depends on vulnerable versions of list-stylesheets
+      Depends on vulnerable versions of style-data
+      node_modules/extract-css
+    style-data  1.1.3 - 1.4.8
+    Depends on vulnerable versions of cheerio
+    node_modules/style-data
+
+lodash.template  *
+Severity: high
+Command Injection in lodash - https://github.com/advisories/GHSA-35jh-r3h4-6jhm
+fix available via `npm audit fix --force`
+Will install ts-jest@29.4.6, which is a breaking change
+node_modules/lodash.template
+  gulp-util  >=1.1.0
+  Depends on vulnerable versions of lodash.template
+  node_modules/gulp-util
+    remap-istanbul  <=0.9.6
+    Depends on vulnerable versions of gulp-util
+    node_modules/remap-istanbul
+
+merge  <2.1.1
+Severity: high
+Prototype Pollution in merge - https://github.com/advisories/GHSA-7wpw-2hjm-89gp
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/merge
+  exec-sh  <=0.3.1
+  Depends on vulnerable versions of merge
+  node_modules/exec-sh
+
+
+minimist  1.0.0 - 1.2.5
+Severity: critical
+Prototype Pollution in minimist - https://github.com/advisories/GHSA-xvch-5gv4-984h
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/@angular-devkit/schematics-cli/node_modules/minimist
+
+node-notifier  <8.0.1
+Severity: moderate
+OS Command Injection in node-notifier - https://github.com/advisories/GHSA-5fw9-fq32-wv5p
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/node-notifier
+
+nodemailer  <=7.0.10
+Severity: high
+Nodemailer: Email to an unintended domain can occur due to Interpretation Conflict - https://github.com/advisories/GHSA-mm7p-fcc7-pg87
+Nodemailer???s addressparser is vulnerable to DoS caused by recursive calls - https://github.com/advisories/GHSA-rcmh-qjqh-p98v
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@2.0.2, which is a breaking change
+node_modules/preview-email/node_modules/nodemailer
+  preview-email  <=3.1.0
+  Depends on vulnerable versions of nodemailer
+  node_modules/preview-email
+
+nth-check  <2.0.1
+Severity: high
+Inefficient Regular Expression Complexity in nth-check - https://github.com/advisories/GHSA-rp65-9cf3-cjxr
+fix available via `npm audit fix --force`
+Will install @nestjs-modules/mailer@2.0.2, which is a breaking change
+node_modules/nth-check
+  css-select  <=3.1.0
+  Depends on vulnerable versions of nth-check
+  node_modules/css-select
+
+qs  <6.14.1
+Severity: high
+qs's arrayLimit bypass in its bracket notation allows DoS via memory exhaustion - https://github.com/advisories/GHSA-6rw7-vpxm-498p
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/request/node_modules/qs
+
+
+shelljs  <=0.8.4
+Severity: high
+Improper Privilege Management in shelljs - https://github.com/advisories/GHSA-64g7-mvw6-v9qj
+Improper Privilege Management in shelljs - https://github.com/advisories/GHSA-4rq4-32rv-6wp6
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/shelljs
+
+tmp  <=0.2.3
+tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/tmp
+  external-editor  >=1.1.1
+  Depends on vulnerable versions of tmp
+  node_modules/external-editor
+    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
+    Depends on vulnerable versions of external-editor
+    node_modules/inquirer
+
+tough-cookie  <4.1.3
+Severity: moderate
+tough-cookie Prototype Pollution vulnerability - https://github.com/advisories/GHSA-72xf-g2v4-qvf3
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/tough-cookie
+
+trim-newlines  <3.0.1
+Severity: high
+Uncontrolled Resource Consumption in trim-newlines - https://github.com/advisories/GHSA-7p7h-4mm5-852v
+fix available via `npm audit fix`
+node_modules/trim-newlines
+  meow  3.4.0 - 5.0.0
+  Depends on vulnerable versions of trim-newlines
+  node_modules/meow
+
+webpack  5.0.0-alpha.0 - 5.93.0
+Severity: critical
+Cross-realm object access in Webpack 5 - https://github.com/advisories/GHSA-hc6q-2mpp-qw7j
+Webpack's AutoPublicPathRuntimeModule has a DOM Clobbering Gadget that leads to XSS - https://github.com/advisories/GHSA-4vvj-4cpr-p986
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/@nestjs/cli/node_modules/webpack
+
+xlsx  *
+Severity: high
+Prototype Pollution in sheetJS - https://github.com/advisories/GHSA-4r6h-8v6p-xvw6
+SheetJS Regular Expression Denial of Service (ReDoS) - https://github.com/advisories/GHSA-5pgg-2g8v-p4x9
+No fix available
+node_modules/xlsx
+
+yargs-parser  <=5.0.0
+Severity: moderate
+yargs-parser Vulnerable to Prototype Pollution - https://github.com/advisories/GHSA-p9pc-299p-vxgp
+fix available via `npm audit fix --force`
+Will install jest@30.2.0, which is a breaking change
+node_modules/yargs-parser
+  yargs  4.0.0-alpha1 - 7.0.0-alpha.3 || 7.1.1
+  Depends on vulnerable versions of yargs-parser
+  node_modules/yargs
+
+74 vulnerabilities (3 low, 28 moderate, 25 high, 18 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
