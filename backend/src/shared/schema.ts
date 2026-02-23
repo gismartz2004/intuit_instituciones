@@ -181,147 +181,6 @@ export const progresoNiveles = pgTable('progreso_niveles', {
   fechaCompletado: timestamp('fecha_completado'),
 });
 
-// 15. Plantillas RAG (Recuperación Autónoma Guiada)
-export const plantillasRag = pgTable('plantillas_rag', {
-  id: serial('id').primaryKey(),
-  nivelId: integer('nivel_id').references(() => niveles.id),
-  // Identificación General
-  programa: varchar('programa', { length: 255 }),
-  modulo: varchar('modulo', { length: 255 }),
-  hitoAprendizaje: varchar('hito_aprendizaje', { length: 255 }),
-  mes: varchar('mes', { length: 50 }),
-  semana: varchar('semana', { length: 50 }),
-  tipoRag: varchar('tipo_rag', { length: 50 }), // Técnica / Práctica / Mixta
-  modalidad: varchar('modalidad', { length: 50 }), // Autónoma / Asincrónica
-  duracionEstimada: varchar('duracion_estimada', { length: 50 }),
-
-  // Propósito y Objetivos
-  proposito: text('proposito'),
-  objetivoAprendizaje: text('objetivo_aprendizaje'),
-
-  // Contenido Clave (Stored as JSON: [{titulo, descripcion}])
-  contenidoClave: jsonb('contenido_clave'),
-
-  // Actividad Autónoma
-  nombreActividad: varchar('nombre_actividad', { length: 255 }),
-  descripcionDesafio: text('descripcion_desafio'),
-  pasosGuiados: jsonb('pasos_guiados'), // JSON: [{paso, completado, requiereEntregable}]
-
-  // Ayudas
-  pistas: jsonb('pistas'), // JSON: [pista1, pista2...]
-
-  // Evidencia
-  tipoEvidencia: varchar('tipo_evidencia', { length: 100 }),
-  cantidadEvidencias: integer('cantidad_evidencias'),
-
-  // Competencias (JSON)
-  competenciasTecnicas: text('competencias_tecnicas'),
-  competenciasBlandas: text('competencias_blandas'),
-
-  // Impacto
-  porcentajeAporte: integer('porcentaje_aporte'),
-  actualizaRadar: boolean('actualiza_radar').default(false),
-  regularizaAsistencia: boolean('regulariza_asistencia').default(false),
-
-  // Criterios de Finalización
-  criterioEvidencia: boolean('criterio_evidencia').default(false),
-  criterioPasos: boolean('criterio_pasos').default(false),
-  criterioTiempo: boolean('criterio_tiempo').default(false),
-
-  // Secciones Dinámicas Globales (Para expandir la plantilla)
-  seccionesDinamicas: jsonb('secciones_dinamicas'), // JSON: [{ titulo, tipo: 'texto'|'checklist', contenido: string | [] }]
-
-  imagenUrl: text('imagen_url'), // Main image for the RAG template
-
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
-});
-
-// 16. Plantillas HA (Hito de Aprendizaje)
-export const plantillasHa = pgTable('plantillas_ha', {
-  id: serial('id').primaryKey(),
-  nivelId: integer('nivel_id').references(() => niveles.id),
-
-  // 1. Fase
-  fase: varchar('fase', { length: 255 }),
-
-  // 2. Objetivo de la semana
-  objetivoSemana: text('objetivo_semana'),
-
-  // 3. Concepto Clave
-  conceptoClave: text('concepto_clave'),
-
-  // 4. Pasos Guiados (Checklist)
-  pasosGuiados: jsonb('pasos_guiados'),
-
-  // 5. Resultado Esperado
-  resultadoEsperado: text('resultado_esperado'),
-  // Nota: El "Estado" (Logrado/En Proceso) se guarda en el progreso del estudiante, no en la plantilla.
-
-  // 6. Evidencia
-  evidenciaTipos: jsonb('evidencia_tipos'), // JSON Array: ['Imagen', 'Video']
-  evidenciaDescripcion: text('evidencia_descripcion'),
-
-  // 7. Pregunta de Reflexión
-  preguntaReflexion: text('pregunta_reflexion'),
-
-  // Secciones Dinámicas
-  seccionesDinamicas: jsonb('secciones_dinamicas'), // JSON
-
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
-});
-
-// 16.2 Plantillas PIM (Proyecto Integrador Modular)
-export const plantillasPim = pgTable('plantillas_pim', {
-  id: serial('id').primaryKey(),
-  nivelId: integer('nivel_id').references(() => niveles.id),
-
-  // Información General
-  tituloProyecto: varchar('titulo_proyecto', { length: 255 }),
-  anioNivel: varchar('anio_nivel', { length: 100 }),
-  descripcionGeneral: text('descripcion_general'),
-  problematicaGeneral: text('problematica_general'),
-  contextoProblema: text('contexto_problema'),
-  objetivoProyecto: text('objetivo_proyecto'),
-
-  // Módulos (JSON Array: [{nombreModulo, enfoqueTecnico, problemaTecnico, actividadesInvestigacion, formatoSugerido, actividadesPractica, ejerciciosPracticos, aporteTecnico}])
-  modulos: jsonb('modulos'),
-
-  // Metadata
-  imagenUrl: text('imagen_url'),
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
-});
-
-// 16.3 Plantillas BD (Bloque de Desarrollo)
-export const plantillasBd = pgTable('plantillas_bd', {
-  id: serial('id').primaryKey(),
-  nivelId: integer('nivel_id').references(() => niveles.id),
-  titulo: varchar('titulo', { length: 255 }),
-  secciones: jsonb('secciones'),
-  impacto: jsonb('impacto'),
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
-});
-
-// 16.4 Plantillas IT (Iteración)
-export const plantillasIt = pgTable('plantillas_it', {
-  id: serial('id').primaryKey(),
-  nivelId: integer('nivel_id').references(() => niveles.id),
-  titulo: varchar('titulo', { length: 255 }),
-  descripcion: text('descripcion'),
-  fases: jsonb('fases'),
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
-});
-
-// 16.5 Plantillas PIC (Proyecto de Innovación)
-export const plantillasPic = pgTable('plantillas_pic', {
-  id: serial('id').primaryKey(),
-  nivelId: integer('nivel_id').references(() => niveles.id),
-  titulo: varchar('titulo', { length: 255 }),
-  alcance: text('alcance'),
-  objetivos: jsonb('objetivos'),
-  entregables: jsonb('entregables'),
-  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
-});
-
 // 17. Logros (Achievements)
 export const logros = pgTable('logros', {
   id: serial('id').primaryKey(),
@@ -352,29 +211,6 @@ export const gamificacionEstudiante = pgTable('gamificacion_estudiante', {
   ultimaRachaUpdate: timestamp('ultima_racha_update'),
 });
 
-// 20. Entregas RAG
-export const entregasRag = pgTable('entregas_rag', {
-  id: serial('id').primaryKey(),
-  estudianteId: integer('estudiante_id').references(() => usuarios.id),
-  plantillaRagId: integer('plantilla_rag_id').references(() => plantillasRag.id),
-  pasoIndice: integer('paso_indice'), // Qué paso es (0, 1, 2...)
-  archivoUrl: text('archivo_url'),
-  tipoArchivo: varchar('tipo_archivo', { length: 50 }),
-  feedbackAvatar: text('feedback_avatar'),
-  fechaSubida: timestamp('fecha_subida').defaultNow(),
-});
-
-// 21. Entregas HA (Evidencia Hito)
-export const entregasHa = pgTable('entregas_ha', {
-  id: serial('id').primaryKey(),
-  estudianteId: integer('estudiante_id').references(() => usuarios.id),
-  plantillaHaId: integer('plantilla_ha_id').references(() => plantillasHa.id),
-  archivosUrls: text('archivos_urls'), // JSON Array stringified
-  comentarioEstudiante: text('comentario_estudiante'),
-  validado: boolean('validado').default(false),
-  fechaSubida: timestamp('fecha_subida').defaultNow(),
-});
-
 // 22. Misiones (Mission Definitions)
 export const misiones = pgTable('misiones', {
   id: serial('id').primaryKey(),
@@ -401,6 +237,28 @@ export const progresoMisiones = pgTable('progreso_misiones', {
   semanaInicio: timestamp('semana_inicio'), // For weekly mission reset/sync
 });
 
+// 24. PIM Templates (Proyectos Integradores Modulares)
+export const pimTemplates = pgTable('pim_templates', {
+  id: serial('id').primaryKey(),
+  levelId: integer('level_id').references(() => niveles.id).unique().notNull(),
+  tituloProyecto: varchar('titulo_proyecto', { length: 255 }),
+  descripcionGeneral: text('descripcion_general'),
+  problematicaGeneral: text('problematica_general'),
+  contextoProblema: text('contexto_problema'),
+  objetivoProyecto: text('objetivo_proyecto'),
+  imagenUrl: text('imagen_url'),
+  modulos: jsonb('modulos'), // Almacena la estructura de módulos como JSON
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+  fechaActualizacion: timestamp('fecha_actualizacion').defaultNow(),
+});
+
+// 25. PIC Templates (Proyectos de Innovación y Creatividad)
+export const picTemplates = pgTable('pic_templates', {
+  id: serial('id').primaryKey(),
+  levelId: integer('level_id').references(() => niveles.id).unique().notNull(),
+  templateData: jsonb('template_data'), // Almacena toda la plantilla como un único objeto JSON
+  fechaCreacion: timestamp('fecha_creacion').defaultNow(),
+});
 
 // 24. Premios (Prizes for Raffle)
 export const premios = pgTable('premios', {
@@ -492,27 +350,14 @@ export type InsertCertificado = z.infer<typeof insertCertificadoSchema>;
 export type ProgresoNivel = typeof progresoNiveles.$inferSelect;
 export type InsertProgresoNivel = z.infer<typeof insertProgresoNivelSchema>;
 
-export const insertPlantillaRagSchema = createInsertSchema(plantillasRag);
-export type PlantillaRag = typeof plantillasRag.$inferSelect;
-export type InsertPlantillaRag = z.infer<typeof insertPlantillaRagSchema>;
-
-export const insertPlantillaHaSchema = createInsertSchema(plantillasHa);
-export type PlantillaHa = typeof plantillasHa.$inferSelect;
-export type InsertPlantillaHa = z.infer<typeof insertPlantillaHaSchema>;
-
 export const insertLogroSchema = createInsertSchema(logros);
 export const insertLogroDesbloqueadoSchema = createInsertSchema(logrosDesbloqueados);
 export const insertGamificacionEstudianteSchema = createInsertSchema(gamificacionEstudiante);
-export const insertEntregaRagSchema = createInsertSchema(entregasRag);
-export const insertEntregaHaSchema = createInsertSchema(entregasHa);
 export const insertMisionSchema = createInsertSchema(misiones);
 export const insertProgresoMisionSchema = createInsertSchema(progresoMisiones);
 export const insertPremioSchema = createInsertSchema(premios);
 export const insertAsistenciaSchema = createInsertSchema(asistencia);
 export const insertModuloProfesorSchema = createInsertSchema(moduloProfesores);
-export const insertPlantillaBdSchema = createInsertSchema(plantillasBd);
-export const insertPlantillaItSchema = createInsertSchema(plantillasIt);
-export const insertPlantillaPicSchema = createInsertSchema(plantillasPic);
 
 
 export type Logro = typeof logros.$inferSelect;
@@ -523,12 +368,6 @@ export type InsertLogroDesbloqueado = z.infer<typeof insertLogroDesbloqueadoSche
 
 export type GamificacionEstudiante = typeof gamificacionEstudiante.$inferSelect;
 export type InsertGamificacionEstudiante = z.infer<typeof insertGamificacionEstudianteSchema>;
-
-export type EntregaRag = typeof entregasRag.$inferSelect;
-export type InsertEntregaRag = z.infer<typeof insertEntregaRagSchema>;
-
-export type EntregaHa = typeof entregasHa.$inferSelect;
-export type InsertEntregaHa = z.infer<typeof insertEntregaHaSchema>;
 
 export type Mision = typeof misiones.$inferSelect;
 export type InsertMision = z.infer<typeof insertMisionSchema>;
@@ -544,11 +383,3 @@ export type InsertAsistencia = z.infer<typeof insertAsistenciaSchema>;
 
 export type ModuloProfesor = typeof moduloProfesores.$inferSelect;
 export type InsertModuloProfesor = z.infer<typeof insertModuloProfesorSchema>;
-
-export type PlantillaBd = typeof plantillasBd.$inferSelect;
-export type InsertPlantillaBd = z.infer<typeof insertPlantillaBdSchema>;
-
-export type PlantillaIt = typeof plantillasIt.$inferSelect;
-export type InsertPlantillaIt = z.infer<typeof insertPlantillaItSchema>;
-
-export type PlantillaPic = typeof plantillasPic.$inferSelect;
